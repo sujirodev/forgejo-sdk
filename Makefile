@@ -103,7 +103,7 @@ ci-lint: ## Run the linter.
 .PHONY: test
 test: ## Run unit tests (requires a running forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
-	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected!"; exit 1; else \
+	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
 	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \
 	fi
 

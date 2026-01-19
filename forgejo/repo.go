@@ -44,6 +44,8 @@ type ExternalTracker struct {
 	ExternalTrackerFormat string `json:"external_tracker_format"`
 	// External Issue Tracker Number Format, either `numeric` or `alphanumeric`
 	ExternalTrackerStyle string `json:"external_tracker_style"`
+	// External Issue Tracker issue regular expression
+	ExternalTrackerRegexPattern string `json:"external_tracker_regexp_pattern"`
 }
 
 // ExternalWiki represents setting for external wiki

@@ -25,7 +25,7 @@ import (
 	version "github.com/hashicorp/go-version"
 )
 
-var jsonHeader = http.Header{"content-type": []string{"application/json"}}
+var jsonHeader = http.Header{"content-type": []string{"application/json"}, "accept": []string{"application/json"}}
 
 // Version return the library version
 func Version() string {

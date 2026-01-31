@@ -98,6 +98,8 @@ const (
 	MergeStyleRebaseMerge MergeStyle = "rebase-merge"
 	// MergeStyleSquash squash and merge pull
 	MergeStyleSquash MergeStyle = "squash"
+	// MergeStyleFastForwardOnly fast forward only pull
+	MergeStyleFastForwardOnly MergeStyle = "fast-forward-only"
 )
 
 // QueryEncode turns options into querystring argument

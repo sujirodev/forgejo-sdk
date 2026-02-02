@@ -109,3 +109,158 @@ func (c *Client) CreateOrgActionSecret(org string, opt CreateSecretOption) (*Res
 		return resp, fmt.Errorf("unexpected Status: %d", status)
 	}
 }
+
+// DeleteOrgActionSecret deletes a secret in an organization
+func (c *Client) DeleteOrgActionSecret(org, secretName string) (*Response, error) {
+	if err := escapeValidatePathSegments(&org, &secretName); err != nil {
+		return nil, err
+	}
+
+	status, resp, err := c.getStatusCode("DELETE", fmt.Sprintf("/orgs/%s/actions/secrets/%s", org, secretName), jsonHeader, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	switch status {
+	case http.StatusNoContent:
+		return resp, nil
+	case http.StatusNotFound:
+		return resp, fmt.Errorf("secret not found")
+	default:
+		return resp, fmt.Errorf("unexpected Status: %d", status)
+	}
+}
+
+// ListOrgActionJobs searches for organization action jobs
+func (c *Client) ListOrgActionJobs(org string, opt ListActionJobsOption) ([]*ActionRunJob, *Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, nil, err
+	}
+
+	link, _ := url.Parse(fmt.Sprintf("/orgs/%s/actions/runners/jobs", org))
+	if opt.Labels != "" {
+		query := link.Query()
+		query.Add("labels", opt.Labels)
+		link.RawQuery = query.Encode()
+	}
+
+	jobs := make([]*ActionRunJob, 0)
+	resp, err := c.getParsedResponse("GET", link.String(), jsonHeader, nil, &jobs)
+	return jobs, resp, err
+}
+
+// ListOrgActionVariables lists an organization's action variables
+func (c *Client) ListOrgActionVariables(org string, opt ListOptions) ([]*ActionVariable, *Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, nil, err
+	}
+	opt.setDefaults()
+
+	link, _ := url.Parse(fmt.Sprintf("/orgs/%s/actions/variables", org))
+	link.RawQuery = opt.getURLQuery().Encode()
+
+	variables := make([]*ActionVariable, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", link.String(), jsonHeader, nil, &variables)
+	return variables, resp, err
+}
+
+// GetOrgActionVariable gets a specific organization action variable
+func (c *Client) GetOrgActionVariable(org, variableName string) (*ActionVariable, *Response, error) {
+	if err := escapeValidatePathSegments(&org, &variableName); err != nil {
+		return nil, nil, err
+	}
+
+	variable := new(ActionVariable)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/orgs/%s/actions/variables/%s", org, variableName), jsonHeader, nil, variable)
+	return variable, resp, err
+}
+
+// CreateOrgActionVariable creates an action variable for an organization
+func (c *Client) CreateOrgActionVariable(org string, opt CreateVariableOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, err
+	}
+	if err := opt.Validate(); err != nil {
+		return nil, err
+	}
+
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+
+	status, resp, err := c.getStatusCode("POST", fmt.Sprintf("/orgs/%s/actions/variables/%s", org, opt.Name), jsonHeader, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	switch status {
+	case http.StatusCreated, http.StatusNoContent:
+		return resp, nil
+	case http.StatusConflict:
+		return resp, fmt.Errorf("variable already exists")
+	default:
+		return resp, fmt.Errorf("unexpected Status: %d", status)
+	}
+}
+
+// UpdateOrgActionVariable updates an action variable for an organization
+func (c *Client) UpdateOrgActionVariable(org, variableName string, opt CreateVariableOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&org, &variableName); err != nil {
+		return nil, err
+	}
+	if err := opt.Validate(); err != nil {
+		return nil, err
+	}
+
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+
+	status, resp, err := c.getStatusCode("PUT", fmt.Sprintf("/orgs/%s/actions/variables/%s", org, variableName), jsonHeader, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	switch status {
+	case http.StatusOK, http.StatusNoContent:
+		return resp, nil
+	case http.StatusNotFound:
+		return resp, fmt.Errorf("variable not found")
+	default:
+		return resp, fmt.Errorf("unexpected Status: %d", status)
+	}
+}
+
+// DeleteOrgActionVariable deletes an action variable from an organization
+func (c *Client) DeleteOrgActionVariable(org, variableName string) (*Response, error) {
+	if err := escapeValidatePathSegments(&org, &variableName); err != nil {
+		return nil, err
+	}
+
+	status, resp, err := c.getStatusCode("DELETE", fmt.Sprintf("/orgs/%s/actions/variables/%s", org, variableName), jsonHeader, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	switch status {
+	case http.StatusNoContent, http.StatusOK:
+		return resp, nil
+	case http.StatusNotFound:
+		return resp, fmt.Errorf("variable not found")
+	default:
+		return resp, fmt.Errorf("unexpected Status: %d", status)
+	}
+}
+
+// GetOrgActionRunnerRegistrationToken gets a runner registration token for an organization
+func (c *Client) GetOrgActionRunnerRegistrationToken(org string) (*RunnerRegistrationToken, *Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, nil, err
+	}
+
+	token := new(RunnerRegistrationToken)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/orgs/%s/actions/runners/registration-token", org), jsonHeader, nil, token)
+	return token, resp, err
+}

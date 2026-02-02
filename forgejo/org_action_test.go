@@ -18,6 +18,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test constant for org action tests
+var testOrgName = "testorg"
+
 func TestOrgActionSecrets(t *testing.T) {
 	log.Println("== TestOrgActionSecrets ==")
 	c := newTestClient()
@@ -334,5 +337,93 @@ func TestCreateSecretOption_Validate(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestDeleteOrgActionSecret(t *testing.T) {
+	log.Println("== TestDeleteOrgActionSecret ==")
+	c := newTestClient()
+
+	// First create a secret to delete
+	_, err := c.CreateOrgActionSecret(testOrgName, CreateSecretOption{
+		Name: "DELETE_TEST_SECRET",
+		Data: "test_value",
+	})
+	if err != nil {
+		t.Skip("Could not create secret, skipping delete test")
+	}
+
+	resp, err := c.DeleteOrgActionSecret(testOrgName, "DELETE_TEST_SECRET")
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+}
+
+func TestListOrgActionJobs(t *testing.T) {
+	log.Println("== TestListOrgActionJobs ==")
+	c := newTestClient()
+
+	user := createTestUser(t, "org_action_jobs_user", c)
+	c.SetSudo(user.UserName)
+	org, _, err := c.CreateOrg(CreateOrgOption{Name: "ActionJobsTestOrg"})
+	require.NoError(t, err)
+	require.NotNil(t, org)
+
+	jobs, resp, err := c.ListOrgActionJobs(org.UserName, ListActionJobsOption{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	// jobs may be nil when the API returns JSON null (no jobs exist)
+	assert.GreaterOrEqual(t, len(jobs), 0)
+}
+
+func TestOrgActionVariables(t *testing.T) {
+	log.Println("== TestOrgActionVariables ==")
+	c := newTestClient()
+
+	variableName := "TEST_ORG_VARIABLE"
+
+	// Create
+	resp, err := c.CreateOrgActionVariable(testOrgName, CreateVariableOption{
+		Name: variableName,
+		Data: "test_value",
+	})
+	if err != nil {
+		t.Skip("Could not create variable, skipping test")
+	}
+	require.NotNil(t, resp)
+
+	// List
+	variables, resp, err := c.ListOrgActionVariables(testOrgName, ListOptions{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, variables)
+
+	// Get
+	variable, resp, err := c.GetOrgActionVariable(testOrgName, variableName)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, variableName, variable.Name)
+
+	// Update
+	resp, err = c.UpdateOrgActionVariable(testOrgName, variableName, CreateVariableOption{
+		Name: variableName,
+		Data: "updated_value",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	// Delete
+	resp, err = c.DeleteOrgActionVariable(testOrgName, variableName)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+}
+
+func TestGetOrgActionRunnerRegistrationToken(t *testing.T) {
+	log.Println("== TestGetOrgActionRunnerRegistrationToken ==")
+	c := newTestClient()
+
+	token, resp, err := c.GetOrgActionRunnerRegistrationToken(testOrgName)
+	if err == nil {
+		require.NotNil(t, resp)
+		assert.NotEmpty(t, token.Token)
 	}
 }

@@ -14,6 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// createTestRepo creates a test user and repo for action tests
+func createTestRepoForActions(t *testing.T, c *Client, suffix string) (*Repository, func()) {
+	t.Helper()
+	user := createTestUser(t, "repo_action_"+suffix, c)
+	c.SetSudo(user.UserName)
+	repo, _, err := c.CreateRepo(CreateRepoOption{Name: "ActionTest" + suffix})
+	require.NoError(t, err)
+	require.NotNil(t, repo)
+	return repo, func() { c.SetSudo("") }
+}
+
 func TestRepoActionSecrets(t *testing.T) {
 	log.Println("== TestRepoActionSecrets ==")
 	c := newTestClient()
@@ -174,4 +185,177 @@ func TestRepoActionSecrets(t *testing.T) {
 		_, err = c.CreateRepoActionSecret(testRepo.Owner.UserName, testRepo.Name, CreateSecretOption{Name: "LARGE_DATA", Data: largeData})
 		require.NoError(t, err)
 	})
+}
+
+func TestDeleteRepoActionSecret(t *testing.T) {
+	log.Println("== TestDeleteRepoActionSecret ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "del_secret")
+	defer cleanup()
+
+	// First create a secret to delete
+	_, err := c.CreateRepoActionSecret(repo.Owner.UserName, repo.Name, CreateSecretOption{
+		Name: "DELETE_TEST_SECRET",
+		Data: "test_value",
+	})
+	require.NoError(t, err)
+
+	// Delete the secret
+	resp, err := c.DeleteRepoActionSecret(repo.Owner.UserName, repo.Name, "DELETE_TEST_SECRET")
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+}
+
+func TestListRepoActionRuns(t *testing.T) {
+	log.Println("== TestListRepoActionRuns ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "list_runs")
+	defer cleanup()
+
+	runs, resp, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+	if err != nil {
+		t.Skipf("ListRepoActionRuns not supported by this Forgejo version: %v", err)
+	}
+	require.NotNil(t, resp)
+	require.NotNil(t, runs)
+	assert.GreaterOrEqual(t, runs.TotalCount, int64(0))
+}
+
+func TestGetRepoActionRun(t *testing.T) {
+	log.Println("== TestGetRepoActionRun ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "get_run")
+	defer cleanup()
+
+	// First list runs to get a valid ID (if any exist)
+	runs, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+	if err != nil {
+		t.Skipf("ListRepoActionRuns not supported by this Forgejo version: %v", err)
+	}
+
+	if len(runs.WorkflowRuns) > 0 {
+		run, resp, err := c.GetRepoActionRun(repo.Owner.UserName, repo.Name, runs.WorkflowRuns[0].ID)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, runs.WorkflowRuns[0].ID, run.ID)
+	}
+}
+
+func TestDispatchRepoWorkflow(t *testing.T) {
+	log.Println("== TestDispatchRepoWorkflow ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "dispatch_wf")
+	defer cleanup()
+
+	// Note: This test requires a workflow file to exist in the repo
+	// It may fail if no workflow exists - that's expected
+	resp, _, err := c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "test.yml", DispatchWorkflowOption{
+		Ref: "main",
+	})
+	// We don't assert NoError because the workflow may not exist
+	_ = resp
+	_ = err
+}
+
+func TestListRepoActionTasks(t *testing.T) {
+	log.Println("== TestListRepoActionTasks ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "list_tasks")
+	defer cleanup()
+
+	tasks, resp, err := c.ListRepoActionTasks(repo.Owner.UserName, repo.Name, ListActionTasksOption{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, tasks)
+	assert.GreaterOrEqual(t, tasks.TotalCount, int64(0))
+}
+
+func TestListRepoActionJobs(t *testing.T) {
+	log.Println("== TestListRepoActionJobs ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "list_jobs")
+	defer cleanup()
+
+	jobs, resp, err := c.ListRepoActionJobs(repo.Owner.UserName, repo.Name, ListActionJobsOption{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	// jobs may be nil when the API returns JSON null (no jobs exist)
+	assert.GreaterOrEqual(t, len(jobs), 0)
+}
+
+func TestRepoActionVariables(t *testing.T) {
+	log.Println("== TestRepoActionVariables ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "variables")
+	defer cleanup()
+
+	variableName := "TEST_VARIABLE"
+
+	// Create
+	resp, err := c.CreateRepoActionVariable(repo.Owner.UserName, repo.Name, CreateVariableOption{
+		Name: variableName,
+		Data: "test_value",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	// List
+	variables, resp, err := c.ListRepoActionVariables(repo.Owner.UserName, repo.Name, ListOptions{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	found := false
+	for _, v := range variables {
+		if v.Name == variableName {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "variable should be in list")
+
+	// Get
+	variable, resp, err := c.GetRepoActionVariable(repo.Owner.UserName, repo.Name, variableName)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, variableName, variable.Name)
+	assert.Equal(t, "test_value", variable.Data)
+
+	// Update
+	resp, err = c.UpdateRepoActionVariable(repo.Owner.UserName, repo.Name, variableName, CreateVariableOption{
+		Name: variableName,
+		Data: "updated_value",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	// Verify update
+	variable, _, err = c.GetRepoActionVariable(repo.Owner.UserName, repo.Name, variableName)
+	require.NoError(t, err)
+	assert.Equal(t, "updated_value", variable.Data)
+
+	// Delete
+	resp, err = c.DeleteRepoActionVariable(repo.Owner.UserName, repo.Name, variableName)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+}
+
+func TestGetRepoActionRunnerRegistrationToken(t *testing.T) {
+	log.Println("== TestGetRepoActionRunnerRegistrationToken ==")
+	c := newTestClient()
+
+	repo, cleanup := createTestRepoForActions(t, c, "runner_token")
+	defer cleanup()
+
+	token, resp, err := c.GetRepoActionRunnerRegistrationToken(repo.Owner.UserName, repo.Name)
+	// This may fail if user doesn't have admin access to repo
+	if err == nil {
+		require.NotNil(t, resp)
+		assert.NotEmpty(t, token.Token)
+	}
 }

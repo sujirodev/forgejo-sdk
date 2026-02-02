@@ -208,7 +208,7 @@ func TestGetUserByID(t *testing.T) {
 	assert.NotNil(t, r2)
 	assert.Equal(t, user2.UserName, r2.UserName)
 
-	r3, _, err := c.GetUserByID(42)
+	r3, _, err := c.GetUserByID(999999)
 	require.Error(t, err)
 	assert.Nil(t, r3)
 

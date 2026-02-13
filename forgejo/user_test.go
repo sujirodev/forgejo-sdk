@@ -45,22 +45,24 @@ func TestMyUser(t *testing.T) {
 func TestUserApp(t *testing.T) {
 	log.Println("== TestUserApp ==")
 	c := newTestClient()
+	user, _, err := c.GetMyUserInfo()
+	require.NoError(t, err)
 
-	result, _, err := c.ListAccessTokens(ListAccessTokensOptions{})
+	result, _, err := c.ListAccessTokens(user.UserName, ListAccessTokensOptions{})
 	require.NoError(t, err)
 	assert.Len(t, result, 1)
 	// TODO: the gitea-admin name for the token is hardcoded in forgejo itself, until it's changed this will need to do
 	assert.EqualValues(t, "gitea-admin", result[0].Name)
 
-	t1, _, err := c.CreateAccessToken(CreateAccessTokenOption{Name: "TestCreateAccessToken", Scopes: []AccessTokenScope{AccessTokenScopeRepositoryRead}})
+	t1, _, err := c.CreateAccessToken(user.UserName, CreateAccessTokenOption{Name: "TestCreateAccessToken", Scopes: []AccessTokenScope{AccessTokenScopeRepositoryRead}})
 	require.NoError(t, err)
 	assert.EqualValues(t, "TestCreateAccessToken", t1.Name)
-	result, _, _ = c.ListAccessTokens(ListAccessTokensOptions{})
+	result, _, _ = c.ListAccessTokens(user.UserName, ListAccessTokensOptions{})
 	assert.Len(t, result, 2)
 
-	_, err = c.DeleteAccessToken(t1.ID)
+	_, err = c.DeleteAccessToken(user.UserName, t1.ID)
 	require.NoError(t, err)
-	result, _, _ = c.ListAccessTokens(ListAccessTokensOptions{})
+	result, _, _ = c.ListAccessTokens(user.UserName, ListAccessTokensOptions{})
 	assert.Len(t, result, 1)
 }
 

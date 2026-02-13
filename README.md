@@ -21,8 +21,8 @@ import "codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
 ```
 
 ## Version Requirements
- * go >= 1.23
- * forgejo >= 9.0.3
+ * go >= 1.25
+ * forgejo >= 11.0.10
  
  **Please note:** that the SDK might or might not work with lower versions of Forgejo depending on what part of the SDK you use, but it was tested against this one. Starting with release v2 of the SDK, Forgejo versions below 7.x.x will not be supported.
 

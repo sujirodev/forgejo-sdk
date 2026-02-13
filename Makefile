@@ -17,7 +17,7 @@ PACKAGE := codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0
 
-FORGEJO_VERSION := 9.0.3
+FORGEJO_VERSION := 11.0.10
 FORGEJO_DL := https://codeberg.org/forgejo/forgejo/releases/download/v$(FORGEJO_VERSION)/forgejo-$(FORGEJO_VERSION)-
 
 # Detect OS and architecture
@@ -46,44 +46,44 @@ HAS_DOCKER := $(shell command -v docker 2> /dev/null)
 DOCKER_AVAILABLE := $(if $(HAS_DOCKER),yes,no)
 
 .PHONY: all
-all: clean test build
+all: clean test build ## Run "make clean test build".
+
+##@ General
+
+# The help target prints out all targets with their descriptions organized
+# beneath their categories. The categories are represented by '##@' and the
+# target descriptions by '##'. The awk command is responsible for reading the
+# entire set of makefiles included in this invocation, looking for lines of the
+# file as xyz: ## something, and then pretty-format the target and help. Then,
+# if there's a line with ##@ something, that gets pretty-printed as a category.
+# More info on the usage of ANSI control characters for terminal formatting:
+# https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters
+# More info on the awk command:
+# http://linuxcommand.org/lc3_adv_awk.php
 
 .PHONY: help
-help:
-	@echo "Make Routines:"
-	@echo " - \"\"                      run \"make clean test build\""
-	@echo " - build                   build sdk"
-	@echo " - clean                   clean build artifacts and test instances"
-	@echo " - fmt                     format the code"
-	@echo " - lint / ci-lint          run golint"
-	@echo " - vet                     examines Go source code and reports suspicious constructs"
-	@echo " - test                    run unit tests (requires a running forgejo instance)"
-	@echo " - test-instance           start a forgejo instance for test (auto-detects method)"
-	@echo " - test-instance-native    start a native forgejo instance (Linux only)"
-	@echo " - test-instance-docker    start a forgejo instance using Docker"
-	@echo " - test-instance-stop      stop the forgejo test instance"
-	@echo " - bench                   run benchmarks"
-	@echo ""
-	@echo "Docker available: $(DOCKER_AVAILABLE)"
-
+help: ## Display this help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: clean
-clean:
+clean: ## Clean build artifacts and test instances.
 	rm -r -f test test-cache
 	cd forgejo && $(GO) clean -i ./...
 
+##@ Development
+
 .PHONY: fmt
-fmt:
+fmt: ## Format the code.
 	find . -name "*.go" -type f | xargs gofmt -s -w; \
 	$(GO) run $(GOFUMPT_PACKAGE) -extra -w ./forgejo
 
 .PHONY: vet
-vet:
+vet: ## Examines Go source code and reports suspicious constructs.
 	# Default vet
 	cd forgejo && $(GO) vet $(PACKAGE)
 
 .PHONY: ci-lint
-ci-lint:
+ci-lint: ## Run the linter.
 	@cd forgejo/; echo -n "gofumpt ...";\
 	diff=$$($(GO) run $(GOFUMPT_PACKAGE) -extra -l .); \
 	if [ -n "$$diff" ]; then \
@@ -98,15 +98,17 @@ ci-lint:
 	fi; echo " done"; \
 	cd -; \
 
+##@ Testing
+
 .PHONY: test
-test:
+test: ## Run unit tests (requires a running forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected!"; exit 1; else \
 	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \
 	fi
 
 .PHONY: test-instance
-test-instance:
+test-instance: ## Start a forgejo instance for test (auto-detects method).
 ifeq ($(NATIVE_BINARY_AVAILABLE),no)
 	@echo "Native binary not available for $(UNAME_S)/$(UNAME_M): using Docker"
 	@$(MAKE) test-instance-docker
@@ -119,7 +121,7 @@ endif
 endif
 
 .PHONY: test-instance-native
-test-instance-native:
+test-instance-native: ## Start a native forgejo instance (Linux only).
 ifeq ($(NATIVE_BINARY_AVAILABLE),no)
 	@echo "Error: Native binary not available for $(UNAME_S)/$(UNAME_M)"
 	@echo "Please use 'make test-instance' to automatically use Docker, or install Docker and run 'make test-instance-docker'"
@@ -154,7 +156,7 @@ endif
 	${WORK_DIR}/test/forgejo-main web -c ${WORK_DIR}/test/conf/app.ini
 
 .PHONY: test-instance-docker
-test-instance-docker:
+test-instance-docker: ## Start a forgejo instance using Docker.
 ifeq ($(DOCKER_AVAILABLE),no)
 	@echo "Error: Docker is not available in PATH"
 	@echo "Please install Docker from https://www.docker.com/products/docker-desktop"
@@ -194,7 +196,7 @@ endif
 	@echo "Test instance is ready at ${FORGEJO_SDK_TEST_URL}"
 
 .PHONY: test-instance-stop
-test-instance-stop:
+test-instance-stop: ## Stop the forgejo test instance.
 	@echo "Stopping Forgejo test instance..."
 ifeq ($(DOCKER_AVAILABLE),yes)
 	@docker stop forgejo-test > /dev/null 2>&1 || true
@@ -205,9 +207,11 @@ endif
 	@echo "Test instance stopped"
 
 .PHONY: bench
-bench:
+bench: ## Run benchmarks.
 	cd forgejo && $(GO) test -run=XXXXXX -benchtime=10s -bench=. || exit 1
 
+##@ Building
+
 .PHONY: build
-build:
+build: ## Build the SDK.
 	cd forgejo && $(GO) build

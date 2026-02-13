@@ -41,8 +41,8 @@ func TestRepoBranches(t *testing.T) {
 
 	b, _, err := c.GetRepoBranch(repo.Owner.UserName, repo.Name, "update")
 	require.NoError(t, err)
-	assert.EqualValues(t, branches["update"].Commit.ID, b.Commit.ID)
-	assert.EqualValues(t, branches["update"].Commit.Added, b.Commit.Added)
+	assert.Equal(t, branches["update"].Commit.ID, b.Commit.ID)
+	assert.Equal(t, branches["update"].Commit.Added, b.Commit.Added)
 
 	s, _, err := c.DeleteRepoBranch(repo.Owner.UserName, repo.Name, "main")
 	require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestRepoBranches(t *testing.T) {
 
 	b, _, err = c.GetRepoBranch(repo.Owner.UserName, repo.Name, bNew.Name)
 	require.NoError(t, err)
-	assert.EqualValues(t, bNew, b)
+	assert.Equal(t, bNew, b)
 }
 
 func TestRepoBranchProtection(t *testing.T) {
@@ -94,11 +94,11 @@ func TestRepoBranchProtection(t *testing.T) {
 		BlockOnOutdatedBranch:   true,
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, "main", bp.BranchName)
+	assert.Equal(t, "main", bp.BranchName)
 	assert.False(t, bp.EnableStatusCheck)
 	assert.True(t, bp.EnablePush)
 	assert.True(t, bp.EnablePushWhitelist)
-	assert.EqualValues(t, []string{"test01"}, bp.PushWhitelistUsernames)
+	assert.Equal(t, []string{"test01"}, bp.PushWhitelistUsernames)
 
 	bp, _, err = c.CreateBranchProtection(repo.Owner.UserName, repo.Name, CreateBranchProtectionOption{
 		BranchName:              "update",
@@ -116,7 +116,7 @@ func TestRepoBranchProtection(t *testing.T) {
 	// GetBranchProtection
 	bp, _, err = c.GetBranchProtection(repo.Owner.UserName, repo.Name, bpl[0].BranchName)
 	require.NoError(t, err)
-	assert.EqualValues(t, bpl[0], bp)
+	assert.Equal(t, bpl[0], bp)
 
 	// EditBranchProtection
 	bp, _, err = c.EditBranchProtection(repo.Owner.UserName, repo.Name, bpl[0].BranchName, EditBranchProtectionOption{
@@ -129,9 +129,9 @@ func TestRepoBranchProtection(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.NotEqual(t, bpl[0], bp)
-	assert.EqualValues(t, bpl[0].BranchName, bp.BranchName)
-	assert.EqualValues(t, bpl[0].EnableMergeWhitelist, bp.EnableMergeWhitelist)
-	assert.EqualValues(t, bpl[0].Created, bp.Created)
+	assert.Equal(t, bpl[0].BranchName, bp.BranchName)
+	assert.Equal(t, bpl[0].EnableMergeWhitelist, bp.EnableMergeWhitelist)
+	assert.Equal(t, bpl[0].Created, bp.Created)
 
 	// DeleteBranchProtection
 	_, err = c.DeleteBranchProtection(repo.Owner.UserName, repo.Name, bpl[1].BranchName)

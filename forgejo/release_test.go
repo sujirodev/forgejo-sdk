@@ -38,24 +38,24 @@ func TestRelease(t *testing.T) {
 		IsPrerelease: true,
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, "awesome", r.TagName)
+	assert.Equal(t, "awesome", r.TagName)
 	assert.True(t, r.IsPrerelease)
 	assert.True(t, r.IsDraft)
-	assert.EqualValues(t, "Release 1", r.Title)
-	assert.EqualValues(t, fmt.Sprintf("%s/api/v1/repos/%s/releases/%d", c.url, repo.FullName, r.ID), r.URL)
-	assert.EqualValues(t, "main", r.Target)
-	assert.EqualValues(t, "yes it's awesome", r.Note)
-	assert.EqualValues(t, c.username, r.Publisher.UserName)
+	assert.Equal(t, "Release 1", r.Title)
+	assert.Equal(t, fmt.Sprintf("%s/api/v1/repos/%s/releases/%d", c.url, repo.FullName, r.ID), r.URL)
+	assert.Equal(t, "main", r.Target)
+	assert.Equal(t, "yes it's awesome", r.Note)
+	assert.Equal(t, c.username, r.Publisher.UserName)
 	rl, _, _ = c.ListReleases(repo.Owner.UserName, repo.Name, ListReleasesOptions{})
 	assert.Len(t, rl, 1)
 
 	// GetRelease
 	r2, _, err := c.GetRelease(repo.Owner.UserName, repo.Name, r.ID)
 	require.NoError(t, err)
-	assert.EqualValues(t, r, r2)
+	assert.Equal(t, r, r2)
 	r2, _, err = c.GetReleaseByTag(repo.Owner.UserName, repo.Name, r.TagName)
 	require.NoError(t, err)
-	assert.EqualValues(t, r, r2)
+	assert.Equal(t, r, r2)
 	// ListRelease without pre-releases
 	tr := true
 	rl, _, err = c.ListReleases(repo.Owner.UserName, repo.Name, ListReleasesOptions{
@@ -66,7 +66,7 @@ func TestRelease(t *testing.T) {
 	// test fallback
 	r2, _, err = c.fallbackGetReleaseByTag(repo.Owner.UserName, repo.Name, r.TagName)
 	require.NoError(t, err)
-	assert.EqualValues(t, r, r2)
+	assert.Equal(t, r, r2)
 
 	// EditRelease
 	r2, _, err = c.EditRelease(repo.Owner.UserName, repo.Name, r.ID, EditReleaseOption{
@@ -76,15 +76,15 @@ func TestRelease(t *testing.T) {
 		IsPrerelease: OptionalBool(false),
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, r.Target, r2.Target)
+	assert.Equal(t, r.Target, r2.Target)
 	assert.False(t, r2.IsDraft)
 	assert.False(t, r2.IsPrerelease)
-	assert.EqualValues(t, r.Note, r2.Note)
+	assert.Equal(t, r.Note, r2.Note)
 
 	// GetLatestRelease
 	r3, _, err := c.GetLatestRelease(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
-	assert.EqualValues(t, r2, r3)
+	assert.Equal(t, r2, r3)
 
 	// DeleteRelease
 	_, err = c.DeleteRelease(repo.Owner.UserName, repo.Name, r.ID)
@@ -112,16 +112,16 @@ func TestRelease(t *testing.T) {
 	_, resp, err := c.GetRelease(repo.Owner.UserName, repo.Name, 1234)
 	require.Error(t, err)
 	if assert.NotNil(t, resp) {
-		assert.EqualValues(t, 404, resp.StatusCode)
+		assert.Equal(t, 404, resp.StatusCode)
 	}
 	_, resp, err = c.GetReleaseByTag(repo.Owner.UserName, repo.Name, "not_here")
 	require.Error(t, err)
 	if assert.NotNil(t, resp) {
-		assert.EqualValues(t, 404, resp.StatusCode)
+		assert.Equal(t, 404, resp.StatusCode)
 	}
 	_, resp, err = c.fallbackGetReleaseByTag(repo.Owner.UserName, repo.Name, "not_here")
 	require.Error(t, err)
 	if assert.NotNil(t, resp) {
-		assert.EqualValues(t, 404, resp.StatusCode)
+		assert.Equal(t, 404, resp.StatusCode)
 	}
 }

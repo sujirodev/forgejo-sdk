@@ -19,7 +19,7 @@ func TestRepoTrees(t *testing.T) {
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()
 	require.NoError(t, err)
-	assert.NotEqual(t, "", rawVersion)
+	assert.NotEmpty(t, rawVersion)
 
 	repoName := "gettrees"
 	repo := prepareTreeTest(t, c, repoName)

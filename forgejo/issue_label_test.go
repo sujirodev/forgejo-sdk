@@ -30,17 +30,17 @@ func TestLabels(t *testing.T) {
 	}
 	err = createOpts.Validate()
 	require.Error(t, err)
-	assert.EqualValues(t, "invalid color format", err.Error())
+	assert.Equal(t, "invalid color format", err.Error())
 	createOpts.Color = "12345f"
 	err = createOpts.Validate()
 	require.Error(t, err)
-	assert.EqualValues(t, "empty name not allowed", err.Error())
+	assert.Equal(t, "empty name not allowed", err.Error())
 	createOpts.Name = "label one"
 
 	labelOne, _, err := c.CreateLabel(repo.Owner.UserName, repo.Name, createOpts)
 	require.NoError(t, err)
-	assert.EqualValues(t, createOpts.Name, labelOne.Name)
-	assert.EqualValues(t, createOpts.Color, labelOne.Color)
+	assert.Equal(t, createOpts.Name, labelOne.Name)
+	assert.Equal(t, createOpts.Color, labelOne.Color)
 
 	labelTwo, _, err := c.CreateLabel(repo.Owner.UserName, repo.Name, CreateLabelOption{
 		Name:        "blue",
@@ -70,14 +70,14 @@ func TestLabels(t *testing.T) {
 
 	label, _, err := c.GetRepoLabel(repo.Owner.UserName, repo.Name, labelTwo.ID)
 	require.NoError(t, err)
-	assert.EqualValues(t, labelTwo, label)
+	assert.Equal(t, labelTwo, label)
 
 	label, _, err = c.EditLabel(repo.Owner.UserName, repo.Name, labelTwo.ID, EditLabelOption{
 		Color:       OptionalString("#0e0175"),
 		Description: OptionalString("blueish"),
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, &Label{
+	assert.Equal(t, &Label{
 		ID:          labelTwo.ID,
 		Name:        labelTwo.Name,
 		Color:       "0e0175",
@@ -92,7 +92,7 @@ func TestLabels(t *testing.T) {
 	issueLabels, _, err := c.GetIssueLabels(repo.Owner.UserName, repo.Name, issueIndex, ListLabelsOptions{})
 	require.NoError(t, err)
 	assert.Len(t, issueLabels, 1)
-	assert.EqualValues(t, label, issueLabels[0])
+	assert.Equal(t, label, issueLabels[0])
 
 	_, _, err = c.AddIssueLabels(repo.Owner.UserName, repo.Name, issueIndex, IssueLabelsOption{Labels: []int64{labels[0].ID}})
 	require.NoError(t, err)
@@ -100,7 +100,7 @@ func TestLabels(t *testing.T) {
 	issueLabels, _, err = c.AddIssueLabels(repo.Owner.UserName, repo.Name, issueIndex, IssueLabelsOption{Labels: []int64{labels[1].ID, labels[2].ID}})
 	require.NoError(t, err)
 	assert.Len(t, issueLabels, 3)
-	assert.EqualValues(t, labels, issueLabels)
+	assert.Equal(t, labels, issueLabels)
 
 	labels, _, _ = c.ListRepoLabels(repo.Owner.UserName, repo.Name, ListLabelsOptions{})
 	assert.Len(t, labels, 11)

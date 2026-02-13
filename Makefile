@@ -15,7 +15,7 @@ FORGEJO_INTERNAL_TOKEN := eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4M
 PACKAGE := codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2
 
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
-GOLANGCI_LINT_PACKAGE ?= github.com/golangci/golangci-lint/cmd/golangci-lint@v1.63.4
+GOLANGCI_LINT_VERSION ?= v2.9.0
 
 FORGEJO_VERSION := 9.0.3
 FORGEJO_DL := https://codeberg.org/forgejo/forgejo/releases/download/v$(FORGEJO_VERSION)/forgejo-$(FORGEJO_VERSION)-
@@ -90,7 +90,8 @@ ci-lint:
 		echo; echo "Not gofumpt-ed"; \
 		exit 1; \
 	fi; echo " done"; echo -n "golangci-lint ...";\
-	$(GO) run $(GOLANGCI_LINT_PACKAGE) run --timeout 5m; \
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $$($(GO) env GOPATH)/bin $(GOLANGCI_LINT_VERSION) \
+	$$($(GO) env GOPATH)/bin/golangci-lint run --timeout 5m; \
 	if [ $$? -eq 1 ]; then \
 		echo; echo "Doesn't pass golangci-lint"; \
 		exit 1; \

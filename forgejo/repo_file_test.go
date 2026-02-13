@@ -28,7 +28,7 @@ func TestFileCreateUpdateGet(t *testing.T) {
 
 	raw, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "main", "README.md")
 	require.NoError(t, err)
-	assert.EqualValues(t, "IyBDaGFuZ2VGaWxlcwoKQSB0ZXN0IFJlcG86IENoYW5nZUZpbGVz", base64.StdEncoding.EncodeToString(raw))
+	assert.Equal(t, "IyBDaGFuZ2VGaWxlcwoKQSB0ZXN0IFJlcG86IENoYW5nZUZpbGVz", base64.StdEncoding.EncodeToString(raw))
 
 	testFileName := "A+#&ä"
 	newFile, _, err := c.CreateFile(repo.Owner.UserName, repo.Name, testFileName, CreateFileOptions{
@@ -39,7 +39,7 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	})
 	require.NoError(t, err)
 	raw, _, _ = c.GetFile(repo.Owner.UserName, repo.Name, "main", testFileName)
-	assert.EqualValues(t, "ZmlsZUEK", base64.StdEncoding.EncodeToString(raw))
+	assert.Equal(t, "ZmlsZUEK", base64.StdEncoding.EncodeToString(raw))
 
 	updatedFile, _, err := c.UpdateFile(repo.Owner.UserName, repo.Name, testFileName, UpdateFileOptions{
 		FileOptions: FileOptions{
@@ -53,8 +53,8 @@ func TestFileCreateUpdateGet(t *testing.T) {
 
 	file, _, err := c.GetContents(repo.Owner.UserName, repo.Name, "main", testFileName)
 	require.NoError(t, err)
-	assert.EqualValues(t, updatedFile.Content.SHA, file.SHA)
-	assert.EqualValues(t, &updatedFile.Content.Content, &file.Content)
+	assert.Equal(t, updatedFile.Content.SHA, file.SHA)
+	assert.Equal(t, &updatedFile.Content.Content, &file.Content)
 
 	_, err = c.DeleteFile(repo.Owner.UserName, repo.Name, testFileName, DeleteFileOptions{
 		FileOptions: FileOptions{
@@ -65,8 +65,8 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	require.NoError(t, err)
 	_, resp, err := c.GetFile(repo.Owner.UserName, repo.Name, "main", testFileName)
 	require.Error(t, err)
-	assert.EqualValues(t, "The target couldn't be found.", err.Error())
-	assert.EqualValues(t, 404, resp.StatusCode)
+	assert.Equal(t, "The target couldn't be found.", err.Error())
+	assert.Equal(t, 404, resp.StatusCode)
 
 	licence, _, err := c.GetContents(repo.Owner.UserName, repo.Name, "", "LICENSE")
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, licence)
 	assert.False(t, bytes.Equal(licenceRaw, licenceRawNew))
-	assert.EqualValues(t, testContent, base64.StdEncoding.EncodeToString(licenceRawNew))
+	assert.Equal(t, testContent, base64.StdEncoding.EncodeToString(licenceRawNew))
 
 	// ListContents in root dir of default branch
 	dir, resp, err := c.ListContents(repo.Owner.UserName, repo.Name, "", "")
@@ -99,25 +99,25 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	// ListContents in not existing dir of default branch
 	_, resp, err = c.ListContents(repo.Owner.UserName, repo.Name, "", "/hehe/")
 	require.Error(t, err)
-	assert.EqualValues(t, 404, resp.StatusCode)
+	assert.Equal(t, 404, resp.StatusCode)
 	// ListContents in root dir of not existing branch
 	_, resp, err = c.ListContents(repo.Owner.UserName, repo.Name, "no-ref-at-all", "")
 	require.Error(t, err)
-	assert.EqualValues(t, 404, resp.StatusCode)
+	assert.Equal(t, 404, resp.StatusCode)
 
 	// ListContents try to get file as dir
 	dir, resp, err = c.ListContents(repo.Owner.UserName, repo.Name, "", "LICENSE")
 	if assert.Error(t, err) {
-		assert.EqualValues(t, "expect directory, got file", err.Error())
+		assert.Equal(t, "expect directory, got file", err.Error())
 	}
 	assert.Nil(t, dir)
-	assert.EqualValues(t, 200, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 
 	// GetContents try to get dir as file
 	file, resp, err = c.GetContents(repo.Owner.UserName, repo.Name, "", "")
 	if assert.Error(t, err) {
-		assert.EqualValues(t, "expect file, got directory", err.Error())
+		assert.Equal(t, "expect file, got directory", err.Error())
 	}
 	assert.Nil(t, file)
-	assert.EqualValues(t, 200, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 }

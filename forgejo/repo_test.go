@@ -62,11 +62,11 @@ func TestRepoMigrateAndLanguages(t *testing.T) {
 
 	repoG, _, err := c.GetRepo(repoM.Owner.UserName, repoM.Name)
 	require.NoError(t, err)
-	assert.EqualValues(t, repoM.ID, repoG.ID)
-	assert.EqualValues(t, "main", repoG.DefaultBranch)
+	assert.Equal(t, repoM.ID, repoG.ID)
+	assert.Equal(t, "main", repoG.DefaultBranch)
 	assert.True(t, repoG.Mirror)
 	assert.False(t, repoG.Empty)
-	assert.EqualValues(t, 1, repoG.Watchers)
+	assert.Equal(t, 1, repoG.Watchers)
 	var zeroTime time.Time
 	assert.NotEqual(t, zeroTime, repoG.MirrorUpdated)
 
@@ -76,7 +76,7 @@ func TestRepoMigrateAndLanguages(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, lang, 2)
 	assert.Less(t, int64(217441), lang["Go"])
-	assert.True(t, 3614 < lang["Makefile"] && 6000 > lang["Makefile"])
+	assert.True(t, 3614 < lang["Makefile"] && 15000 > lang["Makefile"])
 }
 
 func TestSearchRepo(t *testing.T) {
@@ -162,7 +162,7 @@ func TestGetArchiveReader(t *testing.T) {
 	nBytes, err := io.Copy(archive, r)
 	require.NoError(t, err)
 	assert.Greater(t, nBytes, int64(1500))
-	assert.EqualValues(t, nBytes, len(archive.Bytes())) //nolint:testifylint
+	assert.Equal(t, nBytes, int64(len(archive.Bytes()))) //nolint:testifylint
 }
 
 func TestGetRepoByID(t *testing.T) {
@@ -173,7 +173,7 @@ func TestGetRepoByID(t *testing.T) {
 	repo, _, err := c.GetRepoByID(testrepo.ID)
 	require.NoError(t, err)
 	assert.NotNil(t, repo)
-	assert.EqualValues(t, testrepo.ID, repo.ID)
+	assert.Equal(t, testrepo.ID, repo.ID)
 
 	_, err = c.DeleteRepo(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)

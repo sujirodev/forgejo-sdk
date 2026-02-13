@@ -37,13 +37,13 @@ func TestRepoCollaborator(t *testing.T) {
 	mode := AccessModeAdmin
 	resp, err := c.AddCollaborator(repo.Owner.UserName, repo.Name, "ping", AddCollaboratorOption{Permission: &mode})
 	require.NoError(t, err)
-	assert.EqualValues(t, 204, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 
 	permissonPing, resp, err := c.CollaboratorPermission(repo.Owner.UserName, repo.Name, "ping")
 	require.NoError(t, err)
-	assert.EqualValues(t, 200, resp.StatusCode)
-	assert.EqualValues(t, AccessModeAdmin, permissonPing.Permission)
-	assert.EqualValues(t, "ping", permissonPing.User.UserName)
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, AccessModeAdmin, permissonPing.Permission)
+	assert.Equal(t, "ping", permissonPing.User.UserName)
 
 	mode = AccessModeRead
 	_, err = c.AddCollaborator(repo.Owner.UserName, repo.Name, "pong", AddCollaboratorOption{Permission: &mode})
@@ -51,28 +51,28 @@ func TestRepoCollaborator(t *testing.T) {
 
 	permissonPong, resp, err := c.CollaboratorPermission(repo.Owner.UserName, repo.Name, "pong")
 	require.NoError(t, err)
-	assert.EqualValues(t, 200, resp.StatusCode)
-	assert.EqualValues(t, AccessModeRead, permissonPong.Permission)
-	assert.EqualValues(t, "pong", permissonPong.User.UserName)
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, AccessModeRead, permissonPong.Permission)
+	assert.Equal(t, "pong", permissonPong.User.UserName)
 
 	collaborators, _, err = c.ListCollaborators(repo.Owner.UserName, repo.Name, ListCollaboratorsOptions{})
 	require.NoError(t, err)
 	assert.Len(t, collaborators, 2)
-	assert.EqualValues(t, []string{"ping", "pong"}, userToStringSlice(collaborators))
+	assert.Equal(t, []string{"ping", "pong"}, userToStringSlice(collaborators))
 
 	reviewers, _, err := c.GetReviewers(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
 	assert.Len(t, reviewers, 3)
-	assert.EqualValues(t, []string{"ping", "pong", "test01"}, userToStringSlice(reviewers))
+	assert.Equal(t, []string{"ping", "pong", "test01"}, userToStringSlice(reviewers))
 
 	assignees, _, err := c.GetAssignees(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
 	assert.Len(t, assignees, 2)
-	assert.EqualValues(t, []string{"ping", "test01"}, userToStringSlice(assignees))
+	assert.Equal(t, []string{"ping", "test01"}, userToStringSlice(assignees))
 
 	resp, err = c.DeleteCollaborator(repo.Owner.UserName, repo.Name, "ping")
 	require.NoError(t, err)
-	assert.EqualValues(t, 204, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 
 	collaborators, _, err = c.ListCollaborators(repo.Owner.UserName, repo.Name, ListCollaboratorsOptions{})
 	require.NoError(t, err)
@@ -80,6 +80,6 @@ func TestRepoCollaborator(t *testing.T) {
 
 	permissonNotExists, resp, err := c.CollaboratorPermission(repo.Owner.UserName, repo.Name, "user_that_not_exists")
 	require.Error(t, err)
-	assert.EqualValues(t, 404, resp.StatusCode)
+	assert.Equal(t, 404, resp.StatusCode)
 	assert.Nil(t, permissonNotExists)
 }

@@ -53,7 +53,7 @@ func TestRepoStaring(t *testing.T) {
 	users, _, err := c.ListRepoStargazers(repo.Owner.UserName, repo.Name, ListStargazersOptions{})
 	require.NoError(t, err)
 	assert.Len(t, users, 3)
-	assert.EqualValues(t, user1.UserName, users[0].UserName)
+	assert.Equal(t, user1.UserName, users[0].UserName)
 
 	_, err = c.UnStarRepo(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
@@ -73,5 +73,5 @@ func TestRepoStaring(t *testing.T) {
 	reposNew, _, err := c.GetStarredRepos(user1.UserName)
 	require.NoError(t, err)
 	assert.Len(t, repos, 1)
-	assert.EqualValues(t, repos, reposNew)
+	assert.Equal(t, repos, reposNew)
 }

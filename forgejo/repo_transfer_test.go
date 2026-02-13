@@ -28,12 +28,12 @@ func TestRepoTransfer(t *testing.T) {
 	newRepo, _, err := c.TransferRepo(c.username, repo.Name, TransferRepoOption{NewOwner: org.UserName})
 	require.NoError(t, err) // admin transfer repository will execute immediately but not set as pendding.
 	assert.NotNil(t, newRepo)
-	assert.EqualValues(t, "ToMove", newRepo.Name)
+	assert.Equal(t, "ToMove", newRepo.Name)
 
 	repo, err = createTestRepo(t, "ToMove", c)
 	require.NoError(t, err)
 	_, resp, err := c.TransferRepo(c.username, repo.Name, TransferRepoOption{NewOwner: org.UserName})
-	assert.EqualValues(t, 422, resp.StatusCode)
+	assert.Equal(t, 422, resp.StatusCode)
 	require.Error(t, err)
 
 	_, err = c.DeleteRepo(repo.Owner.UserName, repo.Name)

@@ -52,11 +52,11 @@ func TestOrgMembership(t *testing.T) {
 	u, _, err := c.ListOrgMembership(newOrg.UserName, ListOrgMembershipOption{})
 	require.NoError(t, err)
 	assert.Len(t, u, 1)
-	assert.EqualValues(t, user.UserName, u[0].UserName)
+	assert.Equal(t, user.UserName, u[0].UserName)
 	u, _, err = c.ListPublicOrgMembership(newOrg.UserName, ListOrgMembershipOption{})
 	require.NoError(t, err)
 	assert.Len(t, u, 1)
-	assert.EqualValues(t, user.UserName, u[0].UserName)
+	assert.Equal(t, user.UserName, u[0].UserName)
 
 	_, err = c.DeleteOrgMembership(newOrg.UserName, user.UserName)
 	require.Error(t, err)

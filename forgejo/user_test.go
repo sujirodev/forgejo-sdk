@@ -33,12 +33,12 @@ func TestMyUser(t *testing.T) {
 	user, _, err := c.GetMyUserInfo()
 	require.NoError(t, err)
 
-	assert.EqualValues(t, 1, user.ID)
-	assert.EqualValues(t, "test01", user.UserName)
-	assert.EqualValues(t, "test01@forgejo.org", user.Email)
-	assert.EqualValues(t, "", user.FullName)
-	assert.EqualValues(t, expectedAvatarURL, user.AvatarURL)
-	assert.EqualValues(t, expectedHTMLURL, user.HTMLURL)
+	assert.Equal(t, int64(1), user.ID)
+	assert.Equal(t, "test01", user.UserName)
+	assert.Equal(t, "test01@forgejo.org", user.Email)
+	assert.Empty(t, user.FullName)
+	assert.Equal(t, expectedAvatarURL, user.AvatarURL)
+	assert.Equal(t, expectedHTMLURL, user.HTMLURL)
 	assert.True(t, user.IsAdmin)
 }
 
@@ -52,11 +52,11 @@ func TestUserApp(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, result, 1)
 	// TODO: the gitea-admin name for the token is hardcoded in forgejo itself, until it's changed this will need to do
-	assert.EqualValues(t, "gitea-admin", result[0].Name)
+	assert.Equal(t, "gitea-admin", result[0].Name)
 
 	t1, _, err := c.CreateAccessToken(user.UserName, CreateAccessTokenOption{Name: "TestCreateAccessToken", Scopes: []AccessTokenScope{AccessTokenScopeRepositoryRead}})
 	require.NoError(t, err)
-	assert.EqualValues(t, "TestCreateAccessToken", t1.Name)
+	assert.Equal(t, "TestCreateAccessToken", t1.Name)
 	result, _, _ = c.ListAccessTokens(user.UserName, ListAccessTokensOptions{})
 	assert.Len(t, result, 2)
 
@@ -145,7 +145,7 @@ func TestUserFollow(t *testing.T) {
 	f, _, err = c.ListFollowing(uA, ListFollowingOptions{})
 	require.NoError(t, err)
 	assert.Len(t, f, 1)
-	assert.EqualValues(t, me.ID, f[0].ID)
+	assert.Equal(t, me.ID, f[0].ID)
 
 	isFollow, _ := c.IsFollowing(uA)
 	assert.False(t, isFollow)
@@ -164,7 +164,7 @@ func TestUserEmail(t *testing.T) {
 	el, _, err := c.ListEmails(ListEmailsOptions{})
 	require.NoError(t, err)
 	assert.Len(t, el, 1)
-	assert.EqualValues(t, "TestUserEmail@forgejo.org", el[0].Email)
+	assert.Equal(t, "TestUserEmail@forgejo.org", el[0].Email)
 	assert.True(t, el[0].Primary)
 
 	// AddEmail

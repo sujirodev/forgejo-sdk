@@ -36,9 +36,9 @@ func TestListRepoCommits(t *testing.T) {
 	assert.NotNil(t, l[0].RepoCommit)
 	assert.NotNil(t, l[0].RepoCommit.Verification)
 
-	assert.EqualValues(t, "Initial commit\n", l[0].RepoCommit.Message)
-	assert.EqualValues(t, "gpg.error.not_signed_commit", l[0].RepoCommit.Verification.Reason)
-	assert.EqualValues(t, 100, l[0].Stats.Additions)
+	assert.Equal(t, "Initial commit\n", l[0].RepoCommit.Message)
+	assert.Equal(t, "gpg.error.not_signed_commit", l[0].RepoCommit.Verification.Reason)
+	assert.Equal(t, 100, l[0].Stats.Additions)
 }
 
 func TestGetCommitDiffOrPatch(t *testing.T) {
@@ -64,7 +64,7 @@ func TestGetCommitDiffOrPatch(t *testing.T) {
 	// Test the diff output.
 	diffOutput, _, err := c.GetCommitDiff(repo.Owner.UserName, repo.Name, fileResponse.Commit.SHA)
 	require.NoError(t, err)
-	assert.EqualValues(t, "diff --git a/NOT_A_LICENSE b/NOT_A_LICENSE\nnew file mode 100644\nindex 0000000..f27a20a\n--- /dev/null\n+++ b/NOT_A_LICENSE\n@@ -0,0 +1 @@\n+But is it?\n", string(diffOutput))
+	assert.Equal(t, "diff --git a/NOT_A_LICENSE b/NOT_A_LICENSE\nnew file mode 100644\nindex 0000000..f27a20a\n--- /dev/null\n+++ b/NOT_A_LICENSE\n@@ -0,0 +1 @@\n+But is it?\n", string(diffOutput))
 
 	// Test the patch output.
 	patchOutput, _, err := c.GetCommitPatch(repo.Owner.UserName, repo.Name, fileResponse.Commit.SHA)
@@ -123,5 +123,5 @@ func TestGetCommitPullRequest(t *testing.T) {
 
 	// Test the right PR is returned
 	assert.NotNil(t, commitPR)
-	assert.EqualValues(t, pr.ID, commitPR.ID)
+	assert.Equal(t, pr.ID, commitPR.ID)
 }

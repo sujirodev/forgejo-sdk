@@ -73,18 +73,18 @@ func TestPull(t *testing.T) {
 	commits, _, err := c.ListPullRequestCommits(c.username, repoName, pullUpdateFile.Index, ListPullRequestCommitsOptions{})
 	require.NoError(t, err)
 	if assert.Len(t, commits, 1) && assert.Len(t, commits[0].Files, 1) {
-		assert.EqualValues(t, "LICENSE", commits[0].Files[0].Filename)
+		assert.Equal(t, "LICENSE", commits[0].Files[0].Filename)
 	}
 
 	files, _, err := c.ListPullRequestFiles(c.username, repoName, pullUpdateFile.Index, ListPullRequestFilesOptions{})
 	require.NoError(t, err)
 	assert.Len(t, files, 1)
 	file := files[0]
-	assert.EqualValues(t, "LICENSE", file.Filename)
-	assert.EqualValues(t, "changed", file.Status)
-	assert.EqualValues(t, 3, file.Additions)
-	assert.EqualValues(t, 9, file.Deletions)
-	assert.EqualValues(t, 12, file.Changes)
+	assert.Equal(t, "LICENSE", file.Filename)
+	assert.Equal(t, "changed", file.Status)
+	assert.Equal(t, 3, file.Additions)
+	assert.Equal(t, 9, file.Deletions)
+	assert.Equal(t, 12, file.Changes)
 
 	// test Update pull
 	pr, _, err := c.GetPullRequest(user.UserName, repoName, pullUpdateFile.Index)
@@ -114,8 +114,8 @@ func TestPull(t *testing.T) {
 	assert.True(t, merged)
 	pr, _, err = c.GetPullRequest(user.UserName, repoName, pullUpdateFile.Index)
 	require.NoError(t, err)
-	assert.EqualValues(t, pullUpdateFile.Head.Name, pr.Head.Name)
-	assert.EqualValues(t, pullUpdateFile.Base.Name, pr.Base.Name)
+	assert.Equal(t, pullUpdateFile.Head.Name, pr.Head.Name)
+	assert.Equal(t, pullUpdateFile.Base.Name, pr.Base.Name)
 	assert.NotEqual(t, pullUpdateFile.Base.Sha, pr.Base.Sha)
 	assert.Len(t, *pr.MergedCommitID, 40)
 	assert.True(t, pr.HasMerged)
@@ -146,7 +146,7 @@ func TestPull(t *testing.T) {
 		State: &state,
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, state, pr.State)
+	assert.Equal(t, state, pr.State)
 
 	pulls, _, err = c.ListRepoPullRequests(user.UserName, repoName, ListPullRequestsOptions{
 		State: StateClosed,

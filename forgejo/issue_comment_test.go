@@ -29,9 +29,9 @@ func TestIssueComment(t *testing.T) {
 	require.NoError(t, err)
 	issue1, _, err := c.CreateIssue(user.UserName, repo.Name, CreateIssueOption{Title: "issue1", Body: "body", Closed: false})
 	require.NoError(t, err)
-	assert.EqualValues(t, 1, issue1.Index)
+	assert.Equal(t, int64(1), issue1.Index)
 	issue2, _, err := c.CreateIssue(user.UserName, repo.Name, CreateIssueOption{Title: "issue1", Body: "body", Closed: false})
-	assert.EqualValues(t, 2, issue2.Index)
+	assert.Equal(t, int64(2), issue2.Index)
 	require.NoError(t, err)
 	tUser2 := createTestUser(t, "Commenter2", c)
 	tUser3 := createTestUser(t, "Commenter3", c)
@@ -42,8 +42,8 @@ func TestIssueComment(t *testing.T) {
 		c.sudo = ""
 		require.NoError(t, e)
 		assert.NotEmpty(t, comment)
-		assert.EqualValues(t, text, comment.Body)
-		assert.EqualValues(t, u.ID, comment.Poster.ID)
+		assert.Equal(t, text, comment.Body)
+		assert.Equal(t, u.ID, comment.Poster.ID)
 	}
 
 	// CreateIssue
@@ -71,16 +71,16 @@ func TestIssueComment(t *testing.T) {
 	// GetIssueComment
 	comment, _, err := c.GetIssueComment(user.UserName, repo.Name, comments[1].ID)
 	require.NoError(t, err)
-	assert.EqualValues(t, comment.Poster.ID, comments[1].Poster.ID)
-	assert.EqualValues(t, comment.Body, comments[1].Body)
-	assert.EqualValues(t, comment.Updated.Unix(), comments[1].Updated.Unix())
+	assert.Equal(t, comment.Poster.ID, comments[1].Poster.ID)
+	assert.Equal(t, comment.Body, comments[1].Body)
+	assert.Equal(t, comment.Updated.Unix(), comments[1].Updated.Unix())
 
 	// EditIssueComment
 	comment, _, err = c.EditIssueComment(user.UserName, repo.Name, comments[1].ID, EditIssueCommentOption{
 		Body: "changed my mind",
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, "changed my mind", comment.Body)
+	assert.Equal(t, "changed my mind", comment.Body)
 
 	// DeleteIssueComment
 	_, err = c.DeleteIssueComment(user.UserName, repo.Name, comments[1].ID)

@@ -80,10 +80,10 @@ func editIssues(t *testing.T, c *Client) {
 		Ref:   OptionalString("main"),
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, issue.ID, issueNew.ID)
-	assert.EqualValues(t, "123 test and go", issueNew.Body)
-	assert.EqualValues(t, "Edited", issueNew.Title)
-	assert.EqualValues(t, "main", issueNew.Ref)
+	assert.Equal(t, issue.ID, issueNew.ID)
+	assert.Equal(t, "123 test and go", issueNew.Body)
+	assert.Equal(t, "Edited", issueNew.Title)
+	assert.Equal(t, "main", issueNew.Ref)
 }
 
 func listIssues(t *testing.T, c *Client) {
@@ -113,7 +113,7 @@ func listIssues(t *testing.T, c *Client) {
 	assert.Len(t, issues, 3)
 	for i := range issues {
 		if assert.NotNil(t, issues[i].Milestone) {
-			assert.EqualValues(t, "mile1", issues[i].Milestone.Title)
+			assert.Equal(t, "mile1", issues[i].Milestone.Title)
 		}
 	}
 
@@ -140,16 +140,16 @@ func createTestIssue(t *testing.T, c *Client, repoName, title, body string, assi
 	}
 	require.NoError(t, e)
 	assert.NotEmpty(t, issue)
-	assert.EqualValues(t, title, issue.Title)
-	assert.EqualValues(t, body, issue.Body)
-	assert.EqualValues(t, len(assignees), len(issue.Assignees))
+	assert.Equal(t, title, issue.Title)
+	assert.Equal(t, body, issue.Body)
+	assert.Len(t, assignees, len(issue.Assignees))
 	for i, a := range issue.Assignees {
-		assert.EqualValues(t, assignees[i], a.UserName)
+		assert.Equal(t, assignees[i], a.UserName)
 	}
 	if milestone > 0 {
-		assert.EqualValues(t, milestone, issue.Milestone.ID)
+		assert.Equal(t, milestone, issue.Milestone.ID)
 	}
-	assert.EqualValues(t, len(labels), len(issue.Labels))
+	assert.Len(t, labels, len(issue.Labels))
 	if closed {
 		assert.False(t, issue.Closed.IsZero())
 	} else {

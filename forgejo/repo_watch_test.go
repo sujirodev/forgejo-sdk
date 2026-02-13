@@ -21,7 +21,7 @@ func TestRepoWatch(t *testing.T) {
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()
 	require.NoError(t, err)
-	assert.NotEqual(t, "", rawVersion)
+	assert.NotEmpty(t, rawVersion)
 
 	repo1, _ := createTestRepo(t, "TestRepoWatch_1", c)
 	repo2, _ := createTestRepo(t, "TestRepoWatch_2", c)

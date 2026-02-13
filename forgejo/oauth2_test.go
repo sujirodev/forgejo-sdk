@@ -48,9 +48,9 @@ func TestOauth2(t *testing.T) {
 		newApp, _, err := c.CreateOauth2(createOptions)
 		require.NoError(t, err, testCase.name)
 		assert.NotNil(t, newApp, testCase.name)
-		assert.EqualValues(t, "test", newApp.Name, testCase.name)
+		assert.Equal(t, "test", newApp.Name, testCase.name)
 		if testCase.confidentialClient != nil {
-			assert.EqualValues(t, *testCase.confidentialClient, newApp.ConfidentialClient, testCase.name)
+			assert.Equal(t, *testCase.confidentialClient, newApp.ConfidentialClient, testCase.name)
 		} else {
 			assert.False(t, newApp.ConfidentialClient, testCase.name)
 		}
@@ -58,13 +58,13 @@ func TestOauth2(t *testing.T) {
 		a, _, err := c.ListOauth2(ListOauth2Option{})
 		require.NoError(t, err, testCase.name)
 		assert.Len(t, a, 1, testCase.name)
-		assert.EqualValues(t, newApp.Name, a[0].Name, testCase.name)
-		assert.EqualValues(t, newApp.ConfidentialClient, a[0].ConfidentialClient, testCase.name)
+		assert.Equal(t, newApp.Name, a[0].Name, testCase.name)
+		assert.Equal(t, newApp.ConfidentialClient, a[0].ConfidentialClient, testCase.name)
 
 		b, _, err := c.GetOauth2(newApp.ID)
 		require.NoError(t, err, testCase.name)
-		assert.EqualValues(t, newApp.Name, b.Name, testCase.name)
-		assert.EqualValues(t, newApp.ConfidentialClient, b.ConfidentialClient, testCase.name)
+		assert.Equal(t, newApp.Name, b.Name, testCase.name)
+		assert.Equal(t, newApp.ConfidentialClient, b.ConfidentialClient, testCase.name)
 
 		b, _, err = c.UpdateOauth2(newApp.ID, CreateOauth2Option{
 			Name:               newApp.Name,
@@ -72,9 +72,9 @@ func TestOauth2(t *testing.T) {
 			RedirectURIs:       []string{"https://test/login"},
 		})
 		require.NoError(t, err, testCase.name)
-		assert.EqualValues(t, newApp.Name, b.Name, testCase.name)
-		assert.EqualValues(t, "https://test/login", b.RedirectURIs[0], testCase.name)
-		assert.EqualValues(t, newApp.ID, b.ID, testCase.name)
+		assert.Equal(t, newApp.Name, b.Name, testCase.name)
+		assert.Equal(t, "https://test/login", b.RedirectURIs[0], testCase.name)
+		assert.Equal(t, newApp.ID, b.ID, testCase.name)
 		assert.NotEqual(t, newApp.ClientSecret, b.ClientSecret, testCase.name)
 		assert.NotEqual(t, newApp.ConfidentialClient, b.ConfidentialClient, testCase.name)
 

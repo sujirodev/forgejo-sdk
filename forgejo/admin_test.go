@@ -31,13 +31,13 @@ func TestAdminOrg(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, newOrg)
-	assert.EqualValues(t, orgName, newOrg.UserName)
+	assert.Equal(t, orgName, newOrg.UserName)
 
 	orgs, _, err := c.AdminListOrgs(AdminListOrgsOptions{})
 	require.NoError(t, err)
 	if assert.GreaterOrEqual(t, len(orgs), 1) {
 		orgs = orgs[len(orgs)-1:]
-		assert.EqualValues(t, newOrg.ID, orgs[0].ID)
+		assert.Equal(t, newOrg.ID, orgs[0].ID)
 	}
 
 	_, err = c.DeleteOrg(orgName)

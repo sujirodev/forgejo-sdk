@@ -58,23 +58,23 @@ func TestMilestones(t *testing.T) {
 	ml, _, err = c.ListRepoMilestones(repo.Owner.UserName, repo.Name, ListMilestoneOption{State: StateAll, Name: "V3.0"})
 	require.NoError(t, err)
 	assert.Len(t, ml, 1)
-	assert.EqualValues(t, "v3.0", ml[0].Title)
+	assert.Equal(t, "v3.0", ml[0].Title)
 
 	// test fallback resolveMilestoneByName
 	m, _, err := c.resolveMilestoneByName(repo.Owner.UserName, repo.Name, "V3.0")
 	require.NoError(t, err)
-	assert.EqualValues(t, ml[0].ID, m.ID)
+	assert.Equal(t, ml[0].ID, m.ID)
 	_, _, err = c.resolveMilestoneByName(repo.Owner.UserName, repo.Name, "NoEvidenceOfExist")
 	require.Error(t, err)
-	assert.EqualValues(t, "milestone 'NoEvidenceOfExist' do not exist", err.Error())
+	assert.Equal(t, "milestone 'NoEvidenceOfExist' do not exist", err.Error())
 
 	// GetMilestone
 	_, _, err = c.GetMilestone(repo.Owner.UserName, repo.Name, m4.ID)
 	require.Error(t, err)
 	m, _, err = c.GetMilestone(repo.Owner.UserName, repo.Name, m1.ID)
 	require.NoError(t, err)
-	assert.EqualValues(t, m1, m)
+	assert.Equal(t, m1, m)
 	m2, _, err := c.GetMilestoneByName(repo.Owner.UserName, repo.Name, m.Title)
 	require.NoError(t, err)
-	assert.EqualValues(t, m, m2)
+	assert.Equal(t, m, m2)
 }

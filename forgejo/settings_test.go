@@ -27,7 +27,7 @@ func TestGetGlobalSettings(t *testing.T) {
 
 	repoSettings, _, err := c.GetGlobalRepoSettings()
 	require.NoError(t, err)
-	assert.EqualValues(t, &GlobalRepoSettings{
+	assert.Equal(t, &GlobalRepoSettings{
 		HTTPGitDisabled: false,
 		MirrorsDisabled: false,
 		LFSDisabled:     true,
@@ -35,7 +35,7 @@ func TestGetGlobalSettings(t *testing.T) {
 
 	apiSettings, _, err := c.GetGlobalAPISettings()
 	require.NoError(t, err)
-	assert.EqualValues(t, &GlobalAPISettings{
+	assert.Equal(t, &GlobalAPISettings{
 		MaxResponseItems:       50,
 		DefaultPagingNum:       30,
 		DefaultGitTreesPerPage: 1000,
@@ -47,7 +47,7 @@ func TestGetGlobalSettings(t *testing.T) {
 	if assert.NotEmpty(t, attachSettings.AllowedTypes) {
 		attachSettings.AllowedTypes = ""
 	}
-	assert.EqualValues(t, &GlobalAttachmentSettings{
+	assert.Equal(t, &GlobalAttachmentSettings{
 		Enabled:  true,
 		MaxSize:  2048,
 		MaxFiles: 5,

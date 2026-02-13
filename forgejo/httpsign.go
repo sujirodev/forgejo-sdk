@@ -222,7 +222,7 @@ func (c *Client) SignRequest(r *http.Request) error {
 	// sign the request, use the fingerprint if we don't have a certificate
 	keyID := "forgejo"
 	if !c.httpsigner.cert {
-		keyID = ssh.FingerprintSHA256(c.httpsigner.Signer.PublicKey())
+		keyID = ssh.FingerprintSHA256(c.httpsigner.PublicKey())
 	}
 
 	err = signer.SignRequest(keyID, r, contents)

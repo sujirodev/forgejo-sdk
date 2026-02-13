@@ -41,7 +41,7 @@ func TestCommitStatus(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.NotNil(t, combiStats)
-	assert.EqualValues(t, 0, combiStats.TotalCount)
+	assert.Equal(t, 0, combiStats.TotalCount)
 
 	statuses, resp, err := c.ListStatuses(user.UserName, repoName, sha, ListStatusesOption{})
 	require.NoError(t, err)
@@ -65,8 +65,8 @@ func TestCommitStatus(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.NotNil(t, combiStats)
-	assert.EqualValues(t, 2, combiStats.TotalCount)
-	assert.EqualValues(t, StatusState("warning"), combiStats.State)
+	assert.Equal(t, 2, combiStats.TotalCount)
+	assert.Equal(t, StatusState("warning"), combiStats.State)
 	assert.Len(t, combiStats.Statuses, 2)
 }
 
@@ -80,5 +80,5 @@ func createStatus(t *testing.T, c *Client, userName, repoName, sha, url, desc, c
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.NotNil(t, stats)
-	assert.EqualValues(t, state, stats.State)
+	assert.Equal(t, state, stats.State)
 }

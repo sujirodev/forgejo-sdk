@@ -42,7 +42,7 @@ func TestRepoTeamManagement(t *testing.T) {
 	if !assert.Len(t, teams, 1) {
 		return
 	}
-	assert.EqualValues(t, AccessModeOwner, teams[0].Permission)
+	assert.Equal(t, AccessModeOwner, teams[0].Permission)
 
 	team, _, err := c.CheckRepoTeam(repo.Owner.UserName, repo.Name, "Admins")
 	require.NoError(t, err)
@@ -50,19 +50,19 @@ func TestRepoTeamManagement(t *testing.T) {
 
 	resp, err := c.AddRepoTeam(repo.Owner.UserName, repo.Name, "Admins")
 	require.NoError(t, err)
-	assert.EqualValues(t, 204, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 	resp, err = c.AddRepoTeam(repo.Owner.UserName, repo.Name, "CodeManager")
 	require.NoError(t, err)
-	assert.EqualValues(t, 204, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 	resp, err = c.AddRepoTeam(repo.Owner.UserName, repo.Name, "IssueManager")
 	require.NoError(t, err)
-	assert.EqualValues(t, 204, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 
 	team, _, err = c.CheckRepoTeam(repo.Owner.UserName, repo.Name, "Admins")
 	require.NoError(t, err)
 	if assert.NotNil(t, team) {
-		assert.EqualValues(t, "Admins", team.Name)
-		assert.EqualValues(t, AccessModeAdmin, team.Permission)
+		assert.Equal(t, "Admins", team.Name)
+		assert.Equal(t, AccessModeAdmin, team.Permission)
 	}
 
 	teams, _, err = c.GetRepoTeams(repo.Owner.UserName, repo.Name)
@@ -71,7 +71,7 @@ func TestRepoTeamManagement(t *testing.T) {
 
 	resp, err = c.RemoveRepoTeam(repo.Owner.UserName, repo.Name, "IssueManager")
 	require.NoError(t, err)
-	assert.EqualValues(t, 204, resp.StatusCode)
+	assert.Equal(t, 204, resp.StatusCode)
 
 	team, _, err = c.CheckRepoTeam(repo.Owner.UserName, repo.Name, "IssueManager")
 	require.NoError(t, err)

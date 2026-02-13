@@ -23,7 +23,7 @@ func TestUserSettings(t *testing.T) {
 	userConf, _, err := c.GetUserSettings()
 	require.NoError(t, err)
 	assert.NotNil(t, userConf)
-	assert.EqualValues(t, UserSettings{
+	assert.Equal(t, UserSettings{
 		Theme:        "forgejo-auto",
 		HideEmail:    false,
 		HideActivity: false,
@@ -36,7 +36,7 @@ func TestUserSettings(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.NotNil(t, userConf)
-	assert.EqualValues(t, UserSettings{
+	assert.Equal(t, UserSettings{
 		FullName:     "Admin User on Test",
 		Theme:        "forgejo-auto",
 		Language:     "de_de",

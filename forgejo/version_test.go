@@ -21,7 +21,7 @@ func TestVersion(t *testing.T) {
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()
 	require.NoError(t, err)
-	assert.NotEqual(t, "", rawVersion)
+	assert.NotEmpty(t, rawVersion)
 
 	require.NoError(t, c.checkServerVersionGreaterThanOrEqual(version8_0_3))
 	require.Error(t, c.CheckServerVersionConstraint("< 8.0.3"))

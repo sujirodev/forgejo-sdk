@@ -56,5 +56,5 @@ func TestRepoTopics(t *testing.T) {
 
 	sort.Strings(tl)
 	sort.Strings(newTopics)
-	assert.EqualValues(t, newTopics, tl)
+	assert.Equal(t, newTopics, tl)
 }

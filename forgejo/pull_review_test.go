@@ -33,8 +33,8 @@ func TestPullReview(t *testing.T) {
 	})
 	require.NoError(t, err)
 	if assert.NotNil(t, r1) {
-		assert.EqualValues(t, ReviewStateComment, r1.State)
-		assert.EqualValues(t, 1, r1.Reviewer.ID)
+		assert.Equal(t, ReviewStateComment, r1.State)
+		assert.Equal(t, int64(1), r1.Reviewer.ID)
 	}
 
 	c.SetSudo(submitter.UserName)
@@ -71,16 +71,16 @@ func TestPullReview(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, rl, 3)
 	for i := range rl {
-		assert.EqualValues(t, pull.HTMLURL, rl[i].HTMLPullURL)
+		assert.Equal(t, pull.HTMLURL, rl[i].HTMLPullURL)
 		if rl[i].CodeCommentsCount == 1 {
-			assert.EqualValues(t, reviewer.ID, rl[i].Reviewer.ID)
+			assert.Equal(t, reviewer.ID, rl[i].Reviewer.ID)
 		}
 	}
 
 	// GetPullReview
 	rNew, _, err := c.GetPullReview(repo.Owner.UserName, repo.Name, pull.Index, r3.ID)
 	require.NoError(t, err)
-	assert.EqualValues(t, r3, rNew)
+	assert.Equal(t, r3, rNew)
 
 	// DeletePullReview
 	c.SetSudo(submitter.UserName)
@@ -114,27 +114,27 @@ func TestPullReview(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, r4.ID, r5.ID)
+	assert.Equal(t, r4.ID, r5.ID)
 
 	r, _, err := c.SubmitPullReview(repo.Owner.UserName, repo.Name, pull.Index, r4.ID, SubmitPullReviewOptions{
 		State: ReviewStateRequestChanges,
 		Body:  "one nit",
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, r4.ID, r.ID)
-	assert.EqualValues(t, ReviewStateRequestChanges, r.State)
+	assert.Equal(t, r4.ID, r.ID)
+	assert.Equal(t, ReviewStateRequestChanges, r.State)
 
 	// ListPullReviewComments
 	rcl, _, err := c.ListPullReviewComments(repo.Owner.UserName, repo.Name, pull.Index, r.ID)
 	require.NoError(t, err)
 	assert.Len(t, rcl, r.CodeCommentsCount)
 	for _, rc := range rcl {
-		assert.EqualValues(t, pull.HTMLURL, rc.HTMLPullURL)
+		assert.Equal(t, pull.HTMLURL, rc.HTMLPullURL)
 		if rc.LineNum == 3 {
-			assert.EqualValues(t, "hehe and here it is", rc.Body)
+			assert.Equal(t, "hehe and here it is", rc.Body)
 		} else {
-			assert.EqualValues(t, 1, rc.LineNum)
-			assert.EqualValues(t, "its ok", rc.Body)
+			assert.Equal(t, uint64(1), rc.LineNum)
+			assert.Equal(t, "its ok", rc.Body)
 		}
 	}
 
@@ -146,7 +146,7 @@ func TestPullReview(t *testing.T) {
 	resp, err = c.DismissPullReview(repo.Owner.UserName, repo.Name, pull.Index, r.ID, DismissPullReviewOptions{Message: "stale"})
 	require.NoError(t, err)
 	if assert.NotNil(t, resp) {
-		assert.EqualValues(t, 200, resp.StatusCode)
+		assert.Equal(t, 200, resp.StatusCode)
 	}
 	r, _, _ = c.GetPullReview(repo.Owner.UserName, repo.Name, pull.Index, r.ID)
 	assert.True(t, r.Dismissed)
@@ -155,7 +155,7 @@ func TestPullReview(t *testing.T) {
 	resp, err = c.UnDismissPullReview(repo.Owner.UserName, repo.Name, pull.Index, r.ID)
 	require.NoError(t, err)
 	if assert.NotNil(t, resp) {
-		assert.EqualValues(t, 200, resp.StatusCode)
+		assert.Equal(t, 200, resp.StatusCode)
 	}
 	r, _, _ = c.GetPullReview(repo.Owner.UserName, repo.Name, pull.Index, r.ID)
 	assert.False(t, r.Dismissed)
@@ -171,7 +171,7 @@ func TestPullReview(t *testing.T) {
 
 	rl, _, _ = c.ListPullReviews(repo.Owner.UserName, repo.Name, pull.Index, ListPullReviewsOptions{})
 	if assert.Len(t, rl, 4) {
-		assert.EqualValues(t, ReviewStateRequestReview, rl[3].State)
+		assert.Equal(t, ReviewStateRequestReview, rl[3].State)
 	}
 
 	c.SetSudo(reviewer.UserName)

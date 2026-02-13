@@ -34,7 +34,7 @@ func TestRepoFromTemplate(t *testing.T) {
 		Labels:      true,
 	})
 	require.NoError(t, err)
-	assert.EqualValues(t, 201, resp.StatusCode)
+	assert.Equal(t, 201, resp.StatusCode)
 	assert.False(t, newRepo.Template)
 
 	labels, _, err := c.ListRepoLabels(repo.Owner.UserName, repo.Name, ListLabelsOptions{})
@@ -42,7 +42,7 @@ func TestRepoFromTemplate(t *testing.T) {
 	assert.Len(t, labels, 7)
 
 	topics, _, _ := c.ListRepoTopics(repo.Owner.UserName, repo.Name, ListRepoTopicsOptions{})
-	assert.EqualValues(t, []string{"abc", "def", "ghi"}, topics)
+	assert.Equal(t, []string{"abc", "def", "ghi"}, topics)
 
 	_, err = c.DeleteRepo(repo.Owner.UserName, "repoFromTemplate")
 	require.NoError(t, err)

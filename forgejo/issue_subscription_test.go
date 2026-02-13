@@ -37,7 +37,7 @@ func TestIssueSubscription(t *testing.T) {
 
 	_, err = c.IssueSubscribe(repo.Owner.UserName, repo.Name, 1)
 	if assert.Error(t, err) {
-		assert.EqualValues(t, "already subscribed", err.Error())
+		assert.Equal(t, "already subscribed", err.Error())
 	}
 	wi, _, err = c.CheckIssueSubscription(repo.Owner.UserName, repo.Name, 1)
 	require.NoError(t, err)

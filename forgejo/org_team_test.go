@@ -16,18 +16,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createTestOrgTeams(t *testing.T, c *Client, org, name string, accessMode AccessMode, units []RepoUnitType) (*Team, error) {
+func createTestOrgTeams(t *testing.T, c *Client, org, name string, accessMode AccessMode, unitsMap map[string]string) (*Team, error) {
 	team, _, e := c.CreateTeam(org, CreateTeamOption{
 		Name:                    name,
 		Description:             name + "'s team desc",
 		Permission:              accessMode,
 		CanCreateOrgRepo:        false,
 		IncludesAllRepositories: false,
-		Units:                   units,
+		UnitsMap:                unitsMap,
 	})
 	require.NoError(t, e)
 	assert.NotNil(t, team)
 	return team, e
+}
+
+func TestDeprecationErrorOnUnitsUse(t *testing.T) {
+	log.Println("== TestDeprecationErrorOnUnitsUse ==")
+
+	c := newTestClient()
+	org := "TestTeamsOrg"
+	_, _, e := c.CreateTeam(org, CreateTeamOption{
+		Name:                    "testTeam",
+		Description:             "testTeam" + "'s team desc",
+		Permission:              AccessModeAdmin,
+		CanCreateOrgRepo:        false,
+		IncludesAllRepositories: false,
+		Units:                   []RepoUnitType{RepoUnitCode, RepoUnitIssues, RepoUnitPulls, RepoUnitReleases},
+	})
+	require.Error(t, e)
+	assert.EqualError(t, e, "variable Units should be replaced by UnitsMap")
 }
 
 func TestTeamSearch(t *testing.T) {
@@ -47,7 +64,7 @@ func TestTeamSearch(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if _, err = createTestOrgTeams(t, c, orgName, "Admins", AccessModeAdmin, []RepoUnitType{RepoUnitCode, RepoUnitIssues, RepoUnitPulls, RepoUnitReleases}); err != nil {
+	if _, err = createTestOrgTeams(t, c, orgName, "Admins", AccessModeAdmin, map[string]string{RepoUnitCode.String(): string(AccessModeRead), RepoUnitIssues.String(): string(AccessModeRead), RepoUnitPulls.String(): string(AccessModeRead), RepoUnitReleases.String(): string(AccessModeRead)}); err != nil {
 		return
 	}
 
@@ -79,11 +96,11 @@ func TestCreateTeamWithUnitsMap(t *testing.T) {
 
 	// Create team with per-unit permissions using UnitsMap
 	unitsMap := map[string]string{
-		"repo.code":    "write",
-		"repo.issues":  "write",
-		"repo.pulls":   "read",
-		"repo.wiki":    "read",
-		"repo.actions": "none",
+		RepoUnitCode.String():    string(AccessModeWrite),
+		RepoUnitIssues.String():  string(AccessModeWrite),
+		RepoUnitPulls.String():   string(AccessModeRead),
+		RepoUnitWiki.String():    string(AccessModeRead),
+		RepoUnitActions.String(): string(AccessModeNone),
 	}
 
 	team, _, err := c.CreateTeam(orgName, CreateTeamOption{
@@ -126,7 +143,7 @@ func TestEditTeamWithUnitsMap(t *testing.T) {
 		CanCreateOrgRepo:        false,
 		IncludesAllRepositories: false,
 		UnitsMap: map[string]string{
-			"repo.code": "read",
+			RepoUnitCode.String(): string(AccessModeRead),
 		},
 	})
 
@@ -135,9 +152,9 @@ func TestEditTeamWithUnitsMap(t *testing.T) {
 
 	// Edit team to add per-unit permissions
 	updatedUnitsMap := map[string]string{
-		"repo.code":   "read",
-		"repo.issues": "write",
-		"repo.pulls":  "none",
+		RepoUnitCode.String():   string(AccessModeRead),
+		RepoUnitIssues.String(): string(AccessModeWrite),
+		RepoUnitPulls.String():  string(AccessModeNone),
 	}
 
 	_, err = c.EditTeam(initialTeam.ID, EditTeamOption{
@@ -179,7 +196,7 @@ func TestUnitsMapSerialization(t *testing.T) {
 	editOpt := EditTeamOption{
 		Name: "test-team",
 		UnitsMap: map[string]string{
-			"repo.code": "none",
+			RepoUnitCode.String(): string(AccessModeNone),
 		},
 	}
 
@@ -192,8 +209,8 @@ func TestUnitsMapSerialization(t *testing.T) {
 		ID:   1,
 		Name: "test-team",
 		UnitsMap: map[string]string{
-			"repo.wiki":     "read",
-			"repo.releases": "write",
+			RepoUnitWiki.String():     string(AccessModeRead),
+			RepoUnitReleases.String(): string(AccessModeWrite),
 		},
 	}
 

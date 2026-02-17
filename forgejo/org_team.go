@@ -17,19 +17,25 @@ import (
 
 // Team represents a team in an organization
 type Team struct {
-	ID                      int64             `json:"id"`
-	Name                    string            `json:"name"`
-	Description             string            `json:"description"`
-	Organization            *Organization     `json:"organization"`
-	Permission              AccessMode        `json:"permission"`
-	CanCreateOrgRepo        bool              `json:"can_create_org_repo"`
-	IncludesAllRepositories bool              `json:"includes_all_repositories"`
-	Units                   []RepoUnitType    `json:"units"`
-	UnitsMap                map[string]string `json:"units_map"`
+	ID                      int64         `json:"id"`
+	Name                    string        `json:"name"`
+	Description             string        `json:"description"`
+	Organization            *Organization `json:"organization"`
+	Permission              AccessMode    `json:"permission"`
+	CanCreateOrgRepo        bool          `json:"can_create_org_repo"`
+	IncludesAllRepositories bool          `json:"includes_all_repositories"`
+	// example: {"repo.code":"read","repo.issues":"write","repo.ext_issues":"none","repo.pulls":"owner","repo.releases":"none","repo.wiki":"admin","repo.ext_wiki":"none","repo.projects":"none","repo.packages":"none","repo.actions":"none"}
+	UnitsMap map[string]string `json:"units_map"`
+	// Deprecated: This variable should be replaced by UnitsMap and will be dropped in later versions.
+	Units []RepoUnitType `json:"units"`
 }
 
 // RepoUnitType represent all unit types of a repo forgejo currently offer
 type RepoUnitType string
+
+func (r RepoUnitType) String() string {
+	return string(r)
+}
 
 const (
 	// RepoUnitCode represent file view of a repository
@@ -125,13 +131,15 @@ func (c *Client) SearchOrgTeams(org string, opt *SearchTeamsOptions) ([]*Team, *
 
 // CreateTeamOption options for creating a team
 type CreateTeamOption struct {
-	Name                    string            `json:"name"`
-	Description             string            `json:"description"`
-	Permission              AccessMode        `json:"permission"`
-	CanCreateOrgRepo        bool              `json:"can_create_org_repo"`
-	IncludesAllRepositories bool              `json:"includes_all_repositories"`
-	Units                   []RepoUnitType    `json:"units"`
-	UnitsMap                map[string]string `json:"units_map"`
+	Name                    string     `json:"name"`
+	Description             string     `json:"description"`
+	Permission              AccessMode `json:"permission"`
+	CanCreateOrgRepo        bool       `json:"can_create_org_repo"`
+	IncludesAllRepositories bool       `json:"includes_all_repositories"`
+	// example: {"repo.code":"read","repo.issues":"write","repo.ext_issues":"none","repo.pulls":"owner","repo.releases":"none","repo.wiki":"admin","repo.ext_wiki":"none","repo.projects":"none","repo.packages":"none","repo.actions":"none"}
+	UnitsMap map[string]string `json:"units_map"`
+	// Deprecated: This variable should be replaced by UnitsMap and will be dropped in later versions.
+	Units []RepoUnitType `json:"units"`
 }
 
 // Validate the CreateTeamOption struct
@@ -150,8 +158,8 @@ func (opt *CreateTeamOption) Validate() error {
 	if len(opt.Description) > 255 {
 		return fmt.Errorf("description too long")
 	}
-	if len(opt.Units) == 0 && len(opt.UnitsMap) == 0 {
-		return fmt.Errorf("either units or units_map must be specified")
+	if len(opt.Units) != 0 {
+		return fmt.Errorf("variable Units should be replaced by UnitsMap")
 	}
 	return nil
 }
@@ -175,13 +183,15 @@ func (c *Client) CreateTeam(org string, opt CreateTeamOption) (*Team, *Response,
 
 // EditTeamOption options for editing a team
 type EditTeamOption struct {
-	Name                    string            `json:"name"`
-	Description             *string           `json:"description"`
-	Permission              AccessMode        `json:"permission"`
-	CanCreateOrgRepo        *bool             `json:"can_create_org_repo"`
-	IncludesAllRepositories *bool             `json:"includes_all_repositories"`
-	Units                   []RepoUnitType    `json:"units"`
-	UnitsMap                map[string]string `json:"units_map"`
+	Name                    string     `json:"name"`
+	Description             *string    `json:"description"`
+	Permission              AccessMode `json:"permission"`
+	CanCreateOrgRepo        *bool      `json:"can_create_org_repo"`
+	IncludesAllRepositories *bool      `json:"includes_all_repositories"`
+	// example: {"repo.code":"read","repo.issues":"write","repo.ext_issues":"none","repo.pulls":"owner","repo.releases":"none","repo.wiki":"admin","repo.ext_wiki":"none","repo.projects":"none","repo.packages":"none","repo.actions":"none"}
+	UnitsMap map[string]string `json:"units_map"`
+	// Deprecated: This variable should be replaced by UnitsMap and will be dropped in later versions.
+	Units []RepoUnitType `json:"units"`
 }
 
 // Validate the EditTeamOption struct
@@ -200,8 +210,8 @@ func (opt *EditTeamOption) Validate() error {
 	if opt.Description != nil && len(*opt.Description) > 255 {
 		return fmt.Errorf("description to long")
 	}
-	if len(opt.Units) == 0 && len(opt.UnitsMap) == 0 {
-		return fmt.Errorf("either units or units_map must be specified")
+	if len(opt.Units) != 0 {
+		return fmt.Errorf("variable Units should be replaced by UnitsMap")
 	}
 	return nil
 }

@@ -26,13 +26,13 @@ func TestRepoTeamManagement(t *testing.T) {
 		return
 	}
 	defer clean()
-	if _, err = createTestOrgTeams(t, c, repo.Owner.UserName, "Admins", AccessModeAdmin, []RepoUnitType{RepoUnitCode, RepoUnitIssues, RepoUnitPulls, RepoUnitReleases}); err != nil {
+	if _, err = createTestOrgTeams(t, c, repo.Owner.UserName, "Admins", AccessModeAdmin, map[string]string{RepoUnitCode.String(): "read", RepoUnitIssues.String(): "read", RepoUnitPulls.String(): "read", RepoUnitReleases.String(): "read"}); err != nil {
 		return
 	}
-	if _, err = createTestOrgTeams(t, c, repo.Owner.UserName, "CodeManager", AccessModeWrite, []RepoUnitType{RepoUnitCode}); err != nil {
+	if _, err = createTestOrgTeams(t, c, repo.Owner.UserName, "CodeManager", AccessModeWrite, map[string]string{RepoUnitCode.String(): "read"}); err != nil {
 		return
 	}
-	if _, err = createTestOrgTeams(t, c, repo.Owner.UserName, "IssueManager", AccessModeWrite, []RepoUnitType{RepoUnitIssues, RepoUnitPulls}); err != nil {
+	if _, err = createTestOrgTeams(t, c, repo.Owner.UserName, "IssueManager", AccessModeWrite, map[string]string{RepoUnitIssues.String(): "read", RepoUnitPulls.String(): "read"}); err != nil {
 		return
 	}
 

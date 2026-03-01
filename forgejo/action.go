@@ -12,6 +12,7 @@ import (
 // ActionRun represents a workflow run
 type ActionRun struct {
 	ID                int64       `json:"id"`
+	RunNumber         int64       `json:"index_in_repo"`
 	WorkflowID        string      `json:"workflow_id"`
 	Title             string      `json:"title"`
 	Status            string      `json:"status"`
@@ -28,6 +29,7 @@ type ActionRun struct {
 	NeedApproval      bool        `json:"need_approval"`
 	ApprovedBy        int64       `json:"approved_by"`
 	IsForkPullRequest bool        `json:"is_fork_pull_request"`
+	IsRefDeleted      bool        `json:"is_ref_deleted"`
 }
 
 // ActionTask represents a task within a workflow run

@@ -389,6 +389,65 @@ func (c *Client) doRequest(method, path string, header http.Header, body io.Read
 	return newResponse(resp), nil
 }
 
+// Modernized version of doRequest
+func (c *Client) doRequestWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader) (Response, error) {
+	c.mutex.RLock()
+	debug := c.debug
+	if debug {
+		var bodyStr string
+		if body != nil {
+			bs, _ := io.ReadAll(body)
+			body = bytes.NewReader(bs)
+			bodyStr = string(bs)
+		}
+		fmt.Printf("%s: %s\nHeader: %v\nBody: %s\n", method, c.url+"/api/v1"+path, header, bodyStr)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, c.url+"/api/v1"+path, body)
+	if err != nil {
+		c.mutex.RUnlock()
+		return Response{}, err
+	}
+	if len(c.accessToken) != 0 {
+		req.Header.Set("Authorization", "token "+c.accessToken)
+	}
+	if len(c.otp) != 0 {
+		req.Header.Set("X-FORGEJO-OTP", c.otp)
+	}
+	if len(c.username) != 0 {
+		req.SetBasicAuth(c.username, c.password)
+	}
+	if len(c.sudo) != 0 {
+		req.Header.Set("Sudo", c.sudo)
+	}
+	if len(c.userAgent) != 0 {
+		req.Header.Set("User-Agent", c.userAgent)
+	}
+
+	client := c.client
+	c.mutex.RUnlock()
+
+	for k, v := range header {
+		req.Header[k] = v
+	}
+
+	if c.httpsigner != nil {
+		err = c.SignRequest(req)
+		if err != nil {
+			return Response{}, err
+		}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return Response{}, err
+	}
+	if debug {
+		fmt.Printf("Response: %v\n\n", resp)
+	}
+
+	return *newResponse(resp), nil
+}
+
 // Converts a response for a HTTP status code indicating an error condition
 // (non-2XX) to a well-known error value and response body. For non-problematic
 // (2XX) status codes nil will be returned. Note that on a non-2XX response, the
@@ -463,8 +522,38 @@ func (c *Client) getResponse(method, path string, header http.Header, body io.Re
 	return data, resp, nil
 }
 
+// Modernized version of getResponse
+func (c *Client) getResponseWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader) ([]byte, Response, error) {
+	resp, err := c.doRequestWithContext(ctx, method, path, header, body)
+	if err != nil {
+		return nil, resp, err
+	}
+	defer resp.Body.Close()
+
+	data, err := statusCodeToErr(&resp)
+	if err != nil {
+		return data, resp, err
+	}
+
+	data, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return data, resp, nil
+}
+
 func (c *Client) getParsedResponse(method, path string, header http.Header, body io.Reader, obj interface{}) (*Response, error) {
 	data, resp, err := c.getResponse(method, path, header, body)
+	if err != nil {
+		return resp, err
+	}
+	return resp, json.Unmarshal(data, obj)
+}
+
+// Modernized version of getParsedResponse
+func (c *Client) getParsedResponseWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader, obj interface{}) (Response, error) {
+	data, resp, err := c.getResponseWithContext(ctx, method, path, header, body)
 	if err != nil {
 		return resp, err
 	}

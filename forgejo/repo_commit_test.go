@@ -74,7 +74,7 @@ func TestGetCommitDiffOrPatch(t *testing.T) {
 }
 
 func TestGetCommitPullRequest(t *testing.T) {
-	log.Println("== GetCommitPullRequest ==")
+	log.Println("== TestGetCommitPullRequest ==")
 	c := newTestClient()
 
 	repo, err := createTestRepo(t, "GetCommitPullRequest", c)

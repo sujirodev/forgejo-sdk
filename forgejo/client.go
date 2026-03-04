@@ -29,7 +29,7 @@ var jsonHeader = http.Header{"content-type": []string{"application/json"}, "acce
 
 // Version return the library version
 func Version() string {
-	return "0.16.0"
+	return "3.0.0"
 }
 
 // Client represents a thread-safe Forgejo API client.

@@ -1,5 +1,132 @@
 # Changelog
 
+## [v3.0.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v3.0.0) - 2026-03-04
+
+* GENERAL
+  * chore: bump minimum go version to 1.25 (#112)
+
+* FEATURES
+  * feat: Initial quota support (#111)
+  * feat(actions): Add comprehensive Actions API client (#103) (thanks @redbeard)
+  * add repo tag protection (#106) (thanks @kfkonrad)
+  * allow access token operations on arbitrary users (#104) (thanks @kfkonrad)
+  * feat: add fast-forward-only merge style (#101) (thanks @kernald)
+  * Add HTTP accept header into request (#100) (thanks @MartinBasti)
+  * feat: Support external_tracker_regexp_pattern in ExternalTracker (#97) (thanks @qaiser42)
+  * feat: improve action secret validation and test infrastructure (#91) (thanks @pavel_hushcha)
+  * feat: add UnitsMap support for per-unit team permissions (#83) (thanks @kfkonrad)
+  * feat: add endpoint GetCommitPullRequest (#79) (thanks @apricote)
+
+* FIXES
+  * fix: add missing fields to EditRepoOption (#114)
+  * fix: removed unneeded ListReleaseAttachementsOption (#113)
+  * fix: add missing RunNumber and IsRefDeleted fields to ActionRun (#110) (thanks @redbeard)
+  * fix: mandatory units in EditTeamOption (#108)
+  * fix: change Body in EditPullRequestOption to *string (#99) (thanks @OFHansen)
+  * test: fix race condition in pull request merge test (#90) (thanks @pavel_hushcha)
+
+
+## [v2.2.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v2.2.0) - 2025-07-17
+
+* GENERAL
+
+  * Support API endpoint repoGetPullRequestByBaseHead (#73) (thanks @wandhydrant)
+
+* DEPENDENCIES
+
+  * fix(deps): update module golang.org/x/crypto to v0.39.0 (#54)
+
+
+## [v2.1.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v2.1.0) - 2025-05-12
+
+* add User.HTMLURL field (#57) thanks @infinoid
+* Bumped some dependencies
+* Improved CI and Renovate setup
+* Fixed some linting issues
+
+
+## [v2.0.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v2.0.0) - 2025-02-10
+
+This release of the SDK is mostly the same as previous ones, but introduces a
+couple of breaking changes, hence the major version upgrade.
+
+* BREAKING
+
+  * feat!: Add GetTreesOptions argument (#21)
+    This feature introduces pagination and a new API for the GetTrees function
+    which brings it in line with other paginated SDK functions.
+
+  * chore!: update AccessTokenScope* constants for 9.0.3 (#26)
+    The AccessTokenScope* constants in the SDK were outdated and brought into
+    line with current use within Forgejo. Tested against Forgejo v9.0.3.
+
+* MAINTENANCE
+
+  * chore: Bump SDK to go module v2 (#33)
+  * chore: update readme for Forgejo v9.0.3 support (#32)
+  * chore: update readme with new badges (#25)
+
+* CI CHANGES
+
+  * ci: move-releasedrafter-config (#31)
+  * ci: attempt to fix release drafter workflow (#30)
+  * ci: correct release-drafter url (#29)
+  * fix(ci): release drafter config (#28)
+  * ci: try out release drafter on forgejo actions (#27)
+  * ci: allow manual trigger of workflow (#24)
+  * chore(ci): bump forgejo version to 9.0.3 for integration workflow (#23)
+  * chore(ci): add actions based integration workflow (#22)
+
+
+## [v1.2.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v1.2.0) - 2024-10-21
+
+* GENERAL
+
+  * chore: bump minimal go version to 1.22 as well as deps
+  * chore: bump gofumpt and golangci_lint
+  * fix: correct package name
+
+* TESTING CHANGES
+
+  * test: bump integration workflow to 8.0.3
+  * chore(test): add version test for 8.0.3
+  * fix(test): ensure stat and verification are returned
+  * fix(test): make sure to check for nil
+  * test: bump forgejo release to 8.0.3
+  * test: bump forgejo version to use in testing to 8.0.3
+  * chore(test): rename unused param to underscore
+
+* CHERRY PICKED from upstream
+
+  * Update httpsig dependency (#667)
+  * (feat) support more query params for /repos/{owner}/{repo}/commits (#668)
+  * Allow team names of up to 255 characters (#670)
+  * feat: implement Gitea Repo Action Secrets Management (#662)
+
+
+## [v1.1.1](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v1.1.1) - 2024-06-20
+
+This is a security patch release that prevents the Forgejo token from being logged
+when logging an "unknown api" error.
+
+Upgrading is advised to prevent accidentally leaking the Forgejo token.
+
+
+## [v1.1.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v1.1.0) - 2024-06-16
+
+* Updates CI testing to use Forgejo 7.0.4;
+* Uses Codeberg's Woodpecker CI for testing;
+* Cherry picked the latest changes to the Gitea SDK;
+* Bumps dependencies;
+* Fixes silly typo on copyright header;
+
+A couple of points to take into account:
+
+* This is a HARD fork;
+* This SDK intends to follow Semver 2;
+* The last pre-fork commit was January 29th 2024 (see: 5d0143e4e7);
+
+
 ## [v0.15.1](https://gitea.com/gitea/go-sdk/releases/tag/gitea/v0.15.1) - 2022-01-04
 
 * FEATURES

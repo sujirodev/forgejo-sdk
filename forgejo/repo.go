@@ -426,8 +426,12 @@ type EditRepoOption struct {
 	HasWiki *bool `json:"has_wiki,omitempty"`
 	// set this structure to use external wiki instead of internal (requires has_wiki)
 	ExternalWiki *ExternalWiki `json:"external_wiki,omitempty"`
+	// set the globally editable state of the wiki
+	GloballyEditableWiki *bool `json:"globally_editable_wiki,omitempty"`
 	// sets the default branch for this repository.
 	DefaultBranch *string `json:"default_branch,omitempty"`
+	// sets the branch used for this repository's wiki.
+	WikiBranch *string `json:"wiki_branch,omitempty"`
 	// either `true` to allow pull requests, or `false` to prevent pull request.
 	HasPullRequests *bool `json:"has_pull_requests,omitempty"`
 	// either `true` to enable project unit, or `false` to disable them.
@@ -448,6 +452,8 @@ type EditRepoOption struct {
 	AllowRebaseMerge *bool `json:"allow_rebase_explicit,omitempty"`
 	// either `true` to allow squash-merging pull requests, or `false` to prevent squash-merging. `has_pull_requests` must be `true`.
 	AllowSquash *bool `json:"allow_squash_merge,omitempty"`
+	// either `true` to allow fast-forward-only merging pull requests, or `false` to prevent fast-forward-only merging.
+	AllowFastForwardOnly *bool `json:"allow_fast_forward_only_merge,omitempty"`
 	// set to `true` to archive this repository.
 	Archived *bool `json:"archived,omitempty"`
 	// set to a string like `8h30m0s` to set the mirror interval time
@@ -456,9 +462,18 @@ type EditRepoOption struct {
 	AllowManualMerge *bool `json:"allow_manual_merge,omitempty"`
 	// either `true` to enable AutodetectManualMerge, or `false` to prevent it. `has_pull_requests` must be `true`, Note: In some special cases, misjudgments can occur.
 	AutodetectManualMerge *bool `json:"autodetect_manual_merge,omitempty"`
+	// either `true` to allow updating pull request branch by rebase, or `false` to prevent it.
+	AllowRebaseUpdate *bool `json:"allow_rebase_update,omitempty"`
+	// set to `true` to delete pr branch after merge by default
+	DefaultDeleteBranchAfterMerge *bool `json:"default_delete_branch_after_merge,omitempty"`
 	// set to a merge style to be used by this repository: "merge", "rebase", "rebase-merge", or "squash". `has_pull_requests` must be `true`.
 	DefaultMergeStyle *MergeStyle `json:"default_merge_style,omitempty"`
-	// set to `true` to archive this repository.
+	// set to a update style to be used by this repository: "rebase" or "merge"
+	DefaultUpdateStyle *string `json:"default_update_style,omitempty" binding:"In(merge,rebase)"`
+	// set to `true` to allow edits from maintainers by default
+	DefaultAllowMaintainerEdit *bool `json:"default_allow_maintainer_edit,omitempty"`
+	// enable prune - remove obsolete remote-tracking references when mirroring
+	EnablePrune *bool `json:"enable_prune,omitempty"`
 }
 
 // EditRepo edit the properties of a repository

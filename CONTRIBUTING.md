@@ -45,7 +45,7 @@ Please use your real name. If you set your `user.name` and `user.email` git conf
 Code that you contribute should use the standard copyright header:
 
 ```
-// Copyright 2024 The Forgejo Authors. All rights reserved.
+// Copyright 2026 The Forgejo Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 ```

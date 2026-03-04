@@ -48,6 +48,8 @@ jobs:
             && echo "ROOT = /tmp/data/" >> /tmp/conf/app.ini
             && echo "[server]" >> /tmp/conf/app.ini
             && echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
+            && echo "[quota]" >> /tmp/conf/app.ini
+				    && echo "ENABLED = true" >> /tmp/conf/app.ini
             && forgejo migrate -c /tmp/conf/app.ini
             && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
             && forgejo web -c /tmp/conf/app.ini

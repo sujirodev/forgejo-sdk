@@ -28,20 +28,15 @@ type Attachment struct {
 	DownloadURL   string    `json:"browser_download_url"`
 }
 
-// ListReleaseAttachmentsOptions options for listing release's attachments
-type ListReleaseAttachmentsOptions struct {
-	ListOptions
-}
-
 // ListReleaseAttachments list release's attachments
-func (c *Client) ListReleaseAttachments(user, repo string, release int64, opt ListReleaseAttachmentsOptions) ([]*Attachment, *Response, error) {
+func (c *Client) ListReleaseAttachments(user, repo string, release int64) ([]*Attachment, *Response, error) {
 	if err := escapeValidatePathSegments(&user, &repo); err != nil {
 		return nil, nil, err
 	}
-	opt.setDefaults()
-	attachments := make([]*Attachment, 0, opt.PageSize)
+
+	attachments := make([]*Attachment, 0)
 	resp, err := c.getParsedResponse("GET",
-		fmt.Sprintf("/repos/%s/%s/releases/%d/assets?%s", user, repo, release, opt.getURLQuery().Encode()),
+		fmt.Sprintf("/repos/%s/%s/releases/%d/assets", user, repo, release),
 		nil, nil, &attachments)
 	return attachments, resp, err
 }

@@ -11,45 +11,46 @@ jobs:
     env:
       GOPROXY: "https://goproxy.io"
       GO111MODULE: "on"
-      HTTP_PROXY: ""
       FORGEJO_SDK_TEST_URL: "http://forgejo:3000"
       FORGEJO_SDK_TEST_USERNAME: "test01"
       FORGEJO_SDK_TEST_PASSWORD: "test01"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
-          go-version: ">=1.25"
+          go-version: "1.25"
           check-latest: true
+
       - run: make clean
       - run: make vet
       - run: make ci-lint
       - run: make build
-      - run: curl --noproxy "*" http://forgejo:3000/api/v1/version # verify connection to instance
+      
+      # Wait for Forgejo to be healthy before running tests
+      - name: Wait for Forgejo
+        run: |
+          for i in {1..20}; do
+            curl -s http://forgejo:3000/api/v1/version && break
+            echo "Waiting for Forgejo..."
+            sleep 5
+          done
+
       - run: make test
+
     services:
       forgejo:
         image: codeberg.org/forgejo/forgejo:11.0.10
-        cmd:
-          - bash
-          - -c
-          - >-
-            mkdir -p /tmp/conf/
-            && mkdir -p /tmp/data/
-            && echo "I_AM_BEING_UNSAFE_RUNNING_AS_ROOT = true" > /tmp/conf/app.ini
-            && echo "[security]" >> /tmp/conf/app.ini
-            &&echo "INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4" >> /tmp/conf/app.ini
-            && echo "INSTALL_LOCK = true" >> /tmp/conf/app.ini
-            && echo "SECRET_KEY = 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo" >> /tmp/conf/app.ini
-            && echo "PASSWORD_COMPLEXITY = off" >> /tmp/conf/app.ini
-            && echo "[database]" >> /tmp/conf/app.ini
-            && echo "DB_TYPE = sqlite3" >> /tmp/conf/app.ini
-            && echo "[repository]" >> /tmp/conf/app.ini
-            && echo "ROOT = /tmp/data/" >> /tmp/conf/app.ini
-            && echo "[server]" >> /tmp/conf/app.ini
-            && echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
-            && echo "[quota]" >> /tmp/conf/app.ini
-            && echo "ENABLED = true" >> /tmp/conf/app.ini
-            && forgejo migrate -c /tmp/conf/app.ini
-            && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
-            && forgejo web -c /tmp/conf/app.ini
+        env:
+          # Use Environment Variables instead of manual app.ini echos
+          FORGEJO__security__I_AM_BEING_UNSAFE_RUNNING_AS_ROOT: "true"
+          FORGEJO__security__INSTALL_LOCK: "true"
+          FORGEJO__security__SECRET_KEY: "2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo"
+          FORGEJO__security__PASSWORD_COMPLEXITY: "off"
+          FORGEJO__database__DB_TYPE: "sqlite3"
+          FORGEJO__server__ROOT_URL: "http://forgejo:3000"
+          FORGEJO__quota__ENABLED: "true"
+        # We still need a small command to create the admin user
+        command: >-
+          bash -c "forgejo migrate && 
+          forgejo admin user create --username test01 --password test01 --email test01@forgejo.org --admin --must-change-password=false && 
+          forgejo web"

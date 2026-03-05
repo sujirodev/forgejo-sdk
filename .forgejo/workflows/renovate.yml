@@ -2,21 +2,30 @@ name: Renovate
 
 on:
   workflow_dispatch:
-  # Run Renovate every night at 01:23 (24h time, randomly chosen).
+  # Run Renovate every night at 01:23.
   schedule:
     - cron: "23 01 * * *"
 
 jobs:
   renovate:
     runs-on: ubuntu-latest
-    container: ghcr.io/renovatebot/renovate:43
+    container:
+      image: ghcr.io/renovatebot/renovate:43.55.6
     steps:
-      - uses: actions/checkout@v4
-      - run: renovate
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Run Renovate
+        run: renovate
         env:
-          RENOVATE_ENDPOINT: "https://codeberg.org/api/v1/"
+          # Forgejo/Gitea specific settings
           RENOVATE_PLATFORM: "gitea"
+          RENOVATE_ENDPOINT: "${{ vars.FORGEJO_API_URL || 'https://codeberg.org/api/v1/' }}"
           RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
-          RENOVATE_REPOSITORIES: "mvdkleijn/forgejo-sdk"
-          GITHUB_COM_TOKEN: ${ { secrets.TOKEN_GITHUB }}
+          REPOSITORIES: "mvdkleijn/forgejo-sdk"
           
+          # GitHub token is still needed for fetching changelogs/metadata from github.com
+          GITHUB_COM_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          
+          # Logging and Author
+          LOG_LEVEL: "info"
+          RENOVATE_GIT_AUTHOR: "Forgejo SDK Renovate Bot <renovate@noreply.codeberg.org>"

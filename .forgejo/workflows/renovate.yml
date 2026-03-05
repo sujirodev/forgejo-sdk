@@ -21,7 +21,7 @@ jobs:
           RENOVATE_PLATFORM: "forgejo"
           RENOVATE_ENDPOINT: "${{ vars.FORGEJO_API_URL || 'https://codeberg.org/api/v1/' }}"
           RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
-          REPOSITORIES: "mvdkleijn/forgejo-sdk"
+          RENOVATE_REPOSITORIES: "mvdkleijn/forgejo-sdk"
           
           # GitHub token is still needed for fetching changelogs/metadata from github.com
           GITHUB_COM_TOKEN: ${{ secrets.TOKEN_GITHUB }}

@@ -2,27 +2,38 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":gitSignOff"
+    ":gitSignOff",
+    ":dependencyDashboard",
+    "abandonments:recommended",
+    "helpers:pinGitHubActionDigests"
   ],
-  "enabledManagers": [
-    "gomod"
-  ],
+  "postUpdateOptions": ["gomodTidy"],
   "packageRules": [
     {
-      "description": "Configure updates for the Forgejo SDK in the forgejo directory",
-      "matchManagers": [
-        "gomod"
-      ],
-      "matchFileNames": [
-        "forgejo/**"
-      ],
-      "labels": [
-        "dependencies",
-        "go-sdk"
-      ],
+      "description": "Configure updates for Go modules",
+      "matchManagers": ["gomod"],
+	  "matchFileNames": ["forgejo/**/go.mod"],
+      "labels": ["dependencies", "go-sdk"],
       "minimumReleaseAge": "3 days",
       "separateMinorPatch": true,
       "automerge": false
+    },
+    {
+      "description": "Require dashboard approval for Go major version updates",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Pin Forgejo Actions workflow digests, auto-update minor/patch",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "description": "Require dashboard approval for major Actions updates only",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
     }
   ]
 }

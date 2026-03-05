@@ -4,6 +4,7 @@
 
 * GENERAL
   * chore: bump minimum go version to 1.25 (#112)
+  * chore: update renovate and integration workflows
 
 * FEATURES
   * feat: Initial quota support (#111)

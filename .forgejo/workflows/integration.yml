@@ -15,8 +15,8 @@ jobs:
       FORGEJO_SDK_TEST_USERNAME: "test01"
       FORGEJO_SDK_TEST_PASSWORD: "test01"
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
         with:
           go-version: "1.25"
           check-latest: true
@@ -39,7 +39,7 @@ jobs:
 
     services:
       forgejo:
-        image: codeberg.org/forgejo/forgejo:11.0.10
+        image: codeberg.org/forgejo/forgejo:11.0.10@sha256:29fbeed5394a8d1027d94590d68207f788aba417c4d99da1fd847073e98d5252
         cmd:
           - bash
           - -c

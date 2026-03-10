@@ -11,6 +11,7 @@ package forgejo
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -85,7 +86,26 @@ func (c *Client) CreateAccessToken(user string, opt CreateAccessTokenOption) (*A
 	return t, resp, err
 }
 
-// DeleteAccessToken delete token, identified by ID and if not available by name
+// DeleteAccessTokenByID deletes a token identified by its ID.
+func (c *Client) DeleteAccessTokenByID(ctx context.Context, user string, id int64) (Response, error) {
+	token := fmt.Sprintf("%d", id)
+	_, resp, err := c.getResponseWithContext(ctx, "DELETE", fmt.Sprintf("/users/%s/tokens/%s", url.PathEscape(user), url.PathEscape(token)), jsonHeader, nil)
+	return resp, err
+}
+
+// DeleteAccessTokenByName deletes a token identified by its name.
+func (c *Client) DeleteAccessTokenByName(ctx context.Context, user string, name string) (Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version1_13_0); err != nil {
+		return Response{}, err
+	}
+	_, resp, err := c.getResponseWithContext(ctx, "DELETE", fmt.Sprintf("/users/%s/tokens/%s", url.PathEscape(user), url.PathEscape(name)), jsonHeader, nil)
+	return resp, err
+}
+
+// DeleteAccessToken delete token, identified by ID and if not available by name.
+//
+// Deprecated: Use DeleteAccessTokenByID or DeleteAccessTokenByName instead.
+// This will be removed in a future major release.
 func (c *Client) DeleteAccessToken(user string, value any) (*Response, error) {
 	var token string
 

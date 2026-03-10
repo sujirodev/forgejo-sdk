@@ -94,7 +94,7 @@ func (c *Client) DeleteAccessTokenByID(ctx context.Context, user string, id int6
 }
 
 // DeleteAccessTokenByName deletes a token identified by its name.
-func (c *Client) DeleteAccessTokenByName(ctx context.Context, user string, name string) (Response, error) {
+func (c *Client) DeleteAccessTokenByName(ctx context.Context, user, name string) (Response, error) {
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_13_0); err != nil {
 		return Response{}, err
 	}

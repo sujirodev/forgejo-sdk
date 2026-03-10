@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"reflect"
 )
 
 // AccessTokenScope represents the scope for an access token.
@@ -87,17 +86,17 @@ func (c *Client) CreateAccessToken(user string, opt CreateAccessTokenOption) (*A
 }
 
 // DeleteAccessToken delete token, identified by ID and if not available by name
-func (c *Client) DeleteAccessToken(user string, value interface{}) (*Response, error) {
+func (c *Client) DeleteAccessToken(user string, value any) (*Response, error) {
 	var token string
 
-	switch reflect.ValueOf(value).Kind() {
-	case reflect.Int64:
-		token = fmt.Sprintf("%d", value.(int64))
-	case reflect.String:
+	switch v := value.(type) {
+	case int64:
+		token = fmt.Sprintf("%d", v)
+	case string:
 		if err := c.checkServerVersionGreaterThanOrEqual(version1_13_0); err != nil {
 			return nil, err
 		}
-		token = value.(string)
+		token = v
 	default:
 		return nil, fmt.Errorf("only string and int64 supported")
 	}

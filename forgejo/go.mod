@@ -1,6 +1,6 @@
 module codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/42wim/httpsig v1.2.3
@@ -11,7 +11,7 @@ require (
 	github.com/go-openapi/swag v0.25.5
 	github.com/hashicorp/go-version v1.7.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.48.0
+	golang.org/x/crypto v0.49.0
 )
 
 require (
@@ -32,8 +32,8 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

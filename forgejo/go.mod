@@ -7,7 +7,7 @@ require (
 	github.com/davidmz/go-pageant v1.0.2
 	github.com/go-fed/httpsig v1.1.0
 	github.com/go-openapi/errors v0.22.7
-	github.com/go-openapi/strfmt v0.26.0
+	github.com/go-openapi/strfmt v0.26.1
 	github.com/go-openapi/swag v0.25.5
 	github.com/hashicorp/go-version v1.7.0
 	github.com/stretchr/testify v1.11.1

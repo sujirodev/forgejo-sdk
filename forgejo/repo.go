@@ -104,6 +104,9 @@ type Repository struct {
 	MirrorInterval            string           `json:"mirror_interval"`
 	MirrorUpdated             time.Time        `json:"mirror_updated,omitempty"`
 	DefaultMergeStyle         MergeStyle       `json:"default_merge_style"`
+
+	AllowFastForwardOnly          bool `json:"allow_fast_forward_only_merge"`
+	DefaultDeleteBranchAfterMerge bool `json:"default_delete_branch_after_merge"`
 }
 
 // RepoType represent repo type

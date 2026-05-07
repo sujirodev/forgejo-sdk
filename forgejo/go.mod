@@ -3,7 +3,7 @@ module codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3
 go 1.25.0
 
 require (
-	github.com/42wim/httpsig v1.2.3
+	github.com/42wim/httpsig v1.2.4
 	github.com/davidmz/go-pageant v1.0.2
 	github.com/go-fed/httpsig v1.1.0
 	github.com/go-openapi/errors v0.22.7

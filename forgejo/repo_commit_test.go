@@ -11,6 +11,7 @@ package forgejo
 import (
 	"encoding/base64"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,7 +39,18 @@ func TestListRepoCommits(t *testing.T) {
 
 	assert.Equal(t, "Initial commit\n", l[0].RepoCommit.Message)
 	assert.Equal(t, "gpg.error.not_signed_commit", l[0].RepoCommit.Verification.Reason)
-	assert.Equal(t, 100, l[0].Stats.Additions)
+	linesAdded := 0
+	for _, file := range l[0].Files {
+		fileContents, _, getFileError := c.GetFile(repo.Owner.UserName, repo.Name, l[0].SHA, file.Filename, false)
+		assert.NoError(t, getFileError)
+		if fileContents[len(fileContents)-1] == '\n' {
+			fileContents = fileContents[:len(fileContents)-1]
+		}
+		fileString := string(fileContents)
+		fileLines := strings.Split(fileString, "\n")
+		linesAdded += len(fileLines)
+	}
+	assert.Equal(t, linesAdded, l[0].Stats.Additions)
 }
 
 func TestGetCommitDiffOrPatch(t *testing.T) {

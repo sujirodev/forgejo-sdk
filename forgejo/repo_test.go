@@ -146,7 +146,8 @@ func TestGetArchive(t *testing.T) {
 	time.Sleep(time.Second / 2)
 	archive, _, err := c.GetArchive(repo.Owner.UserName, repo.Name, "main", ZipArchive)
 	require.NoError(t, err)
-	assert.True(t, len(archive) > 1500 && len(archive) < 1700)
+	expectedSizeMin, expectedSizeMax := 1500, 1800
+	assert.True(t, len(archive) > expectedSizeMin && len(archive) < expectedSizeMax, "archive size: %d is not within range of (%d, %d)", len(archive), expectedSizeMin, expectedSizeMax)
 }
 
 func TestGetArchiveReader(t *testing.T) {

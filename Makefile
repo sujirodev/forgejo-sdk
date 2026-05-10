@@ -17,7 +17,7 @@ PACKAGE := codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0
 
-FORGEJO_VERSION := 11.0.10
+FORGEJO_VERSION := 15.0.1
 FORGEJO_DL := https://codeberg.org/forgejo/forgejo/releases/download/v$(FORGEJO_VERSION)/forgejo-$(FORGEJO_VERSION)-
 
 # Detect OS and architecture

@@ -182,7 +182,7 @@ func TestUserEmail(t *testing.T) {
 	_, err = c.DeleteEmail(DeleteEmailOption{Emails: []string{mails[1]}})
 	require.NoError(t, err)
 	_, err = c.DeleteEmail(DeleteEmailOption{Emails: []string{"imaginary@e.de"}})
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	el, _, err = c.ListEmails(ListEmailsOptions{})
 	require.NoError(t, err)

@@ -9,7 +9,7 @@ jobs:
   testing:
     runs-on: ubuntu-latest
     env:
-      GOPROXY: "https://goproxy.io"
+      GOPROXY: "https://proxy.golang.org,direct"
       GO111MODULE: "on"
       FORGEJO_SDK_TEST_URL: "http://forgejo:3000"
       FORGEJO_SDK_TEST_USERNAME: "test01"
@@ -21,11 +21,6 @@ jobs:
           go-version: "1.25"
           check-latest: true
 
-      - name: Upgrade Git  
-        run: |  
-          apt-get update  
-          apt-get install -y git
-      
       - name: Verify Git version
         run: git --version
     

@@ -42,7 +42,7 @@ jobs:
 
     services:
       forgejo:
-        image: codeberg.org/forgejo/forgejo:11.0.12@sha256:ed6b4ca6a0456b4b713a32f9c2b69332347a6ef70493fbbff5d86ae4525c4b3c
+        image: codeberg.org/forgejo/forgejo:11.0.14@sha256:afb609f099fdfc85aed99fa763604102cfc6525b78b3637382b2ac48d9d80f7c
         cmd:
           - bash
           - -c

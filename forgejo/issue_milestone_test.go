@@ -79,5 +79,8 @@ func TestMilestones(t *testing.T) {
 	assert.Equal(t, m1, m)
 	m2, _, err := c.GetMilestoneByName(repo.Owner.UserName, repo.Name, m.Title)
 	require.NoError(t, err)
+	assert.True(t, m.Updated.Before(*m2.Updated) || m.Updated.Equal(*m2.Updated))
+	assert.True(t, m2.Updated.Before(time.Now()) || m2.Updated.Equal(time.Now()))
+	m.Updated = m2.Updated
 	assert.Equal(t, m, m2)
 }

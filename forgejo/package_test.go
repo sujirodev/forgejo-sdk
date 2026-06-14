@@ -88,6 +88,30 @@ func TestListPackages(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, packagesList, 0)
 	})
+	t.Run("Test with name query found", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+			Q:    "My",
+			Type: PackageTypeAll,
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 1)
+	})
+	t.Run("Test with name query not found", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+			Q:    "NotMy",
+			Type: PackageTypeAll,
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 0)
+	})
 }
 
 func TestGetPackage(t *testing.T) {

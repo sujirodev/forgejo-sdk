@@ -54,7 +54,8 @@ type PackageFile struct {
 // ListPackagesOptions options for listing packages
 type ListPackagesOptions struct {
 	ListOptions
-	Type PackageType // Filter for package type, if nil, list everything
+	Type PackageType // Filter for package type, if empty, list everything
+	Q    string      // Name filter
 }
 
 func (opt *ListPackagesOptions) QueryEncode() string {
@@ -63,6 +64,9 @@ func (opt *ListPackagesOptions) QueryEncode() string {
 	if len(opt.Type) > 0 {
 		query.Add("type", string(opt.Type))
 	}
+	if len(opt.Q) > 0 {
+		query.Add("q", opt.Q)
+	}
 
 	return query.Encode()
 }
@@ -70,6 +74,7 @@ func (opt *ListPackagesOptions) QueryEncode() string {
 type PackageType string
 
 const (
+	PackageTypeAll       PackageType = ""
 	PackageTypeAlpine    PackageType = "alpine"
 	PackageTypeCargo     PackageType = "cargo"
 	PackageTypeChef      PackageType = "chef"

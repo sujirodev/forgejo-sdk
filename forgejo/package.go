@@ -54,7 +54,44 @@ type PackageFile struct {
 // ListPackagesOptions options for listing packages
 type ListPackagesOptions struct {
 	ListOptions
+	Type PackageType // Filter for package type, if nil, list everything
 }
+
+func (opt *ListPackagesOptions) QueryEncode() string {
+	query := opt.getURLQuery()
+
+	if len(opt.Type) > 0 {
+		query.Add("type", string(opt.Type))
+	}
+
+	return query.Encode()
+}
+
+type PackageType string
+
+const (
+	PackageTypeAlpine    PackageType = "alpine"
+	PackageTypeCargo     PackageType = "cargo"
+	PackageTypeChef      PackageType = "chef"
+	PackageTypeComposer  PackageType = "composer"
+	PackageTypeConan     PackageType = "conan"
+	PackageTypeConda     PackageType = "conda"
+	PackageTypeContainer PackageType = "container"
+	PackageTypeCran      PackageType = "cran"
+	PackageTypeDebian    PackageType = "debian"
+	PackageTypeGeneric   PackageType = "generic"
+	PackageTypeGotype    PackageType = "gotype"
+	PackageTypeHelm      PackageType = "helm"
+	PackageTypeMaven     PackageType = "maven"
+	PackageTypeNpm       PackageType = "npm"
+	PackageTypeNuget     PackageType = "nuget"
+	PackageTypePub       PackageType = "pub"
+	PackageTypePypi      PackageType = "pypi"
+	PackageTypeRpm       PackageType = "rpm"
+	PackageTypeRubygems  PackageType = "rubygems"
+	PackageTypeSwift     PackageType = "swift"
+	PackageTypeVagrant   PackageType = "vagrant"
+)
 
 // ListPackages lists all the packages owned by a given owner (user, organisation)
 func (c *Client) ListPackages(owner string, opt ListPackagesOptions) ([]*Package, *Response, error) {
@@ -63,7 +100,7 @@ func (c *Client) ListPackages(owner string, opt ListPackagesOptions) ([]*Package
 	}
 	opt.setDefaults()
 	packages := make([]*Package, 0, opt.PageSize)
-	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/packages/%s?%s", owner, opt.getURLQuery().Encode()), nil, nil, &packages)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/packages/%s?%s", owner, opt.QueryEncode()), nil, nil, &packages)
 	return packages, resp, err
 }
 

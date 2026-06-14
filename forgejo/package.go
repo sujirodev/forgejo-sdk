@@ -85,7 +85,7 @@ const (
 	PackageTypeCran      PackageType = "cran"
 	PackageTypeDebian    PackageType = "debian"
 	PackageTypeGeneric   PackageType = "generic"
-	PackageTypeGotype    PackageType = "gotype"
+	PackageTypeGo        PackageType = "go"
 	PackageTypeHelm      PackageType = "helm"
 	PackageTypeMaven     PackageType = "maven"
 	PackageTypeNpm       PackageType = "npm"

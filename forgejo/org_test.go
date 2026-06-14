@@ -9,11 +9,38 @@
 package forgejo
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestListAllOrgs(t *testing.T) {
+	log.Println("== TestListAllOrgs ==")
+	c := newTestClient()
+
+	orgName := "ListAllTestOrg"
+	_, _, err := c.GetOrg(orgName)
+	if err != nil {
+		_, _, err = c.CreateOrg(CreateOrgOption{
+			Name:       orgName,
+			Visibility: VisibleTypePublic,
+		})
+		require.NoError(t, err)
+	}
+
+	orgs, _, err := c.ListOrgs(ListOrgsOptions{})
+	require.NoError(t, err)
+
+	foundOrg := false
+	for _, org := range orgs {
+		if org.UserName == orgName {
+			foundOrg = true
+		}
+	}
+	assert.Equal(t, true, foundOrg)
+}
 
 func createTestOrgRepo(t *testing.T, c *Client, name string) (func(), *Repository, error) {
 	_, _, err := c.GetOrg(name)

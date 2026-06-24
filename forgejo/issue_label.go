@@ -18,8 +18,10 @@ import (
 
 // Label a label to an issue or a pr
 type Label struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	Exclusive  bool   `json:"exclusive"`
+	IsArchived bool   `json:"is_archived"`
 	// example: 00aabb
 	Color       string `json:"color"`
 	Description string `json:"description"`
@@ -54,10 +56,12 @@ func (c *Client) GetRepoLabel(owner, repo string, id int64) (*Label, *Response, 
 
 // CreateLabelOption options for creating a label
 type CreateLabelOption struct {
-	Name string `json:"name"`
+	Name      string `json:"name"`
+	Exclusive bool   `json:"exclusive"`
 	// example: #00aabb
 	Color       string `json:"color"`
 	Description string `json:"description"`
+	IsArchived  bool   `json:"is_archived"`
 }
 
 // Validate the CreateLabelOption struct
@@ -102,8 +106,10 @@ func (c *Client) CreateLabel(owner, repo string, opt CreateLabelOption) (*Label,
 // EditLabelOption options for editing a label
 type EditLabelOption struct {
 	Name        *string `json:"name"`
+	Exclusive   *bool   `json:"exclusive"`
 	Color       *string `json:"color"`
 	Description *string `json:"description"`
+	IsArchived  *bool   `json:"is_archived"`
 }
 
 // Validate the EditLabelOption struct

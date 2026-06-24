@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // Label a label to an issue or a pr
@@ -171,6 +172,8 @@ func (c *Client) GetIssueLabels(owner, repo string, index int64, opts ListLabels
 type IssueLabelsOption struct {
 	// list of label IDs
 	Labels []int64 `json:"labels"`
+	// swagger:strfmt date-time
+	Updated *time.Time `json:"updated_at"`
 }
 
 // AddIssueLabels add one or more labels to one issue

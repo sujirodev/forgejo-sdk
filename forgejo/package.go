@@ -10,6 +10,7 @@ package forgejo
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -58,8 +59,8 @@ type ListPackagesOptions struct {
 	Q    string      // Name filter
 }
 
-func (opt *ListPackagesOptions) QueryEncode() string {
-	query := opt.getURLQuery()
+func (opt *ListPackagesOptions) getURLQuery() url.Values {
+	query := opt.ListOptions.getURLQuery()
 
 	if len(opt.Type) > 0 {
 		query.Add("type", string(opt.Type))
@@ -68,7 +69,7 @@ func (opt *ListPackagesOptions) QueryEncode() string {
 		query.Add("q", opt.Q)
 	}
 
-	return query.Encode()
+	return query
 }
 
 type PackageType string
@@ -107,7 +108,17 @@ func (c *Client) ListPackages(owner string, opt ListPackagesOptions) ([]*Package
 	}
 	opt.setDefaults()
 	packages := make([]*Package, 0, opt.PageSize)
-	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/packages/%s?%s", owner, opt.QueryEncode()), nil, nil, &packages)
+	resp, err := c.getParsedResponse(
+		"GET",
+		fmt.Sprintf(
+			"/packages/%s?%s",
+			owner,
+			opt.getURLQuery().Encode(),
+		),
+		nil,
+		nil,
+		&packages,
+	)
 	return packages, resp, err
 }
 

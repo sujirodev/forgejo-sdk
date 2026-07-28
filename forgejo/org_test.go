@@ -39,7 +39,9 @@ func TestListAllOrgs(t *testing.T) {
 			foundOrg = true
 		}
 	}
-	assert.Equal(t, true, foundOrg)
+	assert.True(t, foundOrg)
+
+	c.DeleteOrg(orgName)
 }
 
 func createTestOrgRepo(t *testing.T, c *Client, name string) (func(), *Repository, error) {

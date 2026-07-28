@@ -41,7 +41,8 @@ func TestListAllOrgs(t *testing.T) {
 	}
 	assert.True(t, foundOrg)
 
-	c.DeleteOrg(orgName)
+	_, err = c.DeleteOrg(orgName)
+	assert.NoError(t, err, "failed to delete org")
 }
 
 func createTestOrgRepo(t *testing.T, c *Client, name string) (func(), *Repository, error) {

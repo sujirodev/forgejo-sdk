@@ -75,6 +75,8 @@ type PackageType string
 
 const (
 	PackageTypeAll       PackageType = ""
+	PackageTypeArch      PackageType = "arch"
+	PackageTypeAlt       PackageType = "alt"
 	PackageTypeAlpine    PackageType = "alpine"
 	PackageTypeCargo     PackageType = "cargo"
 	PackageTypeChef      PackageType = "chef"

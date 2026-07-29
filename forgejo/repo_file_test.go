@@ -12,32 +12,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"log"
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-const expectedLicenseTemplate = `MIT License
-
-Copyright (c) [REDACTED]
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-associated documentation files (the "Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-following conditions:
-
-The quick brown fox jumps over the lazy dog and definitely did not read this license before agreeing
-to its terms.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-`
 
 func TestFileCreateUpdateGet(t *testing.T) {
 	log.Println("== TestFileCRUD ==")
@@ -93,30 +72,7 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	require.NoError(t, err)
 	licenceRaw, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "", "LICENSE")
 	require.NoError(t, err)
-	testContent := "diff --git a/LICENSE b/LICENSE\nindex 8086dc7..f402aed 100644\n--- a/LICENSE\n+++ b/LICENSE\n@@ -8,8 +8,8 @@ without limitation the rights to use, copy, modify, merge, publish, distribute,\n copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the\n following conditions:\n \n-The above copyright notice and this permission notice shall be included in all copies or substantial\n-portions of the Software.\n+The quick brown fox jumps over the lazy dog and definitely did not read this license before agreeing\n+to its terms.\n \n THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT\n LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO\n"
-	updatedFile, _, err = c.DiffPatchFile(repo.Owner.UserName, repo.Name, DiffPatchFileOptions{
-		FileOptions: FileOptions{
-			Message:       "DiffPatch",
-			BranchName:    "main",
-			NewBranchName: "diffpatch-a+/&licence",
-		},
-		SHA:     licence.SHA,
-		Content: testContent,
-	})
-	require.NoError(t, err)
-	assert.NotNil(t, updatedFile)
-	licenceRawNew, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "diffpatch-a+/&licence", "LICENSE")
-	require.NoError(t, err)
-	assert.NotNil(t, licence)
-	assert.False(t, bytes.Equal(licenceRaw, licenceRawNew))
-	licenceTextNew := string(licenceRawNew)
-	assert.Equal(t, expectedLicenseTemplate, regexp.MustCompile(`(?m)^Copyright \(c\) .*$`).ReplaceAllString(licenceTextNew, "Copyright (c) [REDACTED]"))
-
-	licence, _, err = c.GetContents(repo.Owner.UserName, repo.Name, "", "LICENSE")
-	require.NoError(t, err)
-	licenceRaw, _, err = c.GetFile(repo.Owner.UserName, repo.Name, "", "LICENSE")
-	require.NoError(t, err)
-	testContent = "Tk9USElORyBJUyBIRVJFIEFOWU1PUkUKSUYgWU9VIExJS0UgVE8gRklORCBTT01FVEhJTkcKV0FJVCBGT1IgVEhFIEZVVFVSRQo="
+	testContent := "Tk9USElORyBJUyBIRVJFIEFOWU1PUkUKSUYgWU9VIExJS0UgVE8gRklORCBTT01FVEhJTkcKV0FJVCBGT1IgVEhFIEZVVFVSRQo="
 	updatedFile, _, err = c.UpdateFile(repo.Owner.UserName, repo.Name, "LICENSE", UpdateFileOptions{
 		FileOptions: FileOptions{
 			Message:       "Overwrite",
@@ -128,7 +84,7 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.NotNil(t, updatedFile)
-	licenceRawNew, _, err = c.GetFile(repo.Owner.UserName, repo.Name, "overwrite-a+/&licence", "LICENSE")
+	licenceRawNew, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "overwrite-a+/&licence", "LICENSE")
 	require.NoError(t, err)
 	assert.NotNil(t, licence)
 	assert.False(t, bytes.Equal(licenceRaw, licenceRawNew))
@@ -164,4 +120,30 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	}
 	assert.Nil(t, file)
 	assert.Equal(t, 200, resp.StatusCode)
+
+	diffPatchFileName := "fileToPatch"
+	diffPatchFile, _, err := c.CreateFile(repo.Owner.UserName, repo.Name, diffPatchFileName, CreateFileOptions{
+		FileOptions: FileOptions{
+			Message: "create file " + diffPatchFileName,
+		},
+		Content: "TGluZSAxOiBXaGF0CkxpbmUgMjogQQpMaW5lIDM6IFdvbmRlcmZ1bApMaW5lIDQ6IFdvcmxkCg==",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, diffPatchFile)
+	diffPatchContent := "--- fileToPatch\n+++ fileToPatch\n@@ -2,4 +2,4 @@\n Line 2: A\n-Line 3: Wonderful\n+Line 3: Beautiful\n Line 4: World\n"
+	patchedFile, _, err := c.DiffPatchFile(repo.Owner.UserName, repo.Name, DiffPatchFileOptions{
+		FileOptions: FileOptions{
+			Message:       "DiffPatch",
+			BranchName:    "main",
+			NewBranchName: "diffpatch-a+/&patch",
+		},
+		SHA:     diffPatchFile.Content.SHA,
+		Content: diffPatchContent,
+	})
+	require.NoError(t, err)
+	assert.NotNil(t, patchedFile)
+	patchedFileRaw, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "diffpatch-a+/&patch", diffPatchFileName)
+	require.NoError(t, err)
+	assert.NotNil(t, patchedFileRaw)
+	assert.Equal(t, "TGluZSAxOiBXaGF0CkxpbmUgMjogQQpMaW5lIDM6IEJlYXV0aWZ1bApMaW5lIDQ6IFdvcmxkCg==", base64.StdEncoding.EncodeToString(patchedFileRaw))
 }

@@ -56,14 +56,62 @@ func TestListPackages(t *testing.T) {
 	err := createTestPackage(t, c)
 	require.NoError(t, err)
 
-	packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
-		ListOptions{
-			Page:     1,
-			PageSize: 1000,
-		},
+	t.Run("Test without type", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 1)
 	})
-	require.NoError(t, err)
-	assert.Len(t, packagesList, 1)
+	t.Run("Test with found", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+			Type: PackageTypeGeneric,
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 1)
+	})
+	t.Run("Test with not found", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+			Type: PackageTypeContainer,
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 0)
+	})
+	t.Run("Test with name query found", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+			Q:    "My",
+			Type: PackageTypeAll,
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 1)
+	})
+	t.Run("Test with name query not found", func(t *testing.T) {
+		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+			ListOptions: ListOptions{
+				Page:     1,
+				PageSize: 1000,
+			},
+			Q:    "NotMy",
+			Type: PackageTypeAll,
+		})
+		require.NoError(t, err)
+		assert.Len(t, packagesList, 0)
+	})
 }
 
 func TestGetPackage(t *testing.T) {
@@ -91,7 +139,7 @@ func TestDeletePackage(t *testing.T) {
 
 	// no packages should be listed following deletion
 	packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
-		ListOptions{
+		ListOptions: ListOptions{
 			Page:     1,
 			PageSize: 1000,
 		},

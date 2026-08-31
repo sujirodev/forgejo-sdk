@@ -42,6 +42,7 @@ type PullRequest struct {
 	State     StateType  `json:"state"`
 	IsLocked  bool       `json:"is_locked"`
 	Comments  int        `json:"comments"`
+	Draft     bool       `json:"draft"`
 
 	HTMLURL  string `json:"html_url"`
 	DiffURL  string `json:"diff_url"`

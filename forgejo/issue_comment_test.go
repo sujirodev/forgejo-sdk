@@ -59,7 +59,7 @@ func TestIssueComment(t *testing.T) {
 	require.NoError(t, err)
 
 	// ListRepoIssueComments
-	comments, _, err := c.ListRepoIssueComments(user.UserName, repo.Name, ListIssueCommentOptions{})
+	comments, _, err := c.ListRepoIssueComments(user.UserName, repo.Name, ListRepoIssueCommentOptions{})
 	require.NoError(t, err)
 	assert.Len(t, comments, 7)
 

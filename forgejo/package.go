@@ -10,6 +10,7 @@ package forgejo
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -54,7 +55,51 @@ type PackageFile struct {
 // ListPackagesOptions options for listing packages
 type ListPackagesOptions struct {
 	ListOptions
+	Type PackageType // Filter for package type, if empty, list everything
+	Q    string      // Name filter
 }
+
+func (opt *ListPackagesOptions) getURLQuery() url.Values {
+	query := opt.ListOptions.getURLQuery()
+
+	if len(opt.Type) > 0 {
+		query.Add("type", string(opt.Type))
+	}
+	if len(opt.Q) > 0 {
+		query.Add("q", opt.Q)
+	}
+
+	return query
+}
+
+type PackageType string
+
+const (
+	PackageTypeAll       PackageType = ""
+	PackageTypeArch      PackageType = "arch"
+	PackageTypeAlt       PackageType = "alt"
+	PackageTypeAlpine    PackageType = "alpine"
+	PackageTypeCargo     PackageType = "cargo"
+	PackageTypeChef      PackageType = "chef"
+	PackageTypeComposer  PackageType = "composer"
+	PackageTypeConan     PackageType = "conan"
+	PackageTypeConda     PackageType = "conda"
+	PackageTypeContainer PackageType = "container"
+	PackageTypeCran      PackageType = "cran"
+	PackageTypeDebian    PackageType = "debian"
+	PackageTypeGeneric   PackageType = "generic"
+	PackageTypeGo        PackageType = "go"
+	PackageTypeHelm      PackageType = "helm"
+	PackageTypeMaven     PackageType = "maven"
+	PackageTypeNpm       PackageType = "npm"
+	PackageTypeNuget     PackageType = "nuget"
+	PackageTypePub       PackageType = "pub"
+	PackageTypePypi      PackageType = "pypi"
+	PackageTypeRpm       PackageType = "rpm"
+	PackageTypeRubygems  PackageType = "rubygems"
+	PackageTypeSwift     PackageType = "swift"
+	PackageTypeVagrant   PackageType = "vagrant"
+)
 
 // ListPackages lists all the packages owned by a given owner (user, organisation)
 func (c *Client) ListPackages(owner string, opt ListPackagesOptions) ([]*Package, *Response, error) {
@@ -63,7 +108,17 @@ func (c *Client) ListPackages(owner string, opt ListPackagesOptions) ([]*Package
 	}
 	opt.setDefaults()
 	packages := make([]*Package, 0, opt.PageSize)
-	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/packages/%s?%s", owner, opt.getURLQuery().Encode()), nil, nil, &packages)
+	resp, err := c.getParsedResponse(
+		"GET",
+		fmt.Sprintf(
+			"/packages/%s?%s",
+			owner,
+			opt.getURLQuery().Encode(),
+		),
+		nil,
+		nil,
+		&packages,
+	)
 	return packages, resp, err
 }
 

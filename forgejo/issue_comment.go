@@ -30,16 +30,34 @@ type Comment struct {
 	Updated          time.Time `json:"updated_at"`
 }
 
-// ListIssueCommentOptions list comment options
-type ListIssueCommentOptions struct {
+// ListRepoIssueCommentOptions list comment options
+type ListRepoIssueCommentOptions struct {
 	ListOptions
 	Since  time.Time
 	Before time.Time
 }
 
 // QueryEncode turns options into querystring argument
-func (opt *ListIssueCommentOptions) QueryEncode() string {
+func (opt *ListRepoIssueCommentOptions) QueryEncode() string {
 	query := opt.getURLQuery()
+	if !opt.Since.IsZero() {
+		query.Add("since", opt.Since.Format(time.RFC3339))
+	}
+	if !opt.Before.IsZero() {
+		query.Add("before", opt.Before.Format(time.RFC3339))
+	}
+	return query.Encode()
+}
+
+// ListIssueCommentOptions list comment options
+type ListIssueCommentOptions struct {
+	Since  time.Time
+	Before time.Time
+}
+
+// QueryEncode turns options into querystring argument
+func (opt *ListIssueCommentOptions) QueryEncode() string {
+	query := make(url.Values)
 	if !opt.Since.IsZero() {
 		query.Add("since", opt.Since.Format(time.RFC3339))
 	}
@@ -54,16 +72,15 @@ func (c *Client) ListIssueComments(owner, repo string, index int64, opt ListIssu
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
 		return nil, nil, err
 	}
-	opt.setDefaults()
 	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/issues/%d/comments", owner, repo, index))
 	link.RawQuery = opt.QueryEncode()
-	comments := make([]*Comment, 0, opt.PageSize)
+	comments := make([]*Comment, 0, 30) // No page size here, so put a default page size as length
 	resp, err := c.getParsedResponse("GET", link.String(), nil, nil, &comments)
 	return comments, resp, err
 }
 
 // ListRepoIssueComments list comments for a given repo.
-func (c *Client) ListRepoIssueComments(owner, repo string, opt ListIssueCommentOptions) ([]*Comment, *Response, error) {
+func (c *Client) ListRepoIssueComments(owner, repo string, opt ListRepoIssueCommentOptions) ([]*Comment, *Response, error) {
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
 		return nil, nil, err
 	}

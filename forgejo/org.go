@@ -46,6 +46,14 @@ type ListOrgsOptions struct {
 	ListOptions
 }
 
+// ListOrgs list all organizations
+func (c *Client) ListOrgs(opt ListOrgsOptions) ([]*Organization, *Response, error) {
+	opt.setDefaults()
+	orgs := make([]*Organization, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/orgs?%s", opt.getURLQuery().Encode()), nil, nil, &orgs)
+	return orgs, resp, err
+}
+
 // ListMyOrgs list all of current user's organizations
 func (c *Client) ListMyOrgs(opt ListOrgsOptions) ([]*Organization, *Response, error) {
 	opt.setDefaults()

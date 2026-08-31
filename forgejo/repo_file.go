@@ -52,6 +52,18 @@ type DeleteFileOptions struct {
 	SHA string `json:"sha"`
 }
 
+// DiffPatchFileOptions options for applying diff patches to files
+// Note: `author` and `committer` are optional (if only one is given, it will be used for the other, otherwise the authenticated user will be used)
+type DiffPatchFileOptions struct {
+	FileOptions
+	// sha is the SHA for the file that already exists
+	// required: true
+	SHA string `json:"sha"`
+	// content is plaintext
+	// required: true
+	Content string `json:"content"`
+}
+
 // UpdateFileOptions options for updating files
 // Note: `author` and `committer` are optional (if only one is given, it will be used for the other, otherwise the authenticated user will be used)
 type UpdateFileOptions struct {
@@ -238,6 +250,26 @@ func (c *Client) UpdateFile(owner, repo, filepath string, opt UpdateFileOptions)
 	}
 	fr := new(FileResponse)
 	resp, err := c.getParsedResponse("PUT", fmt.Sprintf("/repos/%s/%s/contents/%s", owner, repo, filepath), jsonHeader, bytes.NewReader(body), fr)
+	return fr, resp, err
+}
+
+// DiffPatchFile apply a diff patch to a file in a repository
+func (c *Client) DiffPatchFile(owner, repo string, opt DiffPatchFileOptions) (*FileResponse, *Response, error) {
+	var err error
+	if opt.BranchName, err = c.setDefaultBranchForOldVersions(owner, repo, opt.BranchName); err != nil {
+		return nil, nil, err
+	}
+
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	fr := new(FileResponse)
+	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/diffpatch", owner, repo), jsonHeader, bytes.NewReader(body), fr)
 	return fr, resp, err
 }
 

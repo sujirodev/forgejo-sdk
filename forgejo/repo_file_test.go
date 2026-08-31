@@ -120,4 +120,30 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	}
 	assert.Nil(t, file)
 	assert.Equal(t, 200, resp.StatusCode)
+
+	diffPatchFileName := "fileToPatch"
+	diffPatchFile, _, err := c.CreateFile(repo.Owner.UserName, repo.Name, diffPatchFileName, CreateFileOptions{
+		FileOptions: FileOptions{
+			Message: "create file " + diffPatchFileName,
+		},
+		Content: "TGluZSAxOiBXaGF0CkxpbmUgMjogQQpMaW5lIDM6IFdvbmRlcmZ1bApMaW5lIDQ6IFdvcmxkCg==",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, diffPatchFile)
+	diffPatchContent := "--- fileToPatch\n+++ fileToPatch\n@@ -2,4 +2,4 @@\n Line 2: A\n-Line 3: Wonderful\n+Line 3: Beautiful\n Line 4: World\n"
+	patchedFile, _, err := c.DiffPatchFile(repo.Owner.UserName, repo.Name, DiffPatchFileOptions{
+		FileOptions: FileOptions{
+			Message:       "DiffPatch",
+			BranchName:    "main",
+			NewBranchName: "diffpatch-a+/&patch",
+		},
+		SHA:     diffPatchFile.Content.SHA,
+		Content: diffPatchContent,
+	})
+	require.NoError(t, err)
+	assert.NotNil(t, patchedFile)
+	patchedFileRaw, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "diffpatch-a+/&patch", diffPatchFileName)
+	require.NoError(t, err)
+	assert.NotNil(t, patchedFileRaw)
+	assert.Equal(t, "TGluZSAxOiBXaGF0CkxpbmUgMjogQQpMaW5lIDM6IEJlYXV0aWZ1bApMaW5lIDQ6IFdvcmxkCg==", base64.StdEncoding.EncodeToString(patchedFileRaw))
 }

@@ -101,8 +101,12 @@ ci-lint: ## Run the linter.
 
 ##@ Testing
 
+.PHONY: test-unit
+test-unit: ## Run the client's own unit tests (no Forgejo instance needed).
+	cd forgejo && $(GO) test -race -run '^TestUnit_' -v ./...
+
 .PHONY: test
-test: ## Run unit tests (requires a running forgejo instance).
+test: ## Run the integration test suite (requires a running Forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
 	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \

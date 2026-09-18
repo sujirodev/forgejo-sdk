@@ -37,6 +37,7 @@ jobs:
       - run: make vet
       - run: make ci-lint
       - run: make build
+      - run: make test-unit
 
       # Wait for Forgejo to be healthy before running tests; fail if it never is.
       - name: Wait for Forgejo

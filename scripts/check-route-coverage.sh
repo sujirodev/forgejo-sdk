@@ -12,13 +12,10 @@ if [ "${1:-}" = "--strict" ]; then
   strict=1
 fi
 
-# Client plumbing that isn't an API route: no HTTP call to assert against.
-except=(SetHTTPClient SetOTP SetContext SetUserAgent SignRequest)
+# No exceptions: every exported *Client method has a test as of fase 7 of
+# the route-coverage plan (SetHTTPClient/SetOTP/SetContext/SetUserAgent are
+# tested as methods in client_plumbing_unit_test.go; SignRequest there too).
 is_exception() {
-  local m=$1 e
-  for e in "${except[@]}"; do
-    [ "$m" = "$e" ] && return 0
-  done
   return 1
 }
 

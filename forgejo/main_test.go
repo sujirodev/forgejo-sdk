@@ -55,15 +55,18 @@ func newTestClientAuth() ClientOption {
 	return SetToken(getForgejoToken())
 }
 
+// renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
+const testForgejoVersion = "15.0.1"
+
 // TODO: replace with proper forgejo path
 func forgejoMasterPath() string {
 	switch runtime.GOOS {
 	case "darwin":
-		return fmt.Sprintf("https://codeberg.org/forgejo/forgejo/releases/download/v8.0.3/forgejo-8.0.3-%s", runtime.GOARCH)
+		return fmt.Sprintf("https://codeberg.org/forgejo/forgejo/releases/download/v%[1]s/forgejo-%[1]s-%[2]s", testForgejoVersion, runtime.GOARCH)
 	case "linux":
-		return fmt.Sprintf("https://codeberg.org/forgejo/forgejo/releases/download/v8.0.3/forgejo-8.0.3-linux-%s", runtime.GOARCH)
+		return fmt.Sprintf("https://codeberg.org/forgejo/forgejo/releases/download/v%[1]s/forgejo-%[1]s-linux-%[2]s", testForgejoVersion, runtime.GOARCH)
 	case "windows":
-		return fmt.Sprintf("https://codeberg.org/forgejo/forgejo/releases/download/v8.0.3/forgejo-8.0.3-%s.exe", runtime.GOARCH)
+		return fmt.Sprintf("https://codeberg.org/forgejo/forgejo/releases/download/v%[1]s/forgejo-%[1]s-%[2]s.exe", testForgejoVersion, runtime.GOARCH)
 	}
 	return ""
 }

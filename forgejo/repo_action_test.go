@@ -282,11 +282,10 @@ func TestListRepoActionJobs(t *testing.T) {
 	repo, cleanup := createTestRepoForActions(t, c, "list_jobs")
 	defer cleanup()
 
-	jobs, resp, err := c.ListRepoActionJobs(repo.Owner.UserName, repo.Name, ListActionJobsOption{})
+	// jobs may be nil when the API returns JSON null (no jobs exist)
+	_, resp, err := c.ListRepoActionJobs(repo.Owner.UserName, repo.Name, ListActionJobsOption{})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	// jobs may be nil when the API returns JSON null (no jobs exist)
-	assert.GreaterOrEqual(t, len(jobs), 0)
 }
 
 func TestRepoActionVariables(t *testing.T) {

@@ -22,9 +22,6 @@ func TestGetMyQuota(t *testing.T) {
 	// Verify structure is populated
 	// Even with no usage, these should be 0, not a crash
 	assert.GreaterOrEqual(t, quota.Used.Size.Repos.Public, int64(0))
-
-	// Groups may be nil if no quota groups are assigned.
-	assert.GreaterOrEqual(t, len(quota.Groups), 0)
 }
 
 func TestListMyQuotaArtifacts(t *testing.T) {

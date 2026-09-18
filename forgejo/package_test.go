@@ -86,7 +86,7 @@ func TestListPackages(t *testing.T) {
 			Type: PackageTypeContainer,
 		})
 		require.NoError(t, err)
-		assert.Len(t, packagesList, 0)
+		assert.Empty(t, packagesList)
 	})
 	t.Run("Test with name query found", func(t *testing.T) {
 		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
@@ -110,7 +110,7 @@ func TestListPackages(t *testing.T) {
 			Type: PackageTypeAll,
 		})
 		require.NoError(t, err)
-		assert.Len(t, packagesList, 0)
+		assert.Empty(t, packagesList)
 	})
 }
 

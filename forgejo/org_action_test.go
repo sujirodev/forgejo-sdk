@@ -368,11 +368,10 @@ func TestListOrgActionJobs(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, org)
 
-	jobs, resp, err := c.ListOrgActionJobs(org.UserName, ListActionJobsOption{})
+	// jobs may be nil when the API returns JSON null (no jobs exist)
+	_, resp, err := c.ListOrgActionJobs(org.UserName, ListActionJobsOption{})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	// jobs may be nil when the API returns JSON null (no jobs exist)
-	assert.GreaterOrEqual(t, len(jobs), 0)
 }
 
 func TestOrgActionVariables(t *testing.T) {

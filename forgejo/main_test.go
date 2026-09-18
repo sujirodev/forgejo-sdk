@@ -137,6 +137,9 @@ func runForgejo() (*os.Process, error) {
 INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4
 INSTALL_LOCK   = true
 SECRET_KEY     = 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo
+DISABLE_GIT_HOOKS = false
+[migrations]
+ALLOW_LOCALNETWORKS = true
 [database]
 DB_TYPE  = sqlite3
 [log]

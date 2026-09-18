@@ -38,7 +38,7 @@ const (
 func (c *Client) GetMyQuota(ctx context.Context) (models.QuotaInfo, Response, error) {
 	var quota models.QuotaInfo
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", "/user/quota", jsonHeader, nil, &quota)
+	resp, err := c.getParsedResponseWithContext(ctx, "/user/quota", &quota)
 	if err != nil {
 		return models.QuotaInfo{}, resp, err
 	}
@@ -61,7 +61,7 @@ func (c *Client) ListMyQuotaArtifacts(ctx context.Context, opt ListMyQuotaArtifa
 		path += "?" + link
 	}
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", path, jsonHeader, nil, &artifacts)
+	resp, err := c.getParsedResponseWithContext(ctx, path, &artifacts)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -84,7 +84,7 @@ func (c *Client) ListMyQuotaAttachments(ctx context.Context, opt ListMyQuotaAtta
 		path += "?" + link
 	}
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", path, jsonHeader, nil, &attachments)
+	resp, err := c.getParsedResponseWithContext(ctx, path, &attachments)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -127,7 +127,7 @@ func (c *Client) ListMyQuotaPackages(ctx context.Context, opt ListMyQuotaPackage
 		path += "?" + link
 	}
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", path, jsonHeader, nil, &packages)
+	resp, err := c.getParsedResponseWithContext(ctx, path, &packages)
 	if err != nil {
 		return nil, resp, err
 	}

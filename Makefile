@@ -91,9 +91,12 @@ ci-lint: ## Run the linter.
 		echo; echo "Not gofumpt-ed"; \
 		exit 1; \
 	fi; echo " done"; echo -n "golangci-lint ...";\
-	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $$($(GO) env GOPATH)/bin $(GOLANGCI_LINT_VERSION) \
-	$$($(GO) env GOPATH)/bin/golangci-lint run --timeout 5m; \
-	if [ $$? -eq 1 ]; then \
+	bin=$$($(GO) env GOPATH)/bin; \
+	if ! "$$bin/golangci-lint" --version 2>/dev/null | grep -q "$(GOLANGCI_LINT_VERSION:v%=%)"; then \
+		curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$$bin" $(GOLANGCI_LINT_VERSION); \
+	fi; \
+	"$$bin/golangci-lint" run --timeout 5m; \
+	if [ $$? -ne 0 ]; then \
 		echo; echo "Doesn't pass golangci-lint"; \
 		exit 1; \
 	fi; echo " done"; \

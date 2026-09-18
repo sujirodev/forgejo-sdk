@@ -12,8 +12,8 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"fmt"
+	"hash/fnv"
 	"os"
-	"regexp"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -23,27 +23,28 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// unsafeNameChars is anything that isn't safe in a Forgejo username, repo
-// name, org name, or branch/tag name.
-var unsafeNameChars = regexp.MustCompile(`[^a-zA-Z0-9]+`)
-
 // uniqueSeq makes uniqueName collision-proof even when called twice within
-// the same second from the same test (time.Now().Unix() alone isn't enough).
+// the same nanosecond from the same test.
 var uniqueSeq int64
 
 // uniqueName returns a short, collision-resistant name derived from the
-// test's own name, so failures are traceable back to the test that created
-// the resource and parallel/rerun runs don't collide with each other or with
-// the legacy fixed-name tests (see docs/PLANO-COBERTURA-TESTES.md section 5:
-// a new test must never touch a resource it didn't create).
+// test's own name, so a resource is traceable back to the test that created
+// it and reruns don't collide with each other or with the legacy fixed-name
+// tests (see docs/PLANO-COBERTURA-TESTES.md section 5: a new test must never
+// touch a resource it didn't create).
+//
+// The test name goes in hashed, not literal: an earlier version embedded the
+// sanitized test name directly, and a name like
+// "TestIssueSubscription_AddDeleteOtherUser" contains the substring "other",
+// which is exactly the kind of keyword several legacy tests search for
+// globally (TestUserSearch, TestNotifications) — polluting their exact-count
+// assertions. A hash keeps names unique without risking an accidental match.
 func uniqueName(t *testing.T, prefix string) string {
 	t.Helper()
-	clean := unsafeNameChars.ReplaceAllString(t.Name(), "")
-	if len(clean) > 20 {
-		clean = clean[len(clean)-20:] // keep the leaf (sub-test) part
-	}
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(t.Name()))
 	seq := atomic.AddInt64(&uniqueSeq, 1)
-	name := fmt.Sprintf("%s-%s-%d%d", prefix, clean, time.Now().UnixNano()%1_000_000, seq)
+	name := fmt.Sprintf("%s-%x-%d%d", prefix, h.Sum32(), time.Now().UnixNano()%1_000_000, seq)
 	if len(name) > 60 {
 		name = name[:60]
 	}

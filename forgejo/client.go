@@ -552,8 +552,8 @@ func (c *Client) getParsedResponse(method, path string, header http.Header, body
 }
 
 // Modernized version of getParsedResponse
-func (c *Client) getParsedResponseWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader, obj interface{}) (Response, error) {
-	data, resp, err := c.getResponseWithContext(ctx, method, path, header, body)
+func (c *Client) getParsedResponseWithContext(ctx context.Context, path string, header http.Header, body io.Reader, obj interface{}) (Response, error) {
+	data, resp, err := c.getResponseWithContext(ctx, "GET", path, header, body)
 	if err != nil {
 		return resp, err
 	}

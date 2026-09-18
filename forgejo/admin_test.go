@@ -44,6 +44,32 @@ func TestAdminOrg(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestAdminListEditUsers(t *testing.T) {
+	c := newTestClient()
+	user := createTestUser(t, uniqueName(t, "adminedit"), c)
+
+	users, _, err := c.AdminListUsers(AdminListUsersOptions{})
+	require.NoError(t, err)
+	found := false
+	for _, u := range users {
+		if u.UserName == user.UserName {
+			found = true
+		}
+	}
+	assert.True(t, found, "AdminListUsers should list the just-created user")
+
+	fullName := "Edited By AdminEditUser"
+	_, err = c.AdminEditUser(user.UserName, EditUserOption{
+		LoginName: user.UserName,
+		FullName:  &fullName,
+	})
+	require.NoError(t, err)
+
+	edited, _, err := c.GetUserInfo(user.UserName)
+	require.NoError(t, err)
+	assert.Equal(t, fullName, edited.FullName)
+}
+
 func TestAdminCronTasks(t *testing.T) {
 	log.Println("== TestAdminCronTasks ==")
 	c := newTestClient()

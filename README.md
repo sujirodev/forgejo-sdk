@@ -30,7 +30,7 @@ import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
  * go >= 1.25
  * forgejo >= 11.0.10 (minimum supported)
 <!-- renovate: datasource=docker depName=codeberg.org/forgejo/forgejo -->
- * tested against forgejo 16.0.5 (the CI test instance, bumped automatically by Renovate)
+ * tested against forgejo 15.0.1 (the CI test instance, bumped automatically by Renovate)
 
  **Please note:** the SDK might or might not work with versions between the minimum and the tested one
  depending on what part of the SDK you use; CI only runs against the tested version.

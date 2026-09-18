@@ -56,7 +56,7 @@ func newTestClientAuth() ClientOption {
 }
 
 // renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
-const testForgejoVersion = "16.0.5"
+const testForgejoVersion = "15.0.1"
 
 // TODO: replace with proper forgejo path
 func forgejoMasterPath() string {

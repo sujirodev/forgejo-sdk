@@ -2,9 +2,9 @@ name: Renovate
 
 on:
   workflow_dispatch:
-  # Run Renovate every night at 01:23.
+  # Run Renovate once a day at 03:23 UTC (self-hosted runner, keep it cheap).
   schedule:
-    - cron: "23 01/4 * * *"
+    - cron: "23 3 * * *"
 
 jobs:
   renovate:
@@ -21,7 +21,7 @@ jobs:
           RENOVATE_PLATFORM: "forgejo"
           RENOVATE_ENDPOINT: "${{ vars.FORGEJO_API_URL || 'https://codeberg.org/api/v1/' }}"
           RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
-          RENOVATE_REPOSITORIES: "mvdkleijn/forgejo-sdk"
+          RENOVATE_REPOSITORIES: "MatheusAlves96/forgejo-sdk"
           
           # GitHub token is still needed for fetching changelogs/metadata from github.com
           GITHUB_COM_TOKEN: ${{ secrets.TOKEN_GITHUB }}

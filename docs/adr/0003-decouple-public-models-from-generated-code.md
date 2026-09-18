@@ -4,7 +4,7 @@ Date: 2026-03-04
 
 ## Status
 
-Proposed
+Superseded by [4. Stop Generating Quota Models from Swagger](0004-stop-generating-quota-models-from-swagger.md)
 
 ## Context
 

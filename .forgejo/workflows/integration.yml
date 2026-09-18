@@ -2,14 +2,18 @@ name: integration
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
+
+# A newer push to the same branch/PR cancels the run still in progress.
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   testing:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       GOPROXY: "https://proxy.golang.org,direct"
       GO111MODULE: "on"
@@ -22,24 +26,31 @@ jobs:
         with:
           go-version: "1.25"
           check-latest: true
+          cache-dependency-path: forgejo/go.sum
 
       - name: Verify Git version
         run: git --version
-    
+
+      # Every file that pins the Forgejo test-instance version must agree.
+      - run: make check-forgejo-version
       - run: make clean
       - run: make vet
       - run: make ci-lint
       - run: make build
       - run: make test-unit
 
-      # Wait for Forgejo to be healthy before running tests
+      # Wait for Forgejo to be healthy before running tests; fail if it never is.
       - name: Wait for Forgejo
         run: |
           for i in {1..20}; do
-            curl -s http://forgejo:3000/api/v1/version && break
-            echo "Waiting for Forgejo..."
+            if curl -sf http://forgejo:3000/api/v1/version; then
+              exit 0
+            fi
+            echo "Waiting for Forgejo... ($i/20)"
             sleep 5
           done
+          echo "Forgejo did not become healthy in time"
+          exit 1
 
       - run: make test
 
@@ -54,7 +65,7 @@ jobs:
             && mkdir -p /tmp/data/
             && echo "I_AM_BEING_UNSAFE_RUNNING_AS_ROOT = true" > /tmp/conf/app.ini
             && echo "[security]" >> /tmp/conf/app.ini
-            &&echo "INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4" >> /tmp/conf/app.ini
+            && echo "INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4" >> /tmp/conf/app.ini
             && echo "INSTALL_LOCK = true" >> /tmp/conf/app.ini
             && echo "SECRET_KEY = 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo" >> /tmp/conf/app.ini
             && echo "PASSWORD_COMPLEXITY = off" >> /tmp/conf/app.ini

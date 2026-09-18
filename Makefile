@@ -17,6 +17,7 @@ PACKAGE := codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0
 
+# renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
 FORGEJO_VERSION := 15.0.1
 FORGEJO_DL := https://codeberg.org/forgejo/forgejo/releases/download/v$(FORGEJO_VERSION)/forgejo-$(FORGEJO_VERSION)-
 
@@ -90,9 +91,12 @@ ci-lint: ## Run the linter.
 		echo; echo "Not gofumpt-ed"; \
 		exit 1; \
 	fi; echo " done"; echo -n "golangci-lint ...";\
-	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $$($(GO) env GOPATH)/bin $(GOLANGCI_LINT_VERSION) \
-	$$($(GO) env GOPATH)/bin/golangci-lint run --timeout 5m; \
-	if [ $$? -eq 1 ]; then \
+	bin=$$($(GO) env GOPATH)/bin; \
+	if ! "$$bin/golangci-lint" --version 2>/dev/null | grep -q "$(GOLANGCI_LINT_VERSION:v%=%)"; then \
+		curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$$bin" $(GOLANGCI_LINT_VERSION); \
+	fi; \
+	"$$bin/golangci-lint" run --timeout 5m; \
+	if [ $$? -ne 0 ]; then \
 		echo; echo "Doesn't pass golangci-lint"; \
 		exit 1; \
 	fi; echo " done"; \
@@ -100,12 +104,20 @@ ci-lint: ## Run the linter.
 
 ##@ Testing
 
+.PHONY: test-unit
+test-unit: ## Run the client's own unit tests (no Forgejo instance needed).
+	cd forgejo && $(GO) test -race -run '^TestUnit_' -v ./...
+
 .PHONY: test
-test: ## Run unit tests (requires a running forgejo instance).
+test: ## Run the integration test suite (requires a running Forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
 	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \
 	fi
+
+.PHONY: check-forgejo-version
+check-forgejo-version: ## Verify every pinned Forgejo test-instance version matches.
+	@bash scripts/check-forgejo-version.sh
 
 .PHONY: test-instance
 test-instance: ## Start a forgejo instance for test (auto-detects method).
@@ -218,13 +230,3 @@ bench: ## Run benchmarks.
 .PHONY: build
 build: ## Build the SDK.
 	cd forgejo && $(GO) build
-
-.PHONY: swagger-install swagger-generate swagger
-
-swagger-install:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
-
-swagger-generate-models:
-	swagger generate model -t ./forgejo -f swagger.v1.json -m internal/generated/models
-
-swagger: swagger-install swagger-generate-models ## Generate new models based on provided swagger.v1.json file

@@ -163,7 +163,7 @@ func TestGetArchiveReader(t *testing.T) {
 	nBytes, err := io.Copy(archive, r)
 	require.NoError(t, err)
 	assert.Greater(t, nBytes, int64(1500))
-	assert.Equal(t, nBytes, int64(len(archive.Bytes()))) //nolint:testifylint
+	assert.Equal(t, nBytes, int64(len(archive.Bytes())))
 }
 
 func TestGetRepoByID(t *testing.T) {

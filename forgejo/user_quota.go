@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"strings"
 
-	gen "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/internal/generated/models"
 	"codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/models"
 )
 
@@ -37,14 +36,14 @@ const (
 
 // GetMyQuota returns quota information for the authenticated user
 func (c *Client) GetMyQuota(ctx context.Context) (models.QuotaInfo, Response, error) {
-	var genQuota gen.QuotaInfo
+	var quota models.QuotaInfo
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", "/user/quota", jsonHeader, nil, &genQuota)
+	resp, err := c.getParsedResponseWithContext(ctx, "/user/quota", &quota)
 	if err != nil {
 		return models.QuotaInfo{}, resp, err
 	}
 
-	return mapQuotaInfo(&genQuota), resp, nil
+	return quota, resp, nil
 }
 
 // ListMyQuotaArtifactsOptions holds optional parameters for listing quota artifacts
@@ -55,23 +54,16 @@ type ListMyQuotaArtifactsOptions struct {
 // ListMyQuotaArtifacts lists artifacts counting towards the authenticated user's quota
 func (c *Client) ListMyQuotaArtifacts(ctx context.Context, opt ListMyQuotaArtifactsOptions) ([]models.QuotaUsedArtifact, Response, error) {
 	link := opt.getURLQuery().Encode()
-	var genArtifacts []*gen.QuotaUsedArtifact
+	var artifacts []models.QuotaUsedArtifact
 
 	path := "/user/quota/artifacts"
 	if link != "" {
 		path += "?" + link
 	}
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", path, jsonHeader, nil, &genArtifacts)
+	resp, err := c.getParsedResponseWithContext(ctx, path, &artifacts)
 	if err != nil {
 		return nil, resp, err
-	}
-
-	artifacts := make([]models.QuotaUsedArtifact, 0, len(genArtifacts))
-	for _, ga := range genArtifacts {
-		if ga != nil {
-			artifacts = append(artifacts, mapQuotaUsedArtifact(ga))
-		}
 	}
 
 	return artifacts, resp, nil
@@ -85,23 +77,16 @@ type ListMyQuotaAttachmentsOptions struct {
 // ListMyQuotaAttachments lists attachments counting towards the authenticated user's quota
 func (c *Client) ListMyQuotaAttachments(ctx context.Context, opt ListMyQuotaAttachmentsOptions) ([]models.QuotaUsedAttachment, Response, error) {
 	link := opt.getURLQuery().Encode()
-	var genAttachments []*gen.QuotaUsedAttachment
+	var attachments []models.QuotaUsedAttachment
 
 	path := "/user/quota/attachments"
 	if link != "" {
 		path += "?" + link
 	}
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", path, jsonHeader, nil, &genAttachments)
+	resp, err := c.getParsedResponseWithContext(ctx, path, &attachments)
 	if err != nil {
 		return nil, resp, err
-	}
-
-	attachments := make([]models.QuotaUsedAttachment, 0, len(genAttachments))
-	for _, ga := range genAttachments {
-		if ga != nil {
-			attachments = append(attachments, mapQuotaUsedAttachment(ga))
-		}
 	}
 
 	return attachments, resp, nil
@@ -135,189 +120,17 @@ type ListMyQuotaPackagesOptions struct {
 // ListMyQuotaPackages lists packages counting towards the authenticated user's quota
 func (c *Client) ListMyQuotaPackages(ctx context.Context, opt ListMyQuotaPackagesOptions) ([]models.QuotaUsedPackage, Response, error) {
 	link := opt.getURLQuery().Encode()
-	var genPackages []*gen.QuotaUsedPackage
+	var packages []models.QuotaUsedPackage
 
 	path := "/user/quota/packages"
 	if link != "" {
 		path += "?" + link
 	}
 
-	resp, err := c.getParsedResponseWithContext(ctx, "GET", path, jsonHeader, nil, &genPackages)
+	resp, err := c.getParsedResponseWithContext(ctx, path, &packages)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	packages := make([]models.QuotaUsedPackage, 0, len(genPackages))
-	for _, gp := range genPackages {
-		if gp != nil {
-			packages = append(packages, mapQuotaUsedPackage(gp))
-		}
-	}
-
 	return packages, resp, nil
-}
-
-// Mapping functions from generated models to public models
-
-func mapQuotaInfo(in *gen.QuotaInfo) models.QuotaInfo {
-	if in == nil {
-		return models.QuotaInfo{}
-	}
-
-	info := models.QuotaInfo{
-		Used: mapQuotaUsed(in.Used),
-	}
-
-	if len(in.Groups) > 0 {
-		info.Groups = make([]models.QuotaGroup, 0, len(in.Groups))
-		for _, gg := range in.Groups {
-			if gg != nil {
-				info.Groups = append(info.Groups, mapQuotaGroup(gg))
-			}
-		}
-	}
-
-	return info
-}
-
-func mapQuotaUsedArtifact(in *gen.QuotaUsedArtifact) models.QuotaUsedArtifact {
-	return models.QuotaUsedArtifact{
-		HTMLURL: in.HTMLURL,
-		Name:    in.Name,
-		Size:    in.Size,
-	}
-}
-
-func mapQuotaUsedAttachment(in *gen.QuotaUsedAttachment) models.QuotaUsedAttachment {
-	attachment := models.QuotaUsedAttachment{
-		APIURL: in.APIURL,
-		Name:   in.Name,
-		Size:   in.Size,
-	}
-
-	if in.ContainedIn != nil {
-		attachment.ContainedIn = &models.ContainedIn{
-			APIURL:  in.ContainedIn.APIURL,
-			HTMLURL: in.ContainedIn.HTMLURL,
-		}
-	}
-
-	return attachment
-}
-
-func mapQuotaUsedPackage(in *gen.QuotaUsedPackage) models.QuotaUsedPackage {
-	return models.QuotaUsedPackage{
-		HTMLURL: in.HTMLURL,
-		Name:    in.Name,
-		Size:    in.Size,
-		Type:    in.Type,
-		Version: in.Version,
-	}
-}
-
-func mapQuotaUsed(in *gen.QuotaUsed) models.QuotaUsed {
-	if in == nil {
-		return models.QuotaUsed{}
-	}
-
-	return models.QuotaUsed{
-		Size: mapQuotaUsedSize(in.Size),
-	}
-}
-
-func mapQuotaUsedSize(in *gen.QuotaUsedSize) models.QuotaUsedSize {
-	if in == nil {
-		return models.QuotaUsedSize{}
-	}
-
-	return models.QuotaUsedSize{
-		Assets: mapQuotaUsedSizeAssets(in.Assets),
-		Git:    mapQuotaUsedSizeGit(in.Git),
-		Repos:  mapQuotaUsedSizeRepos(in.Repos),
-	}
-}
-
-func mapQuotaUsedSizeAssets(in *gen.QuotaUsedSizeAssets) models.QuotaUsedSizeAssets {
-	if in == nil {
-		return models.QuotaUsedSizeAssets{}
-	}
-
-	return models.QuotaUsedSizeAssets{
-		Artifacts:   in.Artifacts,
-		Attachments: mapQuotaUsedSizeAssetsAttachments(in.Attachments),
-		Packages:    mapQuotaUsedSizeAssetsPackages(in.Packages),
-	}
-}
-
-func mapQuotaUsedSizeGit(in *gen.QuotaUsedSizeGit) models.QuotaUsedSizeGit {
-	if in == nil {
-		return models.QuotaUsedSizeGit{}
-	}
-
-	return models.QuotaUsedSizeGit{
-		LFS: in.LFS,
-	}
-}
-
-func mapQuotaUsedSizeRepos(in *gen.QuotaUsedSizeRepos) models.QuotaUsedSizeRepos {
-	if in == nil {
-		return models.QuotaUsedSizeRepos{}
-	}
-
-	return models.QuotaUsedSizeRepos{
-		Private: in.Private,
-		Public:  in.Public,
-	}
-}
-
-func mapQuotaUsedSizeAssetsAttachments(in *gen.QuotaUsedSizeAssetsAttachments) models.QuotaUsedSizeAssetsAttachments {
-	if in == nil {
-		return models.QuotaUsedSizeAssetsAttachments{}
-	}
-
-	return models.QuotaUsedSizeAssetsAttachments{
-		Issues:   in.Issues,
-		Releases: in.Releases,
-	}
-}
-
-func mapQuotaUsedSizeAssetsPackages(in *gen.QuotaUsedSizeAssetsPackages) models.QuotaUsedSizeAssetsPackages {
-	if in == nil {
-		return models.QuotaUsedSizeAssetsPackages{}
-	}
-
-	return models.QuotaUsedSizeAssetsPackages{
-		All: in.All,
-	}
-}
-
-func mapQuotaGroup(in *gen.QuotaGroup) models.QuotaGroup {
-	group := models.QuotaGroup{
-		Name: in.Name,
-	}
-
-	if len(in.Rules) > 0 {
-		group.Rules = make([]models.QuotaRuleInfo, 0, len(in.Rules))
-		for _, gr := range in.Rules {
-			if gr != nil {
-				group.Rules = append(group.Rules, mapQuotaRuleInfo(gr))
-			}
-		}
-	}
-
-	return group
-}
-
-func mapQuotaRuleInfo(in *gen.QuotaRuleInfo) models.QuotaRuleInfo {
-	rule := models.QuotaRuleInfo{
-		Name:  in.Name,
-		Limit: in.Limit,
-	}
-
-	if len(in.Subjects) > 0 {
-		rule.Subjects = make([]string, len(in.Subjects))
-		copy(rule.Subjects, in.Subjects)
-	}
-
-	return rule
 }

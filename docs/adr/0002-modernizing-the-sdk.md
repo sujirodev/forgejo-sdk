@@ -4,7 +4,8 @@ Date: 2026-03-04
 
 ## Status
 
-Proposed
+Accepted (see the 2026-09-18 amendment below for how "new module" is
+resolved in practice)
 
 ## Context
 
@@ -79,3 +80,38 @@ Example of new style:
 // CheckMyQuota checks if the authenticated user is over quota.
 func (c *Client) CheckMyQuota(ctx context.Context, subject QuotaSubject) (bool, Response, error) { ... }
 ```
+
+## Amendment (2026-09-18): what "new module" means in practice
+
+This ADR originally said new code should use the new style "starting with
+the introduction of Quota related functions", which reads as: any new
+*function*, even one added to an existing legacy file, should get `ctx` and
+a value `Response`. That is not what happened in practice, and a survey of
+every endpoint added to an existing file after this ADR's date (2026-03-04)
+found the legacy style used every time except one:
+
+- `DeleteAccessTokenByID`/`DeleteAccessTokenByName` (`user_app.go`,
+  2026-03-11) — new style, the one exception, a week after this ADR.
+- `ListOrgs` (`org.go`, 2026-06-14) — legacy style.
+- `ListOrgLabels`/`GetOrgLabel`/`CreateOrgLabel`/`EditOrgLabel`/`DeleteOrgLabel`
+  (`org_label.go`, 2026-06-24) — legacy style.
+- `DiffPatchFile` (`repo_file.go`, 2026-06-25) — legacy style.
+- The mirror endpoints added to `repo_mirror.go` — legacy style, matching
+  `PushMirrors`/`MirrorSync` already in that file and in `repo.go`.
+
+The rule this codebase actually follows, and the one to keep following:
+
+- **A new file/module** (no existing file to be consistent with) uses the
+  new style: `ctx context.Context` as the first parameter, `Response`
+  returned by value. Quota (`user_quota.go`) is the reference example.
+- **An addition to an existing file** matches that file's existing style,
+  legacy or new, even after this ADR. Mixing styles within one file (like
+  `user_app.go` now has) makes the file harder to read for no benefit to
+  users of that specific file.
+
+This isn't a retreat from the ADR's goal — the dual-style SDK it predicted
+is exactly what exists today, on purpose, and the migration path is still
+"all legacy methods move to the new pattern in a future major version" (see
+[ADR 0005](0005-roadmap-to-v4.md)). It only corrects which axis decides the
+style for a *new* function: which file it's added to, not merely that the
+SDK already has ctx-style code somewhere else.

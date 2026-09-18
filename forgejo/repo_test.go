@@ -207,3 +207,25 @@ func createTestRepo(t *testing.T, name string, c *Client) (*Repository, error) {
 
 	return repo, err
 }
+
+func TestRepos_ListMyListUserListOrg(t *testing.T) {
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+
+	myRepos, _, err := c.ListMyRepos(ListReposOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsRepoName(myRepos, repo.Name))
+
+	userRepos, _, err := c.ListUserRepos(repo.Owner.UserName, ListReposOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsRepoName(userRepos, repo.Name))
+
+	org := newTestOrg(t, c)
+	orgRepo, _, err := c.CreateOrgRepo(org.UserName, CreateRepoOption{Name: uniqueName(t, "orgrepo"), AutoInit: true})
+	require.NoError(t, err)
+	t.Cleanup(func() { _, _ = c.DeleteRepo(org.UserName, orgRepo.Name) })
+
+	orgRepos, _, err := c.ListOrgRepos(org.UserName, ListOrgReposOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsRepoName(orgRepos, orgRepo.Name))
+}

@@ -251,3 +251,102 @@ func TestUnitsMapBackwardCompatibility(t *testing.T) {
 	assert.Nil(t, editOpt.UnitsMap)
 	assert.Len(t, editOpt.Units, 1)
 }
+
+func TestOrgTeams_ListsMembersAndRepos(t *testing.T) {
+	c := newTestClient()
+	org := newTestOrg(t, c)
+
+	team, err := createTestOrgTeams(t, c, org.UserName, uniqueName(t, "team"), AccessModeWrite,
+		map[string]string{RepoUnitCode.String(): string(AccessModeWrite)})
+	require.NoError(t, err)
+
+	// ListOrgTeams / ListMyTeams: an org always has a default "Owners" team,
+	// so assert our team is present rather than an exact count.
+	orgTeams, _, err := c.ListOrgTeams(org.UserName, ListTeamsOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsTeamName(orgTeams, team.Name))
+
+	// The creator isn't automatically added to a newly created custom team
+	// (only to the org's default "Owners" team), so just check the call
+	// itself works and returns something.
+	myTeams, _, err := c.ListMyTeams(&ListTeamsOptions{})
+	require.NoError(t, err)
+	assert.NotEmpty(t, myTeams)
+
+	// AddTeamMember / GetTeamMember / ListTeamMembers / RemoveTeamMember
+	mate := createTestUser(t, uniqueName(t, "teammate"), c)
+
+	_, err = c.AddTeamMember(team.ID, mate.UserName)
+	require.NoError(t, err)
+
+	member, _, err := c.GetTeamMember(team.ID, mate.UserName)
+	require.NoError(t, err)
+	assert.Equal(t, mate.UserName, member.UserName)
+
+	members, _, err := c.ListTeamMembers(team.ID, ListTeamMembersOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsUserName(members, mate.UserName))
+
+	_, err = c.RemoveTeamMember(team.ID, mate.UserName)
+	require.NoError(t, err)
+
+	members, _, err = c.ListTeamMembers(team.ID, ListTeamMembersOptions{})
+	require.NoError(t, err)
+	assert.False(t, containsUserName(members, mate.UserName))
+
+	// AddTeamRepository / ListTeamRepositories / RemoveTeamRepository
+	repo, _, err := c.CreateOrgRepo(org.UserName, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+	require.NoError(t, err)
+	t.Cleanup(func() { _, _ = c.DeleteRepo(org.UserName, repo.Name) })
+
+	repos, _, err := c.ListTeamRepositories(team.ID, ListTeamRepositoriesOptions{})
+	require.NoError(t, err)
+	assert.False(t, containsRepoName(repos, repo.Name))
+
+	_, err = c.AddTeamRepository(team.ID, org.UserName, repo.Name)
+	require.NoError(t, err)
+
+	repos, _, err = c.ListTeamRepositories(team.ID, ListTeamRepositoriesOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsRepoName(repos, repo.Name))
+
+	_, err = c.RemoveTeamRepository(team.ID, org.UserName, repo.Name)
+	require.NoError(t, err)
+
+	repos, _, err = c.ListTeamRepositories(team.ID, ListTeamRepositoriesOptions{})
+	require.NoError(t, err)
+	assert.False(t, containsRepoName(repos, repo.Name))
+
+	// DeleteTeam
+	_, err = c.DeleteTeam(team.ID)
+	require.NoError(t, err)
+	_, _, err = c.GetTeam(team.ID)
+	require.Error(t, err)
+}
+
+func containsTeamName(teams []*Team, name string) bool {
+	for _, tm := range teams {
+		if tm.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func containsUserName(users []*User, name string) bool {
+	for _, u := range users {
+		if u.UserName == name {
+			return true
+		}
+	}
+	return false
+}
+
+func containsRepoName(repos []*Repository, name string) bool {
+	for _, r := range repos {
+		if r.Name == name {
+			return true
+		}
+	}
+	return false
+}

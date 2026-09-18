@@ -10,9 +10,15 @@
 [![Go Report Card](https://goreportcard.com/badge/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)](https://goreportcard.com/report/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)
 [![GoDoc](https://godoc.org/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3?status.svg)](https://godoc.org/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)
 
-This project is an independent base derived from [mvdkleijn/forgejo-sdk](https://codeberg.org/mvdkleijn/forgejo-sdk), a client SDK implementation written in Go to interact with the Forgejo API implementation. For further informations take a look at the current [documentation](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
+This project is a client SDK implementation written in Go to interact with the Forgejo API implementation. For further informations take a look at the current [documentation](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
 
 Note: function arguments are escaped by the SDK.
+
+## Relationship to upstream
+
+This is an independently maintained base derived from [mvdkleijn/forgejo-sdk](https://codeberg.org/mvdkleijn/forgejo-sdk). We started here as a fork to send PRs upstream, and decided to keep developing on our own copy going forward: as of 2026-09-18, upstream's `main` hadn't moved since 2026-08-31 and had 8 open issues / 9 open PRs, some sitting without a maintainer response for months (e.g. [#159](https://codeberg.org/mvdkleijn/forgejo-sdk/issues/159), open since 2026-05-17). None of that is a knock on the maintainer — it's a one-person project — it's just why we didn't want our own usage blocked on that review queue.
+
+We still track upstream (`git remote add upstream https://codeberg.org/mvdkleijn/forgejo-sdk.git`) and pull in changes when useful, and may still send PRs back when a fix is generally applicable.
 
 ## Use it
 

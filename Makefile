@@ -127,7 +127,7 @@ check-route-coverage: ## Verify every *Client method (route) is referenced by a 
 check-route-coverage-strict: ## Verify every route has both a unit test and an integration test.
 	@bash scripts/check-route-coverage.sh --strict
 
-COVERAGE_MIN ?= 56
+COVERAGE_MIN ?= 70
 
 .PHONY: coverage-check
 coverage-check: ## Fail if forgejo/coverage.out total coverage is below COVERAGE_MIN.

@@ -218,13 +218,3 @@ bench: ## Run benchmarks.
 .PHONY: build
 build: ## Build the SDK.
 	cd forgejo && $(GO) build
-
-.PHONY: swagger-install swagger-generate swagger
-
-swagger-install:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
-
-swagger-generate-models:
-	swagger generate model -t ./forgejo -f swagger.v1.json -m internal/generated/models
-
-swagger: swagger-install swagger-generate-models ## Generate new models based on provided swagger.v1.json file

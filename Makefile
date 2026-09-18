@@ -8,10 +8,6 @@ FORGEJO_SDK_TEST_USERNAME ?= test01
 FORGEJO_SDK_TEST_PASSWORD ?= test01
 FORGEJO_SDK_TEST_EMAIL ?= test01@forgejo.org
 
-# Common test instance configuration
-FORGEJO_SECRET_KEY := 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo
-FORGEJO_INTERNAL_TOKEN := eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4
-
 PACKAGE := codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
 
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
@@ -145,10 +141,12 @@ endif
 	[ -f ${WORK_DIR}/test-cache/forgejo-main ] || { wget ${FORGEJO_DL} -O ${WORK_DIR}/test-cache/forgejo-main; }
 	cp ${WORK_DIR}/test-cache/forgejo-main ${WORK_DIR}/test/forgejo-main; \
 	chmod +x ${WORK_DIR}/test/forgejo-main; \
+	secret_key=$$(${WORK_DIR}/test/forgejo-main generate secret SECRET_KEY); \
+	internal_token=$$(${WORK_DIR}/test/forgejo-main generate secret INTERNAL_TOKEN); \
 	echo "[security]" > ${WORK_DIR}/test/conf/app.ini; \
-	echo "INTERNAL_TOKEN = $(FORGEJO_INTERNAL_TOKEN)" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "INTERNAL_TOKEN = $$internal_token" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "INSTALL_LOCK   = true" >> ${WORK_DIR}/test/conf/app.ini; \
-	echo "SECRET_KEY     = $(FORGEJO_SECRET_KEY)" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "SECRET_KEY     = $$secret_key" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "PASSWORD_COMPLEXITY = off" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[database]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "DB_TYPE = sqlite3" >> ${WORK_DIR}/test/conf/app.ini; \
@@ -178,12 +176,14 @@ ifeq ($(DOCKER_AVAILABLE),no)
 endif
 	@echo "Starting Forgejo test instance in Docker..."
 	@docker volume create forgejo-test-data > /dev/null 2>&1 || true
-	@docker run -d --name forgejo-test \
+	@secret_key=$$(docker run --rm codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} forgejo generate secret SECRET_KEY); \
+	internal_token=$$(docker run --rm codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} forgejo generate secret INTERNAL_TOKEN); \
+	docker run -d --name forgejo-test \
 		-p 3000:3000 \
 		-v forgejo-test-data:/data \
 		-e FORGEJO__security__INSTALL_LOCK=true \
-		-e FORGEJO__security__SECRET_KEY=$(FORGEJO_SECRET_KEY) \
-		-e FORGEJO__security__INTERNAL_TOKEN=$(FORGEJO_INTERNAL_TOKEN) \
+		-e FORGEJO__security__SECRET_KEY=$$secret_key \
+		-e FORGEJO__security__INTERNAL_TOKEN=$$internal_token \
 		-e FORGEJO__security__PASSWORD_COMPLEXITY=off \
 		-e FORGEJO__database__DB_TYPE=sqlite3 \
 		-e FORGEJO__server__ROOT_URL=${FORGEJO_SDK_TEST_URL} \

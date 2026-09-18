@@ -17,6 +17,7 @@ PACKAGE := codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0
 
+# renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
 FORGEJO_VERSION := 15.0.1
 FORGEJO_DL := https://codeberg.org/forgejo/forgejo/releases/download/v$(FORGEJO_VERSION)/forgejo-$(FORGEJO_VERSION)-
 
@@ -106,6 +107,10 @@ test: ## Run unit tests (requires a running forgejo instance).
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
 	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \
 	fi
+
+.PHONY: check-forgejo-version
+check-forgejo-version: ## Verify every pinned Forgejo test-instance version matches.
+	@bash scripts/check-forgejo-version.sh
 
 .PHONY: test-instance
 test-instance: ## Start a forgejo instance for test (auto-detects method).

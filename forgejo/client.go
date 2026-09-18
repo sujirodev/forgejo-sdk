@@ -551,9 +551,9 @@ func (c *Client) getParsedResponse(method, path string, header http.Header, body
 	return resp, json.Unmarshal(data, obj)
 }
 
-// Modernized version of getParsedResponse
-func (c *Client) getParsedResponseWithContext(ctx context.Context, path string, header http.Header, body io.Reader, obj interface{}) (Response, error) {
-	data, resp, err := c.getResponseWithContext(ctx, "GET", path, header, body)
+// Modernized version of getParsedResponse for JSON GET endpoints
+func (c *Client) getParsedResponseWithContext(ctx context.Context, path string, obj interface{}) (Response, error) {
+	data, resp, err := c.getResponseWithContext(ctx, "GET", path, jsonHeader, nil)
 	if err != nil {
 		return resp, err
 	}

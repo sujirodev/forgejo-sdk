@@ -63,6 +63,24 @@ func SetForgejoVersion(v string) ClientOption {
 }
 
 // predefined versions only have to be parsed by library once
+//
+// Naming and versioning convention for anyone adding a new guard here:
+//
+//   - Name the constant versionX_Y_Z for the minimum server version the
+//     feature needs, e.g. version13_0_0 for something that needs >= 13.0.0.
+//     Forgejo reports versions like "13.0.0+gitea-1.22.0", and go-version
+//     compares the leading X.Y.Z, ignoring the "+gitea-..." build suffix, so
+//     it's fine that the constants below this line are Gitea-era 1.x
+//     versions (inherited from before Forgejo's version numbers diverged
+//     from Gitea's) sitting next to Forgejo-era ones like version8_0_3.
+//   - At the call site, cite the Forgejo PR (or issue) that introduced the
+//     endpoint/field, e.g. "guarded per forgejo/forgejo#8932 (13.0.0)", so a
+//     later reader doesn't have to bisect Forgejo's history to confirm the
+//     minimum.
+//   - Add the constant only together with the method that uses it via
+//     checkServerVersionGreaterThanOrEqual — an unused version constant
+//     fails golangci-lint's unused check, and there's no reason to
+//     pre-declare one for a feature that isn't implemented yet.
 var (
 	version1_11_0 = version.Must(version.NewVersion("1.11.0"))
 	version1_11_5 = version.Must(version.NewVersion("1.11.5"))

@@ -229,3 +229,24 @@ func TestRepos_ListMyListUserListOrg(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, containsRepoName(orgRepos, orgRepo.Name))
 }
+
+// Needs [migrations] ALLOW_LOCALNETWORKS = true on the test instance (see
+// docs/PLANO-COBERTURA-TESTES.md section 4 / scripts/check-test-instance-settings.sh):
+// otherwise Forgejo refuses a clone address that resolves to itself.
+func TestMirrorSync(t *testing.T) {
+	c := newTestClient()
+	source := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+
+	mirror, _, err := c.MigrateRepo(MigrateRepoOption{
+		CloneAddr: source.CloneURL,
+		RepoName:  uniqueName(t, "mirror"),
+		RepoOwner: source.Owner.UserName,
+		Mirror:    true,
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() { _, _ = c.DeleteRepo(mirror.Owner.UserName, mirror.Name) })
+	assert.True(t, mirror.Mirror)
+
+	_, err = c.MirrorSync(mirror.Owner.UserName, mirror.Name)
+	require.NoError(t, err)
+}

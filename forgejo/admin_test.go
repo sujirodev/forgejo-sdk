@@ -70,6 +70,30 @@ func TestAdminListEditUsers(t *testing.T) {
 	assert.Equal(t, fullName, edited.FullName)
 }
 
+func TestAdminUserPublicKeys(t *testing.T) {
+	c := newTestClient()
+	owner := createTestUser(t, uniqueName(t, "adminkey"), c)
+
+	key, _, err := c.AdminCreateUserPublicKey(owner.UserName, CreateKeyOption{
+		Title: "sdk-test-admin-key",
+		Key:   genSSHPublicKey(t, "sdk-admin-test"),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "sdk-test-admin-key", key.Title)
+
+	keys, _, err := c.ListPublicKeys(owner.UserName, ListPublicKeysOptions{})
+	require.NoError(t, err)
+	require.Len(t, keys, 1)
+	assert.Equal(t, key.ID, keys[0].ID)
+
+	_, err = c.AdminDeleteUserPublicKey(owner.UserName, int(key.ID))
+	require.NoError(t, err)
+
+	keys, _, err = c.ListPublicKeys(owner.UserName, ListPublicKeysOptions{})
+	require.NoError(t, err)
+	assert.Empty(t, keys)
+}
+
 func TestAdminCronTasks(t *testing.T) {
 	log.Println("== TestAdminCronTasks ==")
 	c := newTestClient()

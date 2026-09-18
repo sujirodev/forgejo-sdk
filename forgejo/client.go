@@ -523,6 +523,8 @@ func (c *Client) getResponse(method, path string, header http.Header, body io.Re
 }
 
 // Modernized version of getResponse
+//
+//nolint:unparam // general-purpose counterpart of getResponse; today's callers happen to be GET-only
 func (c *Client) getResponseWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader) ([]byte, Response, error) {
 	resp, err := c.doRequestWithContext(ctx, method, path, header, body)
 	if err != nil {

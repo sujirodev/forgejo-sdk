@@ -46,7 +46,10 @@ func TestAdminOrg(t *testing.T) {
 
 func TestAdminListEditUsers(t *testing.T) {
 	c := newTestClient()
-	user := createTestUser(t, uniqueName(t, "adminedit"), c)
+	// "adminedit" would embed the substring "it", which TestUserSearch (in
+	// user_test.go) searches for globally: keep prefixes free of that word
+	// and of "other" (see uniqueName's own doc comment in testhelpers_test.go).
+	user := createTestUser(t, uniqueName(t, "adminuser"), c)
 
 	users, _, err := c.AdminListUsers(AdminListUsersOptions{})
 	require.NoError(t, err)
@@ -58,7 +61,9 @@ func TestAdminListEditUsers(t *testing.T) {
 	}
 	assert.True(t, found, "AdminListUsers should list the just-created user")
 
-	fullName := "Edited By AdminEditUser"
+	// SearchUsers matches full names too (see TestUserSearch in
+	// user_test.go, and uniqueName's doc comment): avoid "it"/"other" here.
+	fullName := "Full Name Set By Admin"
 	_, err = c.AdminEditUser(user.UserName, EditUserOption{
 		LoginName: user.UserName,
 		FullName:  &fullName,

@@ -12,7 +12,7 @@ FORGEJO_SDK_TEST_EMAIL ?= test01@forgejo.org
 FORGEJO_SECRET_KEY := 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo
 FORGEJO_INTERNAL_TOKEN := eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4
 
-PACKAGE := codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3
+PACKAGE := codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
 
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0

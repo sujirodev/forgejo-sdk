@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"strings"
 
-	gen "codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3/internal/generated/models"
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3/models"
+	gen "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/internal/generated/models"
+	"codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/models"
 )
 
 // QuotaSubject represents a quota limit subject for use with CheckMyQuota.

@@ -1,23 +1,23 @@
 # Forgejo SDK for Go
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-![release-badge](https://codeberg.org/mvdkleijn/forgejo-sdk/badges/release.svg)
-![status-badge](https://codeberg.org/mvdkleijn/forgejo-sdk/badges/workflows/integration.yml/badge.svg)
+![release-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/release.svg)
+![status-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/workflows/integration.yml/badge.svg)
 
-![stars-badge](https://codeberg.org/mvdkleijn/forgejo-sdk/badges/stars.svg)
-![issues-badge](https://codeberg.org/mvdkleijn/forgejo-sdk/badges/issues/open.svg)
-![prs-badge](https://codeberg.org/mvdkleijn/forgejo-sdk/badges/pulls/closed.svg)
-[![Go Report Card](https://goreportcard.com/badge/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3)](https://goreportcard.com/report/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3)
-[![GoDoc](https://godoc.org/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3?status.svg)](https://godoc.org/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3)
+![stars-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/stars.svg)
+![issues-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/issues/open.svg)
+![prs-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/pulls/closed.svg)
+[![Go Report Card](https://goreportcard.com/badge/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)](https://goreportcard.com/report/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)
+[![GoDoc](https://godoc.org/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3?status.svg)](https://godoc.org/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)
 
-This project acts as a client SDK implementation written in Go to interact with the Forgejo API implementation. For further informations take a look at the current [documentation](https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3).
+This project is an independent base derived from [mvdkleijn/forgejo-sdk](https://codeberg.org/mvdkleijn/forgejo-sdk), a client SDK implementation written in Go to interact with the Forgejo API implementation. For further informations take a look at the current [documentation](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
 
 Note: function arguments are escaped by the SDK.
 
 ## Use it
 
 ```go
-import "codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
 ```
 
 ## Version Requirements

@@ -2,6 +2,8 @@ name: integration
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -42,7 +44,7 @@ jobs:
 
     services:
       forgejo:
-        image: codeberg.org/forgejo/forgejo:11.0.14@sha256:afb609f099fdfc85aed99fa763604102cfc6525b78b3637382b2ac48d9d80f7c
+        image: codeberg.org/forgejo/forgejo:15.0.1@sha256:bff07e43f5c84449e9dc6dca2c0a16c6f9eb285405d7f1bc631a360fd963f3fc
         cmd:
           - bash
           - -c

@@ -8,11 +8,22 @@
     "helpers:pinGitHubActionDigests"
   ],
   "postUpdateOptions": ["gomodTidy"],
+  "customManagers": [
+    {
+      "description": "Forgejo test-instance version pinned outside the workflow (Makefile, README, main_test.go). The line after the marker comment holds the version.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^Makefile$/", "/^README\\.md$/", "/^forgejo/main_test\\.go$/"],
+      "matchStrings": [
+        "renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)[^\\n]*\\n[^\\n]*?(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "versioningTemplate": "docker"
+    }
+  ],
   "packageRules": [
     {
       "description": "Configure updates for Go modules",
       "matchManagers": ["gomod"],
-	  "matchFileNames": ["forgejo/**/go.mod"],
+      "matchFileNames": ["forgejo/**/go.mod"],
       "labels": ["dependencies", "go-sdk"],
       "minimumReleaseAge": "3 days",
       "separateMinorPatch": true,
@@ -34,6 +45,14 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Forgejo test instance: one PR touching every reference (workflow service image, Makefile, README, main_test.go). Majors open a PR without approval; CI on the PR decides. Must stay after the github-actions major rule above.",
+      "matchDepNames": ["codeberg.org/forgejo/forgejo"],
+      "groupName": "forgejo test instance",
+      "labels": ["forgejo-version"],
+      "dependencyDashboardApproval": false,
+      "automerge": false
     }
   ]
 }

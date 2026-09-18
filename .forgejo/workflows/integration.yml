@@ -34,10 +34,13 @@ jobs:
 
       # Every file that pins the Forgejo test-instance version must agree.
       - run: make check-forgejo-version
+      - run: make check-test-instance-settings
       - run: make vet
       - run: make ci-lint
       - run: make build
       - run: make test-unit
+      # Every exported *Client method (route) needs a test.
+      - run: make check-route-coverage
 
   # Runs the integration suite against every Forgejo line the README
   # promises support for: both currently-supported LTS releases (Forgejo
@@ -109,6 +112,7 @@ jobs:
           exit 1
 
       - run: make test
+      - run: make coverage-check
 
     services:
       # Disposable, single-run instance: it only ever serves this one job,
@@ -139,6 +143,7 @@ jobs:
             && echo "INSTALL_LOCK = true" >> /tmp/conf/app.ini
             && echo "SECRET_KEY = ${SECRET_KEY}" >> /tmp/conf/app.ini
             && echo "PASSWORD_COMPLEXITY = off" >> /tmp/conf/app.ini
+            && echo "DISABLE_GIT_HOOKS = false" >> /tmp/conf/app.ini
             && echo "[database]" >> /tmp/conf/app.ini
             && echo "DB_TYPE = sqlite3" >> /tmp/conf/app.ini
             && echo "[repository]" >> /tmp/conf/app.ini
@@ -147,6 +152,8 @@ jobs:
             && echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
             && echo "[quota]" >> /tmp/conf/app.ini
             && echo "ENABLED = true" >> /tmp/conf/app.ini
+            && echo "[migrations]" >> /tmp/conf/app.ini
+            && echo "ALLOW_LOCALNETWORKS = true" >> /tmp/conf/app.ini
             && forgejo migrate -c /tmp/conf/app.ini
             && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
             && forgejo web -c /tmp/conf/app.ini

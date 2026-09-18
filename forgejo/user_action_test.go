@@ -38,11 +38,10 @@ func TestListUserActionJobs(t *testing.T) {
 	log.Println("== TestListUserActionJobs ==")
 	c := newTestClient()
 
-	jobs, resp, err := c.ListUserActionJobs(ListActionJobsOption{})
+	// jobs may be nil when the API returns JSON null (no jobs exist)
+	_, resp, err := c.ListUserActionJobs(ListActionJobsOption{})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	// jobs may be nil when the API returns JSON null (no jobs exist)
-	assert.GreaterOrEqual(t, len(jobs), 0)
 }
 
 func TestUserActionVariables(t *testing.T) {

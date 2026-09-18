@@ -523,6 +523,8 @@ func (c *Client) getResponse(method, path string, header http.Header, body io.Re
 }
 
 // Modernized version of getResponse
+//
+//nolint:unparam // general-purpose counterpart of getResponse; today's callers happen to be GET-only
 func (c *Client) getResponseWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader) ([]byte, Response, error) {
 	resp, err := c.doRequestWithContext(ctx, method, path, header, body)
 	if err != nil {
@@ -551,9 +553,9 @@ func (c *Client) getParsedResponse(method, path string, header http.Header, body
 	return resp, json.Unmarshal(data, obj)
 }
 
-// Modernized version of getParsedResponse
-func (c *Client) getParsedResponseWithContext(ctx context.Context, method, path string, header http.Header, body io.Reader, obj interface{}) (Response, error) {
-	data, resp, err := c.getResponseWithContext(ctx, method, path, header, body)
+// Modernized version of getParsedResponse for JSON GET endpoints
+func (c *Client) getParsedResponseWithContext(ctx context.Context, path string, obj interface{}) (Response, error) {
+	data, resp, err := c.getResponseWithContext(ctx, "GET", path, jsonHeader, nil)
 	if err != nil {
 		return resp, err
 	}

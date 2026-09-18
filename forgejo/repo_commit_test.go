@@ -42,7 +42,7 @@ func TestListRepoCommits(t *testing.T) {
 	linesAdded := 0
 	for _, file := range l[0].Files {
 		fileContents, _, getFileError := c.GetFile(repo.Owner.UserName, repo.Name, l[0].SHA, file.Filename, false)
-		assert.NoError(t, getFileError)
+		require.NoError(t, getFileError)
 		if fileContents[len(fileContents)-1] == '\n' {
 			fileContents = fileContents[:len(fileContents)-1]
 		}

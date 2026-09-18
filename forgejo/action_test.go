@@ -56,5 +56,5 @@ func TestActionRunUnmarshal(t *testing.T) {
 
 	// Verify the missing fields are now populated
 	assert.Equal(t, int64(561), run.RunNumber, "RunNumber should be populated from index_in_repo")
-	assert.Equal(t, true, run.IsRefDeleted, "IsRefDeleted should be populated from is_ref_deleted")
+	assert.True(t, run.IsRefDeleted, "IsRefDeleted should be populated from is_ref_deleted")
 }

@@ -45,6 +45,7 @@ jobs:
       - run: make vet
       - run: make ci-lint
       - run: make build
+      - run: make test-unit
 
   # Job name is a required status check on `main`; keep it as `testing`.
   testing:

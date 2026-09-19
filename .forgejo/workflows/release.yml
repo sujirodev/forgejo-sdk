@@ -2,16 +2,34 @@ name: release
 
 # Runs after a PR is merged into main. Decides the semver bump (major/minor/
 # patch) from the PR's kind/* label, falling back to Conventional Commits in
-# its title/body, then tags and publishes a release.
+# its title/body, then updates CHANGELOG.md, tags and publishes a release.
 #
 # MAJOR is intentionally never automatic: per docs/adr/0005-roadmap-to-v4.md,
 # v4 is a deliberate, batched migration (module path bump + API unification),
 # not something a single PR should trigger. A breaking-change signal fails
 # the job instead of tagging.
+#
+# Every step that computes a value assigns it to a shell variable first and
+# only then writes $GITHUB_OUTPUT: `echo "x=$(cmd)" >> "$GITHUB_OUTPUT"` hides
+# a failing `cmd` behind a succeeding `echo`, which is exactly how run #86
+# reported success while the script had never run ("Permission denied").
+#
+# Order matters for re-runs: CHANGELOG.md is committed BEFORE the release is
+# created. If the release step fails, a re-run finds no tag (so it computes
+# the same one again) and the script skips the changelog section it already
+# added, so nothing is duplicated. If the commit fails, nothing was created
+# at all.
 on:
   pull_request:
     types: [closed]
     branches: [main]
+  # Recovery path: release an already-merged PR whose automatic run did not
+  # publish (or never ran). Only PRs merged into main are accepted.
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Number of an already-merged PR to release"
+        required: true
 
 # Serialize releases: if two PRs merge close together, the second run must
 # see the tag the first one just created.
@@ -21,20 +39,46 @@ concurrency:
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       RELEASE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_TITLE: ${{ github.event.pull_request.title }}
-      PR_BODY: ${{ github.event.pull_request.body }}
-      PR_LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
           fetch-depth: 0
+
+      # Exports PR_NUMBER / PR_TITLE / PR_BODY / PR_LABELS_JSON for every
+      # later step, from the event payload on merge or from the API on a
+      # manual dispatch. scripts/compute-release-version.sh reads them from
+      # the environment.
+      - name: Resolve the merged PR
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          EVENT_PR_JSON: ${{ toJSON(github.event.pull_request) }}
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            pr=$(curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
+              "${api}/repos/${GITHUB_REPOSITORY}/pulls/${INPUT_PR_NUMBER}")
+            if [ "$(jq -r '.merged' <<<"$pr")" != "true" ] || [ "$(jq -r '.base.ref' <<<"$pr")" != "main" ]; then
+              echo "::error::PR #${INPUT_PR_NUMBER} is not a PR merged into main"
+              exit 1
+            fi
+          else
+            pr="$EVENT_PR_JSON"
+          fi
+          {
+            echo "PR_NUMBER=$(jq -r '.number' <<<"$pr")"
+            echo "PR_TITLE=$(jq -r '.title' <<<"$pr")"
+            echo "PR_LABELS_JSON=$(jq -c '.labels // []' <<<"$pr")"
+            echo "PR_BODY<<__PR_BODY_EOF__"
+            jq -r '.body // ""' <<<"$pr"
+            echo "__PR_BODY_EOF__"
+          } >> "$GITHUB_ENV"
 
       # pull_request `paths` filtering isn't documented/supported by Forgejo
       # Actions (only `push` is), so the check happens here instead of in `on:`.
@@ -47,13 +91,17 @@ jobs:
           if jq -e '.[] | select(.filename | startswith("forgejo/"))' <<<"$files" >/dev/null; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
+            echo "PR #${PR_NUMBER} does not touch forgejo/; nothing to release"
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Determine version bump
         if: steps.changed.outputs.changed == 'true'
         id: bump
-        run: echo "level=$(scripts/compute-release-version.sh bump-level)" >> "$GITHUB_OUTPUT"
+        run: |
+          level=$(bash scripts/compute-release-version.sh bump-level)
+          echo "bump level: ${level}"
+          echo "level=${level}" >> "$GITHUB_OUTPUT"
 
       - name: Block automatic MAJOR release
         if: steps.changed.outputs.changed == 'true' && steps.bump.outputs.level == 'major'
@@ -64,56 +112,78 @@ jobs:
       - name: Compute next tag
         if: steps.changed.outputs.changed == 'true' && steps.bump.outputs.level != 'major'
         id: version
-        run: echo "tag=$(scripts/compute-release-version.sh next-tag "${{ steps.bump.outputs.level }}")" >> "$GITHUB_OUTPUT"
+        env:
+          LEVEL: ${{ steps.bump.outputs.level }}
+        run: |
+          tag=$(bash scripts/compute-release-version.sh next-tag "$LEVEL")
+          echo "next tag: ${tag}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
 
       - name: Update CHANGELOG.md
         if: steps.version.outputs.tag
         id: changelog
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           changelog_sha=$(git rev-parse HEAD:CHANGELOG.md)
-          echo "sha=$changelog_sha" >> "$GITHUB_OUTPUT"
-          group=$(scripts/compute-release-version.sh changelog-group)
-          entry=$(scripts/compute-release-version.sh render-entry)
-          scripts/compute-release-version.sh changelog-insert CHANGELOG.md "${{ steps.version.outputs.tag }}" "$group" "$entry" "$GITHUB_REPOSITORY"
+          group=$(bash scripts/compute-release-version.sh changelog-group)
+          entry=$(bash scripts/compute-release-version.sh render-entry)
+          bash scripts/compute-release-version.sh changelog-insert CHANGELOG.md "$TAG" "$group" "$entry" "$GITHUB_REPOSITORY"
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
           {
-            echo "entry<<ENTRY_EOF"
+            echo "sha=${changelog_sha}"
+            echo "entry<<__ENTRY_EOF__"
             echo "$entry"
-            echo "ENTRY_EOF"
+            echo "__ENTRY_EOF__"
           } >> "$GITHUB_OUTPUT"
 
-      # A release with a tag_name that doesn't exist yet creates the tag too
-      # (pointed at target_commitish), so a separate "create tag" call isn't
-      # needed.
-      - name: Publish release
-        if: steps.version.outputs.tag
-        run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
-          sha=$(git rev-parse HEAD)
-          body=$(jq -n \
-            --arg tag "${{ steps.version.outputs.tag }}" \
-            --arg name "${{ steps.version.outputs.tag }}" \
-            --arg target "$sha" \
-            --arg note "${{ steps.changelog.outputs.entry }}" \
-            '{tag_name:$tag, name:$name, target_commitish:$target, body:$note}')
-          curl -sSf -X POST \
-            -H "Authorization: token ${RELEASE_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "$body" \
-            "${api}/repos/${GITHUB_REPOSITORY}/releases"
-
+      # Direct commit to main through the Contents API. The branch protection
+      # on main must allow the token's user to push (push whitelist), or this
+      # step fails with 403 and no release is created.
       - name: Commit CHANGELOG.md
-        if: steps.version.outputs.tag
+        if: steps.changelog.outputs.changed == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          CHANGELOG_SHA: ${{ steps.changelog.outputs.sha }}
         run: |
           api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
           content_b64=$(base64 -w0 CHANGELOG.md)
           body=$(jq -n \
             --arg content "$content_b64" \
-            --arg sha "${{ steps.changelog.outputs.sha }}" \
-            --arg message "docs: update changelog for ${{ steps.version.outputs.tag }}" \
+            --arg sha "$CHANGELOG_SHA" \
+            --arg message "docs: update changelog for ${TAG}" \
             --arg branch "main" \
             '{content:$content, sha:$sha, message:$message, branch:$branch, signoff:true}')
           curl -sSf -X PUT \
             -H "Authorization: token ${RELEASE_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "$body" \
-            "${api}/repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md"
+            "${api}/repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md" >/dev/null
+          echo "committed CHANGELOG.md for ${TAG}"
+
+      # A release with a tag_name that doesn't exist yet creates the tag too,
+      # pointed at the current head of main (which now includes the changelog
+      # commit), so a separate "create tag" call isn't needed.
+      - name: Publish release
+        if: steps.version.outputs.tag
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          NOTE: ${{ steps.changelog.outputs.entry }}
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          body=$(jq -n \
+            --arg tag "$TAG" \
+            --arg name "$TAG" \
+            --arg target "main" \
+            --arg note "$NOTE" \
+            '{tag_name:$tag, name:$name, target_commitish:$target, body:$note}')
+          curl -sSf -X POST \
+            -H "Authorization: token ${RELEASE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
+            "${api}/repos/${GITHUB_REPOSITORY}/releases" >/dev/null
+          echo "published ${TAG}"

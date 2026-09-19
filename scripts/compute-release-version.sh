@@ -92,10 +92,18 @@ render_entry() {
 
 # Prepends a new "## [tag](releases/tag/tag) - date" section, with a single
 # group and entry, to the top of the changelog (right after the "# Changelog"
-# heading). Writes the result back to the same file.
+# heading). Writes the result back to the same file. No-op when the file
+# already has a section for that tag.
 changelog_insert() {
   local file="$1" tag="$2" group="$3" entry="$4" repo="$5"
   local date url tmp
+  # Idempotent: a re-run of a release job that already committed this
+  # section (but failed later, e.g. publishing the release) must not insert
+  # it a second time.
+  if grep -qF "## [${tag#forgejo/}](" "$file"; then
+    echo "${file} already has a ${tag} section, leaving it unchanged" >&2
+    return
+  fi
   date=$(date -u +%Y-%m-%d)
   url="https://codeberg.org/${repo}/releases/tag/${tag}"
   tmp=$(mktemp)

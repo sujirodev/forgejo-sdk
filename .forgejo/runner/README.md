@@ -33,6 +33,34 @@ Nothing sensitive is committed here or should ever be:
 - `FORGEJO_RUNNER_CONN_UUID` is a plain identifier (not a secret, per
   Forgejo's own docs) and is set as a stack env var.
 
+## Redeploying: the stack's `Env` must be resent every time
+
+`FORGEJO_RUNNER_CONN_URL` and `FORGEJO_RUNNER_CONN_UUID` are configured as
+the Portainer *stack's* environment variables (Portainer's `Env` field),
+separate from this file's `${VAR:-default}` placeholders. The Portainer
+Stack Update API (`StackUpdate`, used by
+`mcp__portainer-matheus__StackUpdate`) replaces the stack wholesale — it is
+not a patch. Calling it with `StackFileContent` but no `Env` wipes whatever
+was configured, and the container falls back to the deprecated legacy
+register flow (which then also fails, since
+`FORGEJO_RUNNER_REGISTRATION_TOKEN` isn't set either). This actually
+happened on 2026-09-19: a redeploy through the MCP tool omitted `Env` and
+took the runner offline until the two values were re-supplied by the
+operator and resent explicitly in the `Env` array.
+
+A local, gitignored `.env` in this directory (`.forgejo/runner/.env`, listed
+in `.git/info/exclude`, never committed) keeps a copy of these two values so
+a future redeploy can resend them without hunting them down again. It holds
+no secrets — the token stays only in the Swarm secret.
+
+Every future `StackUpdate` call must include both:
+```
+Env: [
+  {"name": "FORGEJO_RUNNER_CONN_URL", "value": "<from .env>"},
+  {"name": "FORGEJO_RUNNER_CONN_UUID", "value": "<from .env>"}
+]
+```
+
 ## Caching
 
 Go's build/module caches and the golangci-lint binary are bind-mounted from

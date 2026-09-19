@@ -1,0 +1,119 @@
+name: release
+
+# Runs after a PR is merged into main. Decides the semver bump (major/minor/
+# patch) from the PR's kind/* label, falling back to Conventional Commits in
+# its title/body, then tags and publishes a release.
+#
+# MAJOR is intentionally never automatic: per docs/adr/0005-roadmap-to-v4.md,
+# v4 is a deliberate, batched migration (module path bump + API unification),
+# not something a single PR should trigger. A breaking-change signal fails
+# the job instead of tagging.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+# Serialize releases: if two PRs merge close together, the second run must
+# see the tag the first one just created.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+      PR_LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # pull_request `paths` filtering isn't documented/supported by Forgejo
+      # Actions (only `push` is), so the check happens here instead of in `on:`.
+      - name: Check whether the SDK (forgejo/) changed
+        id: changed
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          files=$(curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
+            "${api}/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?limit=100")
+          if jq -e '.[] | select(.filename | startswith("forgejo/"))' <<<"$files" >/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine version bump
+        if: steps.changed.outputs.changed == 'true'
+        id: bump
+        run: echo "level=$(scripts/compute-release-version.sh bump-level)" >> "$GITHUB_OUTPUT"
+
+      - name: Block automatic MAJOR release
+        if: steps.changed.outputs.changed == 'true' && steps.bump.outputs.level == 'major'
+        run: |
+          echo "::error::PR #${PR_NUMBER} sinaliza uma mudanca breaking (label kind/breaking, 'feat!:'/'fix!:' ou rodape 'BREAKING CHANGE:'). Bump MAJOR nao e automatico: siga o processo manual descrito em docs/adr/0005-roadmap-to-v4.md antes de publicar uma v4."
+          exit 1
+
+      - name: Compute next tag
+        if: steps.changed.outputs.changed == 'true' && steps.bump.outputs.level != 'major'
+        id: version
+        run: echo "tag=$(scripts/compute-release-version.sh next-tag "${{ steps.bump.outputs.level }}")" >> "$GITHUB_OUTPUT"
+
+      - name: Update CHANGELOG.md
+        if: steps.version.outputs.tag
+        id: changelog
+        run: |
+          changelog_sha=$(git rev-parse HEAD:CHANGELOG.md)
+          echo "sha=$changelog_sha" >> "$GITHUB_OUTPUT"
+          group=$(scripts/compute-release-version.sh changelog-group)
+          entry=$(scripts/compute-release-version.sh render-entry)
+          scripts/compute-release-version.sh changelog-insert CHANGELOG.md "${{ steps.version.outputs.tag }}" "$group" "$entry" "$GITHUB_REPOSITORY"
+          {
+            echo "entry<<ENTRY_EOF"
+            echo "$entry"
+            echo "ENTRY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # A release with a tag_name that doesn't exist yet creates the tag too
+      # (pointed at target_commitish), so a separate "create tag" call isn't
+      # needed.
+      - name: Publish release
+        if: steps.version.outputs.tag
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          sha=$(git rev-parse HEAD)
+          body=$(jq -n \
+            --arg tag "${{ steps.version.outputs.tag }}" \
+            --arg name "${{ steps.version.outputs.tag }}" \
+            --arg target "$sha" \
+            --arg note "${{ steps.changelog.outputs.entry }}" \
+            '{tag_name:$tag, name:$name, target_commitish:$target, body:$note}')
+          curl -sSf -X POST \
+            -H "Authorization: token ${RELEASE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
+            "${api}/repos/${GITHUB_REPOSITORY}/releases"
+
+      - name: Commit CHANGELOG.md
+        if: steps.version.outputs.tag
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          content_b64=$(base64 -w0 CHANGELOG.md)
+          body=$(jq -n \
+            --arg content "$content_b64" \
+            --arg sha "${{ steps.changelog.outputs.sha }}" \
+            --arg message "docs: update changelog for ${{ steps.version.outputs.tag }}" \
+            --arg branch "main" \
+            '{content:$content, sha:$sha, message:$message, branch:$branch, signoff:true}')
+          curl -sSf -X PUT \
+            -H "Authorization: token ${RELEASE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
+            "${api}/repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md"

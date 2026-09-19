@@ -9,7 +9,7 @@ against codeberg.org for this repo.
   content -> Update the stack). No CI workflow applies it automatically.
 - `entrypoint.sh` — the container entrypoint, deployed as the Swarm config
   named in `stack.yml`'s `configs.codeberg_runner_entrypoint.name`
-  (`codeberg_runner_entrypoint_v11` as of this file). Bumping the entrypoint
+  (`codeberg_runner_entrypoint_v12` as of this file). Bumping the entrypoint
   requires creating a new Swarm config under a new version suffix and
   pointing `stack.yml` at it — Swarm configs are immutable once created.
 
@@ -38,10 +38,25 @@ Nothing sensitive is committed here or should ever be:
 Go's build/module caches and the golangci-lint binary are bind-mounted from
 `/data/toolcache/{go-build,go-mod,golangci-lint}` on the runner's own
 persistent volume straight into every job container, via `container.options`
-in `entrypoint.sh`. This replaced an earlier attempt (through v10) to route
-caching through the runner's built-in cache proxy (`actions/cache`'s
-`ACTIONS_CACHE_URL`): that proxy (port 3101, published in Swarm `mode: host`)
-turned out to time out when reached from a per-job isolated bridge network
-on this host, confirmed by direct testing — not just by every run missing
-cache. The workflow no longer uses `actions/cache` or `setup-go`'s own
-`cache:` option for this reason.
+in `entrypoint.sh`. Two things are required for this to actually take
+effect, not just be declared:
+
+1. `container.valid_volumes` must list the exact host paths — act_runner
+   denies any volume not in that allowlist (default: empty, i.e. deny all),
+   silently ("is not a valid volume, will be ignored") regardless of whether
+   the volume comes from a workflow's own `volumes:` or from
+   `container.options`. Missing this in v11 meant the bind mounts were
+   accepted syntactically but never actually applied.
+2. The host paths must already have something in them for a job to benefit
+   — the first run after adding a path is unavoidably cold.
+
+Verified on the live runner (v12): a cold run showed the usual `go:
+downloading ...` lines for every module; the next run showed none, and
+golangci-lint went straight to `0 issues.` without reinstalling.
+
+This replaced an earlier attempt (through v10) to route caching through the
+runner's built-in cache proxy (`actions/cache`'s `ACTIONS_CACHE_URL`): that
+proxy (port 3101, published in Swarm `mode: host`) turned out to time out
+when reached from a per-job isolated bridge network on this host, confirmed
+by direct testing. The workflow no longer uses `actions/cache` or
+`setup-go`'s own `cache:` option for this reason.

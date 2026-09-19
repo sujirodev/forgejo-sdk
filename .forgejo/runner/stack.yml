@@ -19,7 +19,7 @@ version: "3.8"
 # a secret.
 #
 # Entrypoint behavior and version history: see ./entrypoint.sh (deployed as
-# Swarm config `codeberg_runner_entrypoint_v11`, kept in sync with this
+# Swarm config `codeberg_runner_entrypoint_v12`, kept in sync with this
 # file's `configs.codeberg_runner_entrypoint.name`).
 
 services:
@@ -58,7 +58,7 @@ services:
 configs:
   codeberg_runner_entrypoint:
     external: true
-    name: codeberg_runner_entrypoint_v11
+    name: codeberg_runner_entrypoint_v12
 
 secrets:
   codeberg_runner_conn_token:

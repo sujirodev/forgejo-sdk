@@ -37,7 +37,7 @@ services:
     environment:
       FORGEJO_RUNNER_INSTANCE_URL: "https://codeberg.org"
       FORGEJO_RUNNER_NAME: "${FORGEJO_RUNNER_NAME:-matheus-server-codeberg}"
-      FORGEJO_RUNNER_LABELS: "${FORGEJO_RUNNER_LABELS:-ubuntu-latest:docker://node:22-bookworm,docker:docker://node:22-bookworm}"
+      FORGEJO_RUNNER_LABELS: "${FORGEJO_RUNNER_LABELS:-ubuntu-latest:docker://catthehacker/ubuntu:act-22.04,docker:docker://catthehacker/ubuntu:act-22.04}"
       FORGEJO_RUNNER_CONN_URL: "${FORGEJO_RUNNER_CONN_URL:-}"
       FORGEJO_RUNNER_CONN_UUID: "${FORGEJO_RUNNER_CONN_UUID:-}"
       FORGEJO_RUNNER_REGISTRATION_TOKEN: "${FORGEJO_RUNNER_REGISTRATION_TOKEN:-}"

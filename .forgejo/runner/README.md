@@ -9,7 +9,7 @@ against codeberg.org for this repo.
   content -> Update the stack). No CI workflow applies it automatically.
 - `entrypoint.sh` — the container entrypoint, deployed as the Swarm config
   named in `stack.yml`'s `configs.codeberg_runner_entrypoint.name`
-  (`codeberg_runner_entrypoint_v10` as of this file). Bumping the entrypoint
+  (`codeberg_runner_entrypoint_v11` as of this file). Bumping the entrypoint
   requires creating a new Swarm config under a new version suffix and
   pointing `stack.yml` at it — Swarm configs are immutable once created.
 
@@ -33,10 +33,15 @@ Nothing sensitive is committed here or should ever be:
 - `FORGEJO_RUNNER_CONN_UUID` is a plain identifier (not a secret, per
   Forgejo's own docs) and is set as a stack env var.
 
-## Known limitation
+## Caching
 
-See the "Known limitation as of v10" comment in `entrypoint.sh`: the cache
-proxy is currently unreachable from the per-job isolated networks this setup
-uses, so `actions/cache` steps miss every run. Planned fix: bind-mount
-persistent host directories (GOMODCACHE, GOCACHE, golangci-lint) into job
-containers via `container.options` instead of relying on the proxy.
+Go's build/module caches and the golangci-lint binary are bind-mounted from
+`/data/toolcache/{go-build,go-mod,golangci-lint}` on the runner's own
+persistent volume straight into every job container, via `container.options`
+in `entrypoint.sh`. This replaced an earlier attempt (through v10) to route
+caching through the runner's built-in cache proxy (`actions/cache`'s
+`ACTIONS_CACHE_URL`): that proxy (port 3101, published in Swarm `mode: host`)
+turned out to time out when reached from a per-job isolated bridge network
+on this host, confirmed by direct testing — not just by every run missing
+cache. The workflow no longer uses `actions/cache` or `setup-go`'s own
+`cache:` option for this reason.

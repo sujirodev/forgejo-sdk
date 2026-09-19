@@ -62,11 +62,23 @@ func TestRepoCollaborator(t *testing.T) {
 
 	reviewers, _, err := c.GetReviewers(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
-	// Forgejo 16 narrowed GetReviewers to only list collaborators with write
-	// access or higher (same criteria as GetAssignees below), so "pong"
-	// (added with AccessModeRead) no longer qualifies.
-	assert.Len(t, reviewers, 2)
-	assert.Equal(t, []string{"ping", "test01"}, userToStringSlice(reviewers))
+	// Forgejo 15.0.8 narrowed GetReviewers to only list collaborators with
+	// write access or higher (same criteria as GetAssignees below), so
+	// "pong" (added with AccessModeRead) no longer qualifies. Confirmed by
+	// bisecting the release line directly against the live endpoint: 15.0.7
+	// still returns pong, 15.0.8 does not (16.0.5 inherits the new
+	// behavior). This is the server's own access-control decision, not
+	// something GetReviewers computes or could normalize away, so the test
+	// asserts per version instead of picking one and breaking the other —
+	// found by running this suite against Forgejo 11.0.16 and 15.0.9, not
+	// just the newest release.
+	if serverAtLeast(t, c, "15.0.8") {
+		assert.Len(t, reviewers, 2)
+		assert.Equal(t, []string{"ping", "test01"}, userToStringSlice(reviewers))
+	} else {
+		assert.Len(t, reviewers, 3)
+		assert.Equal(t, []string{"ping", "pong", "test01"}, userToStringSlice(reviewers))
+	}
 
 	assignees, _, err := c.GetAssignees(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)

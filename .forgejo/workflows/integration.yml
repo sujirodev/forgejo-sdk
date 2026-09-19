@@ -39,8 +39,39 @@ jobs:
       - run: make build
       - run: make test-unit
 
-  # Job name is a required status check on `main`; keep it as `testing`.
+  # Runs the integration suite against every Forgejo line the README
+  # promises support for: both currently-supported LTS releases (Forgejo
+  # ships one LTS per year, on its first release; the rest are "stable"
+  # with ~3 months of support — see https://forgejo.org/releases/) plus the
+  # newest stable, so "supports 11.0.10+" is something CI actually checks
+  # instead of an unverified claim about the versions in between.
+  #
+  # With the matrix, the job name Forgejo Actions reports for each leg is
+  # "testing (lts-11)", "testing (lts-15)", "testing (latest-stable)" — the
+  # single "testing" name that used to be the required status check on
+  # `main` no longer exists on its own. Branch protection needs updating to
+  # require the three new names instead (administrative repo setting, not
+  # something this workflow file can do by itself).
+  #
+  # fail-fast: true trades "know immediately which legs would have failed"
+  # for "stop burning runner capacity the moment any leg is red": the first
+  # failing leg cancels the other two still in flight.
   testing:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # renovate: versioning=regex:^(?<major>11)\.(?<minor>\d+)\.(?<patch>\d+)$
+          - label: lts-11
+            image: codeberg.org/forgejo/forgejo:11.0.16@sha256:946243edbab116d5bb78b73ea68af6f3d69229ba1b1ed958dd82c3481167f3e0
+          # renovate: versioning=regex:^(?<major>15)\.(?<minor>\d+)\.(?<patch>\d+)$
+          - label: lts-15
+            image: codeberg.org/forgejo/forgejo:15.0.9@sha256:91a5310c86934339e16bd06b6078aada836e3d8935b2d70f6598108cbfaed5d1
+          # No version-lock marker: this entry tracks the same release as
+          # Makefile/README.md/forgejo/main_test.go and is bumped by the
+          # same Renovate group ("forgejo test instance") as those three.
+          - label: latest-stable
+            image: codeberg.org/forgejo/forgejo:16.0.5@sha256:cf5f5ae6acf2ababca0ee3d255705b83a47f35b25e07fc931d694d60664053fe
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -86,7 +117,7 @@ jobs:
       # for a throwaway CI instance; would not be fine for anything
       # long-lived.
       forgejo:
-        image: codeberg.org/forgejo/forgejo:16.0.5@sha256:cf5f5ae6acf2ababca0ee3d255705b83a47f35b25e07fc931d694d60664053fe
+        image: ${{ matrix.image }}
         cmd:
           - bash
           - -c

@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -53,6 +54,21 @@ func newTestClientAuth() ClientOption {
 		return SetBasicAuth(getForgejoUsername(), getForgejoPassword())
 	}
 	return SetToken(getForgejoToken())
+}
+
+// serverAtLeast reports whether c's server satisfies the given minimum
+// version. Use it when a route's *documented* behavior genuinely differs
+// across Forgejo versions (not a bug, and nothing the SDK can or should
+// paper over): assert one thing when true, the other, explicitly, when
+// false. A version check with no else branch on either side is not a
+// version-aware test, it is a test that only runs half the time.
+func serverAtLeast(t *testing.T, c *Client, minVersion string) bool {
+	t.Helper()
+	err := c.CheckServerVersionConstraint(">= " + minVersion)
+	if err != nil && !strings.Contains(err.Error(), "does not satisfy version constraint") {
+		t.Fatalf("serverAtLeast(%q): %v", minVersion, err)
+	}
+	return err == nil
 }
 
 // renovate: datasource=docker depName=codeberg.org/forgejo/forgejo

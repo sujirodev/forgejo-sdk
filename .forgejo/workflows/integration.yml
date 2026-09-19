@@ -12,9 +12,12 @@ concurrency:
 
 jobs:
   # Static checks need no Forgejo instance; they run alongside `testing`
-  # (the self-hosted runner has capacity 2). Keep golangci-lint's binary and
-  # its incremental cache across runs: `make ci-lint` only downloads the
-  # binary when the pinned version is missing.
+  # (the self-hosted runner has capacity 2). golangci-lint's binary and
+  # Go's own build/module caches are bind-mounted from the runner host
+  # (see .forgejo/runner/entrypoint.sh's container.options) instead of
+  # going through actions/cache/setup-go's own cache: the runner's cache
+  # proxy is unreachable from job containers on this host, so those paths
+  # are disabled below rather than left silently failing every run.
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -27,18 +30,7 @@ jobs:
         with:
           go-version-file: forgejo/go.mod
           check-latest: true
-          cache-dependency-path: forgejo/go.sum
-
-      - run: echo "GOPATH=$(go env GOPATH)" >> "$GITHUB_ENV"
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: |
-            ${{ env.GOPATH }}/bin/golangci-lint
-            ~/.cache/golangci-lint
-          # Bump the version segment together with GOLANGCI_LINT_VERSION in the Makefile.
-          key: golangci-lint-v2.9.0-${{ hashFiles('forgejo/go.sum') }}
-          restore-keys: |
-            golangci-lint-v2.9.0-
+          cache: false
 
       # Every file that pins the Forgejo test-instance version must agree.
       - run: make check-forgejo-version
@@ -63,7 +55,7 @@ jobs:
         with:
           go-version-file: forgejo/go.mod
           check-latest: true
-          cache-dependency-path: forgejo/go.sum
+          cache: false
 
       # Wait for Forgejo to be healthy before running tests; fail if it never is.
       - name: Wait for Forgejo

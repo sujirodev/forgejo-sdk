@@ -34,30 +34,27 @@ TOKEN_FILE="/run/secrets/forgejo_runner_conn_token"
 # `forgejo` on the same network, and one job's tests hit the other job's
 # instance ("repository already exists"). Now `container.network` is left
 # empty so act_runner creates an isolated network per job (services only
-# resolve inside their own job), and the cache is reached through the
-# cache PROXY (the one-time ACTIONS_CACHE_URL each workflow gets) on a fixed
-# proxy_port published on the host in host mode. FORGEJO_RUNNER_CACHE_HOST
-# must be an address of the Docker host reachable from job containers (the
-# Swarm node address). `port` (internal cache server) stays private: only
-# the proxy talks to it, authenticated with the runner's generated secret.
+# resolve inside their own job).
 #
-# v10: cache.dir moved to /data/cache. The default ($HOME/.cache/actcache,
-# i.e. /root) is not on the codeberg_runner_data volume, so every stack
-# redeploy threw the whole actions/cache store away.
+# v10: cache.dir moved to /data/cache (the default, $HOME/.cache/actcache,
+# is not on the codeberg_runner_data volume, so every stack redeploy threw
+# the whole actions/cache store away). Turned out moot: the cache proxy
+# (port 3101, Swarm `mode: host` publish) times out when reached from a
+# per-job isolated bridge network on this host -- confirmed by direct
+# testing (curl to the proxy times out even via the bridge's own gateway
+# IP, while the same port answers instantly from the host's own network
+# namespace). Root cause not fully diagnosed; looks like Swarm's host-mode
+# publish not hairpinning back through other bridge networks here.
 #
-# Known limitation as of v10: the cache proxy (port 3101, published in Swarm
-# `mode: host`) times out when reached from a per-job isolated bridge network
-# on this host -- confirmed by direct testing (curl to the proxy times out
-# from a plain bridge container, even via the bridge's own gateway IP, while
-# the same port answers instantly from the host's own network namespace).
-# Root cause not fully diagnosed (looks like Swarm's host-mode publish not
-# hairpinning back through other bridge networks on this specific host).
-# The planned fix is to stop depending on this proxy for Go's own caches and
-# instead bind-mount persistent host directories
-# (GOMODCACHE, GOCACHE, the golangci-lint binary) into every job container
-# via `container.options`, which needs no network path at all.
+# v11: stopped depending on the cache proxy for Go's own caches. Instead,
+# `container.options` bind-mounts persistent host directories straight into
+# every job container -- no network path needed at all, works the same
+# whether jobs land on isolated or shared networks. `cache.enabled` and the
+# proxy_port publish are dropped; nothing in the workflow uses actions/cache
+# anymore (see .forgejo/workflows/integration.yml).
 if [ -n "${FORGEJO_RUNNER_CONN_URL:-}" ] && [ -n "${FORGEJO_RUNNER_CONN_UUID:-}" ] && [ -f "$TOKEN_FILE" ]; then
   log "Connection fields + token secret found. Starting daemon directly (no register step)."
+  mkdir -p /data/toolcache/go-build /data/toolcache/go-mod /data/toolcache/golangci-lint
   cat > /data/config.yml <<EOF
 server:
   connections:
@@ -69,14 +66,12 @@ runner:
   capacity: ${FORGEJO_RUNNER_CAPACITY:-2}
   labels:
 $(printf '%s' "${FORGEJO_RUNNER_LABELS:-}" | tr ',' '\n' | sed '/^$/d; s/^/    - /')
-cache:
-  enabled: true
-  host: "${FORGEJO_RUNNER_CACHE_HOST:-}"
-  dir: "${FORGEJO_RUNNER_CACHE_DIR:-/data/cache}"
-  port: ${FORGEJO_RUNNER_CACHE_PORT:-3100}
-  proxy_port: ${FORGEJO_RUNNER_CACHE_PROXY_PORT:-3101}
 container:
   network: "${FORGEJO_RUNNER_JOB_NETWORK:-}"
+  options: >-
+    --volume /data/toolcache/go-build:/root/.cache/go-build
+    --volume /data/toolcache/go-mod:/root/go/pkg/mod
+    --volume /data/toolcache/golangci-lint:/root/go/bin
 EOF
   exec forgejo-runner daemon --config /data/config.yml
 fi

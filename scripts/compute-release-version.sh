@@ -12,6 +12,21 @@ usage() {
 
 command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
 
+# PR metadata comes either from PR_NUMBER/PR_TITLE/PR_BODY/PR_LABELS_JSON in
+# the environment (handy for local runs) or from a Forgejo PullRequest JSON
+# document at PR_JSON_FILE, which takes precedence. The workflow always uses
+# the file: the Forgejo runner re-evaluates every value it loads from
+# $GITHUB_ENV as an expression, so a PR body that merely quotes "${{ ... }}"
+# (like #22's did) aborts the job before any step runs when passed as an
+# environment variable.
+if [ -n "${PR_JSON_FILE:-}" ]; then
+  PR_NUMBER=$(jq -r '.number' "$PR_JSON_FILE")
+  PR_TITLE=$(jq -r '.title // ""' "$PR_JSON_FILE")
+  PR_BODY=$(jq -r '.body // ""' "$PR_JSON_FILE")
+  PR_LABELS_JSON=$(jq -c '.labels // []' "$PR_JSON_FILE")
+  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON
+fi
+
 # Prints one label name per line from PR_LABELS_JSON. A jq failure (e.g.
 # malformed JSON) must abort the script rather than be swallowed into an
 # empty list, which would silently misclassify a breaking change as patch.

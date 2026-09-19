@@ -14,7 +14,7 @@ GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0
 
 # renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
-FORGEJO_VERSION := 15.0.1
+FORGEJO_VERSION := 16.0.5
 FORGEJO_DL := https://codeberg.org/forgejo/forgejo/releases/download/v$(FORGEJO_VERSION)/forgejo-$(FORGEJO_VERSION)-
 
 # Detect OS and architecture

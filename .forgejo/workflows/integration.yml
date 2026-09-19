@@ -53,10 +53,17 @@ jobs:
   # require the three new names instead (administrative repo setting, not
   # something this workflow file can do by itself).
   #
+  # The explicit `name:` below is what makes those names stable: without it
+  # the runner names each leg after every matrix field, image digest
+  # included ("testing (codeberg.org/forgejo/forgejo:11.0.16@sha256:...,
+  # lts-11)"), so the status-check context would change on every Renovate
+  # bump and the required check on `main` would never match again.
+  #
   # fail-fast: true trades "know immediately which legs would have failed"
   # for "stop burning runner capacity the moment any leg is red": the first
   # failing leg cancels the other two still in flight.
   testing:
+    name: testing (${{ matrix.label }})
     strategy:
       fail-fast: true
       matrix:

@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.0.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.0.1) - 2026-09-19
+
+* MISC
+  * ci: run the integration suite against Forgejo's LTS lines too (#21)
+
+
 ## [v3.0.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v3.0.0) - 2026-03-04
 
 * GENERAL

@@ -19,7 +19,7 @@ version: "3.8"
 # a secret.
 #
 # Entrypoint behavior and version history: see ./entrypoint.sh (deployed as
-# Swarm config `codeberg_runner_entrypoint_v10`, kept in sync with this
+# Swarm config `codeberg_runner_entrypoint_v11`, kept in sync with this
 # file's `configs.codeberg_runner_entrypoint.name`).
 
 services:
@@ -42,16 +42,7 @@ services:
       FORGEJO_RUNNER_CONN_UUID: "${FORGEJO_RUNNER_CONN_UUID:-}"
       FORGEJO_RUNNER_REGISTRATION_TOKEN: "${FORGEJO_RUNNER_REGISTRATION_TOKEN:-}"
       FORGEJO_RUNNER_CAPACITY: "${FORGEJO_RUNNER_CAPACITY:-2}"
-      FORGEJO_RUNNER_CACHE_HOST: "${FORGEJO_RUNNER_CACHE_HOST:-}"
-      FORGEJO_RUNNER_CACHE_PROXY_PORT: "${FORGEJO_RUNNER_CACHE_PROXY_PORT:-3101}"
       DOCKER_HOST: "unix:///var/run/docker.sock"
-    ports:
-      # Cache proxy (see entrypoint.sh's "known limitation" note: this path
-      # currently times out from per-job isolated networks on this host).
-      - target: 3101
-        published: 3101
-        protocol: tcp
-        mode: host
     volumes:
       - codeberg_runner_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -67,7 +58,7 @@ services:
 configs:
   codeberg_runner_entrypoint:
     external: true
-    name: codeberg_runner_entrypoint_v10
+    name: codeberg_runner_entrypoint_v11
 
 secrets:
   codeberg_runner_conn_token:

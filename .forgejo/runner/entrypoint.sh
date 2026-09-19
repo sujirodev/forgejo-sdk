@@ -48,10 +48,18 @@ TOKEN_FILE="/run/secrets/forgejo_runner_conn_token"
 #
 # v11: stopped depending on the cache proxy for Go's own caches. Instead,
 # `container.options` bind-mounts persistent host directories straight into
-# every job container -- no network path needed at all, works the same
-# whether jobs land on isolated or shared networks. `cache.enabled` and the
-# proxy_port publish are dropped; nothing in the workflow uses actions/cache
-# anymore (see .forgejo/workflows/integration.yml).
+# every job container -- no network path needed at all. Turned out to be a
+# no-op: act_runner has a `container.valid_volumes` allowlist that defaults
+# to empty (deny all), applied to every volume regardless of whether it
+# comes from workflow-declared `volumes:` or operator-set `container.options`
+# -- the bind mounts were silently dropped ("is not a valid volume, will be
+# ignored"), confirmed in a run's log, so caching was still a no-op.
+#
+# v12: added `container.valid_volumes` listing the exact host paths used by
+# `container.options`, so the bind mounts actually take effect. Verified:
+# two back-to-back workflow_dispatch runs, first one cold (v11 never wrote
+# anything to these host paths), second one with zero `go: downloading`
+# lines and no golangci-lint reinstall.
 if [ -n "${FORGEJO_RUNNER_CONN_URL:-}" ] && [ -n "${FORGEJO_RUNNER_CONN_UUID:-}" ] && [ -f "$TOKEN_FILE" ]; then
   log "Connection fields + token secret found. Starting daemon directly (no register step)."
   mkdir -p /data/toolcache/go-build /data/toolcache/go-mod /data/toolcache/golangci-lint
@@ -68,6 +76,10 @@ runner:
 $(printf '%s' "${FORGEJO_RUNNER_LABELS:-}" | tr ',' '\n' | sed '/^$/d; s/^/    - /')
 container:
   network: "${FORGEJO_RUNNER_JOB_NETWORK:-}"
+  valid_volumes:
+    - /data/toolcache/go-build
+    - /data/toolcache/go-mod
+    - /data/toolcache/golangci-lint
   options: >-
     --volume /data/toolcache/go-build:/root/.cache/go-build
     --volume /data/toolcache/go-mod:/root/go/pkg/mod

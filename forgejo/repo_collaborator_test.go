@@ -62,8 +62,11 @@ func TestRepoCollaborator(t *testing.T) {
 
 	reviewers, _, err := c.GetReviewers(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
-	assert.Len(t, reviewers, 3)
-	assert.Equal(t, []string{"ping", "pong", "test01"}, userToStringSlice(reviewers))
+	// Forgejo 16 narrowed GetReviewers to only list collaborators with write
+	// access or higher (same criteria as GetAssignees below), so "pong"
+	// (added with AccessModeRead) no longer qualifies.
+	assert.Len(t, reviewers, 2)
+	assert.Equal(t, []string{"ping", "test01"}, userToStringSlice(reviewers))
 
 	assignees, _, err := c.GetAssignees(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)

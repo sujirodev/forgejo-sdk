@@ -4,7 +4,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-wf=$(grep -oE 'forgejo/forgejo:[0-9]+\.[0-9]+\.[0-9]+' .forgejo/workflows/integration.yml | head -1 | cut -d: -f2)
+# The testing job's version matrix has three image lines (lts-11, lts-15,
+# latest-stable); only latest-stable is meant to match Makefile/README/
+# main_test.go, so pull the line right after its "label: latest-stable"
+# marker instead of just the first "forgejo/forgejo:" match in the file.
+wf=$(awk '/label: latest-stable/{found=1; next} found && /forgejo\/forgejo:/{print; exit}' .forgejo/workflows/integration.yml \
+  | grep -oE 'forgejo/forgejo:[0-9]+\.[0-9]+\.[0-9]+' | cut -d: -f2)
 mk=$(grep -oE '^FORGEJO_VERSION := [0-9]+\.[0-9]+\.[0-9]+' Makefile | awk '{print $3}')
 rd=$(grep -A1 'renovate: datasource=docker depName=codeberg.org/forgejo/forgejo' README.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 gt=$(grep -oE 'testForgejoVersion = "[0-9]+\.[0-9]+\.[0-9]+"' forgejo/main_test.go | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')

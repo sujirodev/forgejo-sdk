@@ -17,6 +17,16 @@
         "renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)[^\\n]*\\n[^\\n]*?(?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
       "versioningTemplate": "docker"
+    },
+    {
+      "description": "Forgejo images inside the testing job's version matrix (integration.yml). Matches all three matrix entries (lts-11, lts-15, latest-stable) as separate dependencies, routed to separate update groups by the packageRules below.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.forgejo/workflows/integration\\.yml$/"],
+      "matchStrings": [
+        "image: (?<depName>codeberg\\.org/forgejo/forgejo):(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
   "packageRules": [
@@ -47,12 +57,34 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Forgejo test instance: always track the newest release tag (https://codeberg.org/forgejo/forgejo/tags; the docker datasource exposes the same tags plus the image digest). One PR touching every reference (workflow service image, Makefile, README, main_test.go), majors included, no separate minor/patch PR, no dashboard approval; CI on the PR decides. Must stay after the github-actions major rule above.",
+      "description": "Forgejo test instance: always track the newest release tag (https://codeberg.org/forgejo/forgejo/tags; the docker datasource exposes the same tags plus the image digest). One PR touching every reference (workflow service image, Makefile, README, main_test.go), majors included, no separate minor/patch PR, no dashboard approval; CI on the PR decides. Must stay after the github-actions major rule above, and before the two lts-* matrix rules below (their narrower groupName has to win for those two dependencies; this rule's groupName still applies to the matrix's latest-stable entry, which neither of them matches).",
       "matchDepNames": ["codeberg.org/forgejo/forgejo"],
       "groupName": "forgejo test instance",
       "labels": ["forgejo-version"],
       "dependencyDashboardApproval": false,
       "separateMajorMinor": false,
+      "automerge": false
+    },
+    {
+      "description": "Keep the testing matrix's lts-11 entry inside the 11.x line: it tracks Forgejo's LTS releases (see docs/PLANO-MATRIZ-VERSOES.md), not the newest stable, so it must never follow the group above past a major bump. Comes after that rule so this groupName overrides it for this one dependency.",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".forgejo/workflows/integration.yml"],
+      "matchCurrentVersion": "/^11\\./",
+      "allowedVersions": "/^11\\./",
+      "groupName": "forgejo lts-11 test matrix entry",
+      "labels": ["forgejo-version"],
+      "dependencyDashboardApproval": false,
+      "automerge": false
+    },
+    {
+      "description": "Keep the testing matrix's lts-15 entry inside the 15.x line, same reasoning as lts-11 above.",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".forgejo/workflows/integration.yml"],
+      "matchCurrentVersion": "/^15\\./",
+      "allowedVersions": "/^15\\./",
+      "groupName": "forgejo lts-15 test matrix entry",
+      "labels": ["forgejo-version"],
+      "dependencyDashboardApproval": false,
       "automerge": false
     }
   ],

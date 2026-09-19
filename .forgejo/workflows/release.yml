@@ -50,10 +50,15 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      # Exports PR_NUMBER / PR_TITLE / PR_BODY / PR_LABELS_JSON for every
-      # later step, from the event payload on merge or from the API on a
-      # manual dispatch. scripts/compute-release-version.sh reads them from
-      # the environment.
+      # Saves the PR as JSON (from the event payload on merge, from the API
+      # on a manual dispatch) and hands only its PATH to later steps via
+      # $GITHUB_ENV. scripts/compute-release-version.sh reads
+      # number/title/body/labels from that file.
+      #
+      # The title/body themselves must never go through $GITHUB_ENV: the
+      # runner re-evaluates every value loaded from it as an expression on
+      # every following step, so a PR body that merely quotes "${{ ... }}"
+      # (as #22's did, run #88) aborts the whole job with a parse error.
       - name: Resolve the merged PR
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -61,24 +66,19 @@ jobs:
           EVENT_PR_JSON: ${{ toJSON(github.event.pull_request) }}
         run: |
           api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          pr_file="${RUNNER_TEMP:-/tmp}/release-pr.json"
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            pr=$(curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
-              "${api}/repos/${GITHUB_REPOSITORY}/pulls/${INPUT_PR_NUMBER}")
-            if [ "$(jq -r '.merged' <<<"$pr")" != "true" ] || [ "$(jq -r '.base.ref' <<<"$pr")" != "main" ]; then
+            curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
+              "${api}/repos/${GITHUB_REPOSITORY}/pulls/${INPUT_PR_NUMBER}" > "$pr_file"
+            if [ "$(jq -r '.merged' "$pr_file")" != "true" ] || [ "$(jq -r '.base.ref' "$pr_file")" != "main" ]; then
               echo "::error::PR #${INPUT_PR_NUMBER} is not a PR merged into main"
               exit 1
             fi
           else
-            pr="$EVENT_PR_JSON"
+            printf '%s' "$EVENT_PR_JSON" > "$pr_file"
           fi
-          {
-            echo "PR_NUMBER=$(jq -r '.number' <<<"$pr")"
-            echo "PR_TITLE=$(jq -r '.title' <<<"$pr")"
-            echo "PR_LABELS_JSON=$(jq -c '.labels // []' <<<"$pr")"
-            echo "PR_BODY<<__PR_BODY_EOF__"
-            jq -r '.body // ""' <<<"$pr"
-            echo "__PR_BODY_EOF__"
-          } >> "$GITHUB_ENV"
+          echo "resolved PR #$(jq -r '.number' "$pr_file"): $(jq -r '.title' "$pr_file")"
+          echo "PR_JSON_FILE=${pr_file}" >> "$GITHUB_ENV"
 
       # pull_request `paths` filtering isn't documented/supported by Forgejo
       # Actions (only `push` is), so the check happens here instead of in `on:`.
@@ -86,6 +86,7 @@ jobs:
         id: changed
         run: |
           api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          PR_NUMBER=$(jq -r '.number' "$PR_JSON_FILE")
           files=$(curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
             "${api}/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?limit=100")
           if jq -e '.[] | select(.filename | startswith("forgejo/"))' <<<"$files" >/dev/null; then
@@ -106,6 +107,7 @@ jobs:
       - name: Block automatic MAJOR release
         if: steps.changed.outputs.changed == 'true' && steps.bump.outputs.level == 'major'
         run: |
+          PR_NUMBER=$(jq -r '.number' "$PR_JSON_FILE")
           echo "::error::PR #${PR_NUMBER} sinaliza uma mudanca breaking (label kind/breaking, 'feat!:'/'fix!:' ou rodape 'BREAKING CHANGE:'). Bump MAJOR nao e automatico: siga o processo manual descrito em docs/adr/0005-roadmap-to-v4.md antes de publicar uma v4."
           exit 1
 

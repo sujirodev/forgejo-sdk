@@ -93,3 +93,16 @@ func (c *Client) DeleteDeployKey(owner, repo string, keyID int64) (*Response, er
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/keys/%d", owner, repo, keyID), nil, nil)
 	return resp, err
 }
+
+// GetRepoSigningKey returns the ASCII-armored public part of the key used by
+// the server to sign commits and tags for the given repository, if any.
+func (c *Client) GetRepoSigningKey(owner, repo string) (string, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return "", nil, err
+	}
+	data, resp, err := c.getResponse("GET", fmt.Sprintf("/repos/%s/%s/signing-key.gpg", owner, repo), nil, nil)
+	if err != nil {
+		return "", resp, err
+	}
+	return string(data), resp, nil
+}

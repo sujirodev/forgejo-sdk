@@ -70,6 +70,43 @@ func TestCommitStatus(t *testing.T) {
 	assert.Len(t, combiStats.Statuses, 2)
 }
 
+func TestListCommitStatuses(t *testing.T) {
+	log.Println("== TestListCommitStatuses ==")
+	c := newTestClient()
+	user, _, err := c.GetMyUserInfo()
+	require.NoError(t, err)
+
+	repoName := "CommitStatusesBySHA"
+	origRepo, err := createTestRepo(t, repoName, c)
+	if !assert.NoError(t, err) { //nolint:testifylint
+		return
+	}
+
+	commits, _, _ := c.ListRepoCommits(user.UserName, repoName, ListCommitOptions{
+		ListOptions: ListOptions{},
+		SHA:         origRepo.DefaultBranch,
+	})
+	if !assert.Len(t, commits, 1) {
+		return
+	}
+	sha := commits[0].SHA
+
+	statuses, resp, err := c.ListCommitStatuses(user.UserName, repoName, sha, ListCommitStatusesOptions{})
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Empty(t, statuses)
+
+	createStatus(t, c, user.UserName, repoName, sha, "http://dummy.test", "start testing", "ultraCI", StatusPending)
+	createStatus(t, c, user.UserName, repoName, sha, "http://dummy.test", "test passed", "ultraCI", StatusSuccess)
+
+	statuses, resp, err = c.ListCommitStatuses(user.UserName, repoName, sha, ListCommitStatusesOptions{State: StatusSuccess})
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	if assert.Len(t, statuses, 1) {
+		assert.Equal(t, StatusSuccess, statuses[0].State)
+	}
+}
+
 func createStatus(t *testing.T, c *Client, userName, repoName, sha, url, desc, context string, state StatusState) { //nolint
 	stats, resp, err := c.CreateStatus(userName, repoName, sha, CreateStatusOption{
 		State:       state,

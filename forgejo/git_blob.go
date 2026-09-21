@@ -10,6 +10,7 @@ package forgejo
 
 import (
 	"fmt"
+	"strings"
 )
 
 // GitBlobResponse represents a git blob
@@ -29,4 +30,14 @@ func (c *Client) GetBlob(user, repo, sha string) (*GitBlobResponse, *Response, e
 	blob := new(GitBlobResponse)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/git/blobs/%s", user, repo, sha), nil, nil, blob)
 	return blob, resp, err
+}
+
+// GetBlobs gets multiple blobs of a repository, given a list of blob SHAs
+func (c *Client) GetBlobs(user, repo string, shas []string) ([]*GitBlobResponse, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, nil, err
+	}
+	blobs := make([]*GitBlobResponse, 0, len(shas))
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/git/blobs?shas=%s", user, repo, strings.Join(shas, ",")), nil, nil, &blobs)
+	return blobs, resp, err
 }

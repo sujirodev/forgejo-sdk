@@ -27,5 +27,5 @@ jobs:
           GITHUB_COM_TOKEN: ${{ secrets.TOKEN_GITHUB }}
           
           # Logging and Author
-          LOG_LEVEL: "debug"
+          LOG_LEVEL: "info"
           RENOVATE_GIT_AUTHOR: "Forgejo SDK Renovate Bot <renovate@noreply.codeberg.org>"

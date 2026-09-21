@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.1.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.1) - 2026-09-21
+
+* MISC
+  * test: a test for every route, and a check that keeps it that way (#28)
+
+
 ## [v3.1.0](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.0) - 2026-09-21
 
 * MISC

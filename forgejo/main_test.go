@@ -44,8 +44,23 @@ func enableRunForgejo() bool {
 }
 
 func newTestClient() *Client {
-	c, _ := NewClient(getForgejoURL(), newTestClientAuth())
+	c, _ := newTestClientOpts()
 	return c
+}
+
+// newTestClientOpts builds an integration test client with extra options on
+// top of the standard auth and the route recorder. Every integration test
+// builds its client here, never with a bare NewClient: a client built outside
+// this helper bypasses the recorder and its requests land in the report's
+// "unattributed" bucket.
+func newTestClientOpts(opts ...ClientOption) (*Client, error) {
+	all := make([]ClientOption, 0, len(opts)+2)
+	all = append(all,
+		newTestClientAuth(),
+		SetHTTPClient(&http.Client{Transport: testRouteRecorder}),
+	)
+	all = append(all, opts...)
+	return NewClient(getForgejoURL(), all...)
 }
 
 func newTestClientAuth() ClientOption {
@@ -137,6 +152,9 @@ func runForgejo() (*os.Process, error) {
 INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4
 INSTALL_LOCK   = true
 SECRET_KEY     = 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo
+DISABLE_GIT_HOOKS = false
+[migrations]
+ALLOW_LOCALNETWORKS = true
 [database]
 DB_TYPE  = sqlite3
 [log]
@@ -183,6 +201,7 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("testing with %v, %v, %v\n", getForgejoURL(), getForgejoUsername(), getForgejoPassword())
 	exitCode := m.Run()
+	writeRouteReport()
 	exit(exitCode)
 }
 

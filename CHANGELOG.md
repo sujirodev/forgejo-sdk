@@ -1,5 +1,29 @@
 # Changelog
 
+## [v3.1.3](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.3) - 2026-09-21
+
+* MISC
+  * test: close the 12 routes the evidence did not support, and turn the gate on (#30)
+
+
+## [v3.1.2](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.2) - 2026-09-21
+
+* MISC
+  * docs: generate the per-version route contract from what the suite actually did (#29)
+
+
+## [v3.1.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.1) - 2026-09-21
+
+* MISC
+  * test: a test for every route, and a check that keeps it that way (#28)
+
+
+## [v3.1.0](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.0) - 2026-09-21
+
+* MISC
+  * feat(packages): add LinkPackage and UnlinkPackage (#42)
+
+
 ## [v3.0.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.0.1) - 2026-09-19
 
 * MISC

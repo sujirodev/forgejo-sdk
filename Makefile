@@ -127,6 +127,10 @@ check-route-coverage: ## Verify every *Client method (route) is referenced by a 
 check-route-coverage-strict: ## Verify every route has both a unit test and an integration test.
 	@bash scripts/check-route-coverage.sh --strict
 
+.PHONY: route-report
+route-report: test ## Run the suite and write the route evidence (forgejo/route-report.json).
+	@echo "route evidence: forgejo/route-report.json (label: $${FORGEJO_SDK_TEST_LABEL:-local})"
+
 COVERAGE_MIN ?= 70
 
 .PHONY: coverage-check

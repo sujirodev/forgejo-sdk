@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.1.2](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.2) - 2026-09-21
+
+* MISC
+  * docs: generate the per-version route contract from what the suite actually did (#29)
+
+
 ## [v3.1.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.1) - 2026-09-21
 
 * MISC

@@ -74,6 +74,48 @@ type RunnerRegistrationToken struct {
 	Token string `json:"token"`
 }
 
+// ActionRunner represents a Forgejo Actions runner
+type ActionRunner struct {
+	// ID uniquely identifies this runner.
+	ID int64 `json:"id"`
+	// UUID uniquely identifies this runner.
+	UUID string `json:"uuid"`
+	// Name of the runner; not unique.
+	Name string `json:"name"`
+	// Version is the self-reported version string of Forgejo Runner.
+	Version string `json:"version"`
+	// OwnerID is the identifier of the user or organization this runner belongs to. 0 if the runner is owned by a repository.
+	OwnerID int64 `json:"owner_id"`
+	// RepoID is the identifier of the repository this runner belongs to. 0 if the runner belongs to a user or organization.
+	RepoID int64 `json:"repo_id"`
+	// Description provides optional details about this runner.
+	Description string `json:"description"`
+	// Labels is a list of labels attached to this runner.
+	Labels []string `json:"labels"`
+	// Status indicates whether this runner is offline, idle, or active.
+	Status string `json:"status"`
+	// Ephemeral indicates if this is an ephemeral (one-off) runner.
+	Ephemeral bool `json:"ephemeral"`
+}
+
+// RegisterRunnerOption options for registering a new runner
+type RegisterRunnerOption struct {
+	// Name of the runner to register. The name of the runner does not have to be unique.
+	Name string `json:"name"`
+	// Description of the runner to register.
+	Description string `json:"description"`
+	// Ephemeral registers the runner as an ephemeral (one-off) runner.
+	// See https://forgejo.org/docs/latest/admin/actions/security/#ephemeral-runner
+	Ephemeral bool `json:"ephemeral"`
+}
+
+// RegisterRunnerResponse contains the details of a just-registered runner
+type RegisterRunnerResponse struct {
+	ID    int64  `json:"id"`
+	Token string `json:"token"`
+	UUID  string `json:"uuid"`
+}
+
 // ListActionRunsOption options for listing action runs
 type ListActionRunsOption struct {
 	ListOptions

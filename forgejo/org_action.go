@@ -264,3 +264,64 @@ func (c *Client) GetOrgActionRunnerRegistrationToken(org string) (*RunnerRegistr
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/orgs/%s/actions/runners/registration-token", org), jsonHeader, nil, token)
 	return token, resp, err
 }
+
+// ListOrgRunnersOption options for listing an organization's runners
+type ListOrgRunnersOption struct {
+	ListOptions
+	// Visible controls whether to include all visible runners (true) or only
+	// those directly owned by the organization (false).
+	Visible bool
+}
+
+// QueryEncode encodes options to query parameters
+func (opt *ListOrgRunnersOption) QueryEncode() string {
+	query := opt.getURLQuery()
+	if opt.Visible {
+		query.Add("visible", "true")
+	}
+	return query.Encode()
+}
+
+// ListOrgRunners gets the organization's runners
+func (c *Client) ListOrgRunners(org string, opt ListOrgRunnersOption) ([]*ActionRunner, *Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, nil, err
+	}
+	opt.setDefaults()
+	runners := make([]*ActionRunner, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/orgs/%s/actions/runners?%s", org, opt.QueryEncode()), jsonHeader, nil, &runners)
+	return runners, resp, err
+}
+
+// RegisterOrgRunner registers a new organization-level runner and returns its registration token
+func (c *Client) RegisterOrgRunner(org string, opt RegisterRunnerOption) (*RegisterRunnerResponse, *Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	result := new(RegisterRunnerResponse)
+	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/orgs/%s/actions/runners", org), jsonHeader, bytes.NewReader(body), result)
+	return result, resp, err
+}
+
+// GetOrgRunner gets a particular runner that belongs to the organization
+func (c *Client) GetOrgRunner(org string, runnerID int64) (*ActionRunner, *Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, nil, err
+	}
+	runner := new(ActionRunner)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/orgs/%s/actions/runners/%d", org, runnerID), jsonHeader, nil, runner)
+	return runner, resp, err
+}
+
+// DeleteOrgRunner deletes a particular runner that belongs to the organization
+func (c *Client) DeleteOrgRunner(org string, runnerID int64) (*Response, error) {
+	if err := escapeValidatePathSegments(&org); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/orgs/%s/actions/runners/%d", org, runnerID), jsonHeader, nil)
+	return resp, err
+}

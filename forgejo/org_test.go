@@ -45,6 +45,43 @@ func TestListAllOrgs(t *testing.T) {
 	assert.NoError(t, err, "failed to delete org")
 }
 
+func TestRenameOrg(t *testing.T) {
+	log.Println("== TestRenameOrg ==")
+	c := newTestClient()
+
+	oldName := "RenameOrgTestOld"
+	newName := "RenameOrgTestNew"
+	_, _, err := c.GetOrg(oldName)
+	if err == nil {
+		_, _ = c.DeleteOrg(oldName)
+	}
+	_, _, err = c.GetOrg(newName)
+	if err == nil {
+		_, _ = c.DeleteOrg(newName)
+	}
+
+	_, _, err = c.CreateOrg(CreateOrgOption{
+		Name:       oldName,
+		Visibility: VisibleTypePublic,
+	})
+	require.NoError(t, err)
+	defer func() {
+		_, _ = c.DeleteOrg(oldName)
+		_, _ = c.DeleteOrg(newName)
+	}()
+
+	resp, err := c.RenameOrg(oldName, RenameOrgOption{NewName: newName})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	renamed, _, err := c.GetOrg(newName)
+	require.NoError(t, err)
+	assert.Equal(t, newName, renamed.UserName)
+
+	_, _, err = c.GetOrg(oldName)
+	assert.Error(t, err)
+}
+
 func createTestOrgRepo(t *testing.T, c *Client, name string) (func(), *Repository, error) {
 	_, _, err := c.GetOrg(name)
 	if err == nil {

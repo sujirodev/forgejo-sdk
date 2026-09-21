@@ -93,6 +93,17 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      # issue_attachment.go and issue_comment_attachment.go are both thin,
+      # intentionally parallel wrappers around the shared attachment.go
+      # helpers (one set per parent resource: issue vs. issue comment).
+      # dupl flags them as clones of each other even though there's nothing
+      # left to extract - the alternative is collapsing two differently
+      # named public APIs into one, which the routes this SDK exposes
+      # (issueXIssueAttachment vs issueXIssueCommentAttachment) don't allow.
+      - path: forgejo/issue_(comment_)?attachment\.go
+        linters:
+          - dupl
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

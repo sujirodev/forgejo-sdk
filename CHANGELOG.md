@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.1.3](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.3) - 2026-09-21
+
+* MISC
+  * test: close the 12 routes the evidence did not support, and turn the gate on (#30)
+
+
 ## [v3.1.2](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.2) - 2026-09-21
 
 * MISC

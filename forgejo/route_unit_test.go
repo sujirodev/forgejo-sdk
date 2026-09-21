@@ -139,3 +139,49 @@ func TestUnit_Routes_AdminCron(t *testing.T) {
 		},
 	})
 }
+
+// TestUnit_Routes_RepoActionRuns pins the guard added for Forgejo 12.0.0:
+// /repos/{owner}/{repo}/actions/runs does not exist on 11.x, where the router
+// answers a bare 404 page instead of an API error.
+func TestUnit_Routes_RepoActionRuns(t *testing.T) {
+	runRouteCases(t, []routeCase{
+		{
+			name:         "ListRepoActionRuns",
+			minVersion:   "12.0.0",
+			belowVersion: "11.0.16",
+			handler: func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, http.MethodGet, r.Method)
+				assert.Equal(t, "/api/v1/repos/u/r/actions/runs", r.URL.Path)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"total_count":1,"workflow_runs":[{"id":7}]}`))
+			},
+			call: func(t *testing.T, c *Client) error {
+				runs, _, err := c.ListRepoActionRuns("u", "r", ListActionRunsOption{})
+				if err != nil {
+					return err
+				}
+				assert.Len(t, runs.WorkflowRuns, 1)
+				return nil
+			},
+		},
+		{
+			name:         "GetRepoActionRun",
+			minVersion:   "12.0.0",
+			belowVersion: "11.0.16",
+			handler: func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, http.MethodGet, r.Method)
+				assert.Equal(t, "/api/v1/repos/u/r/actions/runs/7", r.URL.Path)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"id":7}`))
+			},
+			call: func(t *testing.T, c *Client) error {
+				run, _, err := c.GetRepoActionRun("u", "r", 7)
+				if err != nil {
+					return err
+				}
+				assert.Equal(t, int64(7), run.ID)
+				return nil
+			},
+		},
+	})
+}

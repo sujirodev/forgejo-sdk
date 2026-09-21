@@ -25,6 +25,17 @@ jobs:
       GOPROXY: "https://proxy.golang.org,direct"
       GO111MODULE: "on"
     steps:
+      # The self-hosted runner reuses /workspace/<owner>/<repo> between jobs.
+      # When a job starts and that directory has no .git (it happens),
+      # actions/checkout init's a fresh repository on top of whatever is
+      # already there and checks out the ref -- which restores tracked files
+      # but leaves the *previous* job's files behind as untracked leftovers.
+      # A job then lints and tests files from another pull request: observed
+      # on PR #31, whose lint failed on a forgejo/repo_refs_test.go that does
+      # not exist on its branch at all. Wipe the workspace first.
+      - name: Clean the shared workspace
+        run: find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
@@ -88,6 +99,17 @@ jobs:
       FORGEJO_SDK_TEST_USERNAME: "test01"
       FORGEJO_SDK_TEST_PASSWORD: "test01"
     steps:
+      # The self-hosted runner reuses /workspace/<owner>/<repo> between jobs.
+      # When a job starts and that directory has no .git (it happens),
+      # actions/checkout init's a fresh repository on top of whatever is
+      # already there and checks out the ref -- which restores tracked files
+      # but leaves the *previous* job's files behind as untracked leftovers.
+      # A job then lints and tests files from another pull request: observed
+      # on PR #31, whose lint failed on a forgejo/repo_refs_test.go that does
+      # not exist on its branch at all. Wipe the workspace first.
+      - name: Clean the shared workspace
+        run: find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:

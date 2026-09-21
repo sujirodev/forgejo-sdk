@@ -44,8 +44,23 @@ func enableRunForgejo() bool {
 }
 
 func newTestClient() *Client {
-	c, _ := NewClient(getForgejoURL(), newTestClientAuth())
+	c, _ := newTestClientOpts()
 	return c
+}
+
+// newTestClientOpts builds an integration test client with extra options on
+// top of the standard auth and the route recorder. Every integration test
+// builds its client here, never with a bare NewClient: a client built outside
+// this helper bypasses the recorder and its requests land in the report's
+// "unattributed" bucket.
+func newTestClientOpts(opts ...ClientOption) (*Client, error) {
+	all := make([]ClientOption, 0, len(opts)+2)
+	all = append(all,
+		newTestClientAuth(),
+		SetHTTPClient(&http.Client{Transport: testRouteRecorder}),
+	)
+	all = append(all, opts...)
+	return NewClient(getForgejoURL(), all...)
 }
 
 func newTestClientAuth() ClientOption {
@@ -186,6 +201,7 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("testing with %v, %v, %v\n", getForgejoURL(), getForgejoUsername(), getForgejoPassword())
 	exitCode := m.Run()
+	writeRouteReport()
 	exit(exitCode)
 }
 

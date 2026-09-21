@@ -159,6 +159,7 @@ func (c *Client) GetCommitPatch(user, repo, commitID string) ([]byte, *Response,
 	return c.getResponse("GET", fmt.Sprintf("/repos/%s/%s/git/commits/%s.%s", user, repo, commitID, pullRequestDiffTypePatch), nil, nil)
 }
 
+// GetCommitPullRequest returns the pull request a commit was merged through.
 func (c *Client) GetCommitPullRequest(user, repo, commitID string) (*PullRequest, *Response, error) {
 	if err := c.checkServerVersionGreaterThanOrEqual(version1_22_0); err != nil {
 		return nil, nil, err

@@ -35,6 +35,16 @@ import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
  **Please note:** the SDK might or might not work with versions between the minimum and the tested one
  depending on what part of the SDK you use; CI only runs against the tested version.
 
+## Route coverage
+
+Every route the SDK exposes is one exported `*Client` method. The table below
+is generated from what the integration suite actually did against each Forgejo
+version -- not from reading the tests -- and CI regenerates it on every pull
+request, so a stale table is a red build instead of a promise nobody checked.
+
+<!-- route-matrix:start -->
+<!-- route-matrix:end -->
+
 ## Contributing
 
 Fork -> Patch -> Push -> Pull Request

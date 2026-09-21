@@ -127,6 +127,22 @@ check-route-coverage: ## Verify every *Client method (route) is referenced by a 
 check-route-coverage-strict: ## Verify every route has both a unit test and an integration test.
 	@bash scripts/check-route-coverage.sh --strict
 
+.PHONY: route-report
+route-report: test ## Run the suite and write the route evidence (forgejo/route-report.json).
+	@echo "route evidence: forgejo/route-report.json (label: $${FORGEJO_SDK_TEST_LABEL:-local})"
+
+# ROUTE_REPORTS lets CI pass one report per matrix leg; empty means "the local
+# forgejo/route-report.json".
+ROUTE_REPORTS ?=
+
+.PHONY: route-matrix
+route-matrix: ## Generate ROUTES.md and the README route-matrix block from the route reports.
+	@bash scripts/gen-route-matrix.sh $(ROUTE_REPORTS)
+
+.PHONY: check-routes
+check-routes: ## Verify ROUTES.md and the README block match the route reports.
+	@bash scripts/gen-route-matrix.sh --check $(ROUTE_REPORTS)
+
 COVERAGE_MIN ?= 70
 
 .PHONY: coverage-check

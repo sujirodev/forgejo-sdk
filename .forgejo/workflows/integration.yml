@@ -193,21 +193,30 @@ jobs:
             && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
             && forgejo web -c /tmp/conf/app.ini
 
-  # Turns the legs' evidence into the route contract: ROUTES.md (one line per
-  # route, one column per version) and the counters in README.md. Cheap job --
-  # it only downloads three small JSON files and runs a generator -- and with
-  # `needs:` it does not compete with the legs for runner capacity.
+  # Checks the route contract against what the legs actually did: ROUTES.md
+  # (one line per route, one column per version) and the counters in
+  # README.md have to match what the generator produces from the three
+  # reports. Cheap job -- it only downloads three small JSON files and runs a
+  # generator -- and with `needs:` it does not compete with the legs for
+  # runner capacity.
   #
-  # Not enforcing yet (fase B of docs/PLANO-CONTRATO-ROTAS.md): it generates
-  # and publishes the contract so the gaps are visible, but a gap does not
-  # fail the build. Fase D flips this over, once the routes the first real run
-  # flagged are closed or declared in route-exceptions.json:
-  #   - drop `continue-on-error`,
-  #   - swap `route-matrix` for `check-routes` (which also fails on a stale
-  #     ROUTES.md / README block),
-  #   - add this job to the branch protection of `main` alongside the three
-  #     `testing` legs (an administrative repo setting, not something this
-  #     file can do).
+  # This job fails the build when:
+  #   - a route has no evidence on some version and no declared reason in
+  #     route-exceptions.json;
+  #   - a route was called there and never answered 2xx (a masked
+  #     regression: only a reason that explicitly covers failing evidence
+  #     may stand in for it);
+  #   - a request could not be attributed to any *Client method (a client
+  #     built outside newTestClientOpts);
+  #   - a route has no doc comment, so its description would be empty;
+  #   - an exception uses a reason outside the closed set, omits the issue
+  #     link its reason requires, or has been "todo" for over 90 days;
+  #   - ROUTES.md or the README block differ from the generated output.
+  #
+  # Still to do by hand, once this has run green on a pull request: add
+  # "route-matrix" to the branch protection of `main` alongside the three
+  # `testing` legs. That is an administrative repo setting, not something
+  # this file can do.
   route-matrix:
     needs: [testing]
     runs-on: ubuntu-latest
@@ -233,15 +242,23 @@ jobs:
           pattern: route-report-*
           path: route-reports
 
-      - name: Generate the route contract
-        continue-on-error: true
+      - name: Check the route contract
         run: |
           reports=$(find route-reports -name route-report.json -printf '%p ')
           test -n "$reports" || { echo "no route reports downloaded"; exit 1; }
-          make route-matrix ROUTE_REPORTS="$reports"
+          make check-routes ROUTE_REPORTS="$reports"
 
-      - name: Upload the generated contract
-        uses: forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+      # On failure this is what says how the committed files differ from the
+      # evidence: regenerating locally needs all three versions, which a
+      # contributor will not usually have to hand.
+      - name: Upload the contract the evidence produces
+        if: always()
+        run: |
+          reports=$(find route-reports -name route-report.json -printf '%p ')
+          make route-matrix ROUTE_REPORTS="$reports" || true
+
+      - uses: forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        if: always()
         with:
           name: route-contract
           path: |

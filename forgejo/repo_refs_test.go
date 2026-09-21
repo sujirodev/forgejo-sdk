@@ -29,7 +29,7 @@ func TestRepoRefs(t *testing.T) {
 	// actual behavior here rather than silently skipping the route: this
 	// looks like a real, separate bug in GetRepoRef worth its own fix.
 	_, _, err = c.GetRepoRef(repo.Owner.UserName, repo.Name, "heads/main")
-	assert.EqualError(t, err, "no exact match found for this ref")
+	require.EqualError(t, err, "no exact match found for this ref")
 
 	_, _, err = c.GetRepoRef(repo.Owner.UserName, repo.Name, "heads/does-not-exist")
 	require.Error(t, err)

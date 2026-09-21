@@ -115,6 +115,29 @@ test: ## Run the integration test suite (requires a running Forgejo instance).
 check-forgejo-version: ## Verify every pinned Forgejo test-instance version matches.
 	@bash scripts/check-forgejo-version.sh
 
+.PHONY: check-test-instance-settings
+check-test-instance-settings: ## Verify the extra app.ini settings match across Makefile/CI/main_test.go.
+	@bash scripts/check-test-instance-settings.sh
+
+.PHONY: check-route-coverage
+check-route-coverage: ## Verify every *Client method (route) is referenced by a test.
+	@bash scripts/check-route-coverage.sh
+
+.PHONY: check-route-coverage-strict
+check-route-coverage-strict: ## Verify every route has both a unit test and an integration test.
+	@bash scripts/check-route-coverage.sh --strict
+
+COVERAGE_MIN ?= 70
+
+.PHONY: coverage-check
+coverage-check: ## Fail if forgejo/coverage.out total coverage is below COVERAGE_MIN.
+	@if [ ! -f forgejo/coverage.out ]; then echo "forgejo/coverage.out missing; run 'make test' first"; exit 1; fi
+	@pct=$$(cd forgejo && $(GO) tool cover -func=coverage.out | tail -1 | grep -oE '[0-9]+\.[0-9]+'); \
+	echo "total coverage: $${pct}% (minimum: $(COVERAGE_MIN)%)"; \
+	awk -v p="$$pct" -v min="$(COVERAGE_MIN)" 'BEGIN { exit !(p+0 >= min+0) }' || { \
+		echo "coverage $${pct}% is below the $(COVERAGE_MIN)% floor"; exit 1; \
+	}
+
 .PHONY: test-instance
 test-instance: ## Start a forgejo instance for test (auto-detects method).
 ifeq ($(NATIVE_BINARY_AVAILABLE),no)
@@ -148,6 +171,7 @@ endif
 	echo "INSTALL_LOCK   = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "SECRET_KEY     = $$secret_key" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "PASSWORD_COMPLEXITY = off" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "DISABLE_GIT_HOOKS = false" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[database]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "DB_TYPE = sqlite3" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[repository]" >> ${WORK_DIR}/test/conf/app.ini; \
@@ -156,6 +180,8 @@ endif
 	echo "ROOT_URL = ${FORGEJO_SDK_TEST_URL}" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[quota]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ENABLED = true" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "[migrations]" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "ALLOW_LOCALNETWORKS = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	${WORK_DIR}/test/forgejo-main migrate -c ${WORK_DIR}/test/conf/app.ini; \
 	${WORK_DIR}/test/forgejo-main admin user create \
 		--username=${FORGEJO_SDK_TEST_USERNAME} \
@@ -185,11 +211,13 @@ endif
 		-e FORGEJO__security__SECRET_KEY=$$secret_key \
 		-e FORGEJO__security__INTERNAL_TOKEN=$$internal_token \
 		-e FORGEJO__security__PASSWORD_COMPLEXITY=off \
+		-e FORGEJO__security__DISABLE_GIT_HOOKS=false \
 		-e FORGEJO__database__DB_TYPE=sqlite3 \
 		-e FORGEJO__server__ROOT_URL=${FORGEJO_SDK_TEST_URL} \
 		-e FORGEJO__service__DISABLE_REGISTRATION=false \
 		-e FORGEJO__admin__DISABLE_REGULAR_ORG_CREATION=false \
 		-e FORGEJO__quota__ENABLED=true \
+		-e FORGEJO__migrations__ALLOW_LOCALNETWORKS=true \
 		codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} > /dev/null 2>&1 || true
 	@echo "Waiting for Forgejo to start..."
 	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do \

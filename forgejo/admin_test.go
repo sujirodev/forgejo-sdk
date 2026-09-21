@@ -44,6 +44,61 @@ func TestAdminOrg(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestAdminListEditUsers(t *testing.T) {
+	c := newTestClient()
+	// "adminedit" would embed the substring "it", which TestUserSearch (in
+	// user_test.go) searches for globally: keep prefixes free of that word
+	// and of "other" (see uniqueName's own doc comment in testhelpers_test.go).
+	user := createTestUser(t, uniqueName(t, "adminuser"), c)
+
+	users, _, err := c.AdminListUsers(AdminListUsersOptions{})
+	require.NoError(t, err)
+	found := false
+	for _, u := range users {
+		if u.UserName == user.UserName {
+			found = true
+		}
+	}
+	assert.True(t, found, "AdminListUsers should list the just-created user")
+
+	// SearchUsers matches full names too (see TestUserSearch in
+	// user_test.go, and uniqueName's doc comment): avoid "it"/"other" here.
+	fullName := "Full Name Set By Admin"
+	_, err = c.AdminEditUser(user.UserName, EditUserOption{
+		LoginName: user.UserName,
+		FullName:  &fullName,
+	})
+	require.NoError(t, err)
+
+	edited, _, err := c.GetUserInfo(user.UserName)
+	require.NoError(t, err)
+	assert.Equal(t, fullName, edited.FullName)
+}
+
+func TestAdminUserPublicKeys(t *testing.T) {
+	c := newTestClient()
+	owner := createTestUser(t, uniqueName(t, "adminkey"), c)
+
+	key, _, err := c.AdminCreateUserPublicKey(owner.UserName, CreateKeyOption{
+		Title: "sdk-test-admin-key",
+		Key:   genSSHPublicKey(t, "sdk-admin-test"),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "sdk-test-admin-key", key.Title)
+
+	keys, _, err := c.ListPublicKeys(owner.UserName, ListPublicKeysOptions{})
+	require.NoError(t, err)
+	require.Len(t, keys, 1)
+	assert.Equal(t, key.ID, keys[0].ID)
+
+	_, err = c.AdminDeleteUserPublicKey(owner.UserName, int(key.ID))
+	require.NoError(t, err)
+
+	keys, _, err = c.ListPublicKeys(owner.UserName, ListPublicKeysOptions{})
+	require.NoError(t, err)
+	assert.Empty(t, keys)
+}
+
 func TestAdminCronTasks(t *testing.T) {
 	log.Println("== TestAdminCronTasks ==")
 	c := newTestClient()

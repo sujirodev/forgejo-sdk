@@ -43,6 +43,13 @@ func TestRepoStaring(t *testing.T) {
 
 	_, err = c.StarRepo(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
+
+	// The "yes" answer too: IsRepoStarring maps 404 to false and 204 to
+	// true, and only the false branch was ever exercised.
+	is, _, err = c.IsRepoStarring(repo.Owner.UserName, repo.Name)
+	require.NoError(t, err)
+	assert.True(t, is)
+
 	c.SetSudo(userA.UserName)
 	_, err = c.StarRepo(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)

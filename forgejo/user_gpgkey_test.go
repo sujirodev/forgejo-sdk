@@ -36,3 +36,39 @@ func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
 	})
 	require.Error(t, err)
 }
+
+// TestUserGPGKeys uses the fixture in testdata/gpg_test01.asc, whose UID
+// email matches the CI/local test instance's admin account
+// (test01@forgejo.org), so it attaches to the default test client's own
+// user rather than needing a second one.
+func TestUserGPGKeys(t *testing.T) {
+	c := newTestClient()
+
+	baseline, _, err := c.ListMyGPGKeys(&ListGPGKeysOptions{})
+	require.NoError(t, err)
+
+	created, _, err := c.CreateGPGKey(CreateGPGKeyOption{ArmoredKey: testGPGPublicKey(t)})
+	require.NoError(t, err)
+	t.Cleanup(func() { _, _ = c.DeleteGPGKey(created.ID) })
+	require.Len(t, created.Emails, 1)
+	assert.Equal(t, "test01@forgejo.org", created.Emails[0].Email)
+
+	fetched, _, err := c.GetGPGKey(created.ID)
+	require.NoError(t, err)
+	assert.Equal(t, created.KeyID, fetched.KeyID)
+
+	mine, _, err := c.ListMyGPGKeys(&ListGPGKeysOptions{})
+	require.NoError(t, err)
+	assert.Len(t, mine, len(baseline)+1)
+
+	all, _, err := c.ListGPGKeys("test01", ListGPGKeysOptions{})
+	require.NoError(t, err)
+	assert.Len(t, all, len(baseline)+1)
+
+	_, err = c.DeleteGPGKey(created.ID)
+	require.NoError(t, err)
+
+	mine, _, err = c.ListMyGPGKeys(&ListGPGKeysOptions{})
+	require.NoError(t, err)
+	assert.Len(t, mine, len(baseline))
+}

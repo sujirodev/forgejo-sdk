@@ -159,3 +159,43 @@ func TestListPackageFiles(t *testing.T) {
 	assert.Len(t, packageFiles, 1)
 	assert.Equal(t, "file1.txt", packageFiles[0].Name)
 }
+
+func TestLinkPackage(t *testing.T) {
+	log.Println("== TestLinkPackage ==")
+	c := newTestClient()
+	err := createTestPackage(t, c)
+	require.NoError(t, err)
+
+	_, _ = c.DeleteRepo("PackageOrg", "PackageRepo")
+	_, _, err = c.CreateOrgRepo("PackageOrg", CreateRepoOption{Name: "PackageRepo", AutoInit: true})
+	require.NoError(t, err)
+
+	_, err = c.LinkPackage("PackageOrg", "generic", "MyPackage", "PackageRepo")
+	require.NoError(t, err)
+
+	pkg, _, err := c.GetPackage("PackageOrg", "generic", "MyPackage", "v1")
+	require.NoError(t, err)
+	require.NotNil(t, pkg.Repository)
+	assert.Equal(t, "PackageRepo", pkg.Repository.Name)
+}
+
+func TestUnlinkPackage(t *testing.T) {
+	log.Println("== TestUnlinkPackage ==")
+	c := newTestClient()
+	err := createTestPackage(t, c)
+	require.NoError(t, err)
+
+	_, _ = c.DeleteRepo("PackageOrg", "PackageRepo")
+	_, _, err = c.CreateOrgRepo("PackageOrg", CreateRepoOption{Name: "PackageRepo", AutoInit: true})
+	require.NoError(t, err)
+
+	_, err = c.LinkPackage("PackageOrg", "generic", "MyPackage", "PackageRepo")
+	require.NoError(t, err)
+
+	_, err = c.UnlinkPackage("PackageOrg", "generic", "MyPackage")
+	require.NoError(t, err)
+
+	pkg, _, err := c.GetPackage("PackageOrg", "generic", "MyPackage", "v1")
+	require.NoError(t, err)
+	assert.Nil(t, pkg.Repository)
+}

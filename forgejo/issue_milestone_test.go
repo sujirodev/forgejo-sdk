@@ -84,3 +84,25 @@ func TestMilestones(t *testing.T) {
 	m.Updated = m2.Updated
 	assert.Equal(t, m, m2)
 }
+
+func TestMilestoneByName_EditDelete(t *testing.T) {
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+
+	_, _, err := c.CreateMilestone(repo.Owner.UserName, repo.Name, CreateMilestoneOption{Title: "v1.0"})
+	require.NoError(t, err)
+
+	newDescription := "renamed via EditMilestoneByName"
+	edited, _, err := c.EditMilestoneByName(repo.Owner.UserName, repo.Name, "v1.0", EditMilestoneOption{
+		Description: &newDescription,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, newDescription, edited.Description)
+	assert.Equal(t, "v1.0", edited.Title)
+
+	_, err = c.DeleteMilestoneByName(repo.Owner.UserName, repo.Name, "v1.0")
+	require.NoError(t, err)
+
+	_, _, err = c.GetMilestoneByName(repo.Owner.UserName, repo.Name, "v1.0")
+	require.Error(t, err)
+}

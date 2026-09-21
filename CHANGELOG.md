@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.1.0](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.1.0) - 2026-09-21
+
+* MISC
+  * feat(packages): add LinkPackage and UnlinkPackage (#42)
+
+
 ## [v3.0.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.0.1) - 2026-09-19
 
 * MISC

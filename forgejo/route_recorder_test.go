@@ -4,15 +4,6 @@
 
 package forgejo
 
-// The route recorder answers the question the static check-route-coverage.sh
-// cannot: which routes did the suite *actually* exercise against this server,
-// and with what result. It wraps the test client's transport, so every request
-// the SDK emits passes through it, and attributes each request to the exported
-// *Client methods on the call stack.
-//
-// The report it writes (forgejo/route-report.json) is the per-version evidence
-// that feeds ROUTES.md. See docs/PLANO-CONTRATO-ROTAS.md, section 2.1.
-
 import (
 	"encoding/json"
 	"fmt"
@@ -25,6 +16,15 @@ import (
 	"sync"
 	"time"
 )
+
+// The route recorder answers the question the static check-route-coverage.sh
+// cannot: which routes did the suite *actually* exercise against this server,
+// and with what result. It wraps the test client's transport, so every request
+// the SDK emits passes through it, and attributes each request to the exported
+// *Client methods on the call stack.
+//
+// The report it writes (forgejo/route-report.json) is the per-version evidence
+// that feeds ROUTES.md. See docs/PLANO-CONTRATO-ROTAS.md, section 2.1.
 
 // routeRecorderFrames bounds the stack walk. The frames between an exported
 // *Client method and RoundTrip are http.Client internals (a handful), plus

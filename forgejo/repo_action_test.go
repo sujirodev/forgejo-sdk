@@ -250,10 +250,17 @@ func TestListRepoActionRuns(t *testing.T) {
 	repo, cleanup := createTestRepoForActions(t, c, "list_runs")
 	defer cleanup()
 
-	runs, resp, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
-	if err != nil {
-		t.Skipf("ListRepoActionRuns not supported by this Forgejo version: %v", err)
+	// /actions/runs arrived in Forgejo 12.0.0, and the SDK now guards it.
+	// Assert both sides: the route works above the guard, and below it the
+	// SDK refuses without contacting the server.
+	if !serverAtLeast(t, c, "12.0.0") {
+		_, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
 	}
+
+	runs, resp, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotNil(t, runs)
 	assert.GreaterOrEqual(t, runs.TotalCount, int64(0))
@@ -272,6 +279,14 @@ func TestGetRepoActionRun(t *testing.T) {
 		Ref: "main",
 	})
 	require.NoError(t, err)
+
+	// Reading the run needs Forgejo 12.0.0; below that the SDK's guard
+	// refuses, which is the documented behavior and worth asserting.
+	if !serverAtLeast(t, c, "12.0.0") {
+		_, _, err := c.GetRepoActionRun(repo.Owner.UserName, repo.Name, 1)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
 
 	runs, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
 	require.NoError(t, err)

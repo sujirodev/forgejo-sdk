@@ -13,9 +13,9 @@ import (
 
 // TestGetSigningKey exercises the GPG signing key endpoint. Whether a
 // default signing key exists depends on server configuration
-// ([repository.signing] / a generated commit-signing key), so this only
-// pins the wire behavior: no transport error, and a well-formed key when
-// one is configured.
+// ([repository.signing] / a generated commit-signing key). Forgejo answers
+// 200 with an empty body rather than an error when none is configured, so
+// this skips on either signal: no transport error, but also no key.
 func TestGetSigningKey(t *testing.T) {
 	log.Println("== TestGetSigningKey ==")
 	c := newTestClient()
@@ -23,6 +23,9 @@ func TestGetSigningKey(t *testing.T) {
 	key, resp, err := c.GetSigningKey(t.Context())
 	if err != nil {
 		t.Skipf("no default GPG signing key configured on this server: %v", err)
+	}
+	if key == "" {
+		t.Skip("no default GPG signing key configured on this server: empty response")
 	}
 	assert.NotNil(t, resp)
 	assert.Contains(t, key, "PGP PUBLIC KEY BLOCK")
@@ -36,6 +39,9 @@ func TestGetSSHSigningKey(t *testing.T) {
 	key, resp, err := c.GetSSHSigningKey(t.Context())
 	if err != nil {
 		t.Skipf("no default SSH signing key configured on this server: %v", err)
+	}
+	if key == "" {
+		t.Skip("no default SSH signing key configured on this server: empty response")
 	}
 	assert.NotNil(t, resp)
 	assert.NotEmpty(t, key)

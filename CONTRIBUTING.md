@@ -20,6 +20,26 @@ Before starting to write something new for the Forgejo SDK project, please [file
 
 Before sending code out for review, run all the tests using `make test`, to make sure the changes don't break other usage. In order to run the test, you'll need a test instance. You can create one using `make test-instance`.
 
+Every exported `*Client` method counts as a route and needs a test:
+`make check-route-coverage` says which ones are still missing one.
+
+## Adding or changing a route
+
+[`ROUTES.md`](ROUTES.md) and the counters in [`README.md`](README.md) are
+generated, never edited by hand. CI regenerates them from what the suite
+actually did against each Forgejo version, so a route added without a test
+that exercises it fails the `route-matrix` job rather than quietly landing
+as a supported route.
+
+Two consequences for your pull request:
+
+* If `ROUTES.md` conflicts on merge, do not resolve the conflict line by
+  line. Take either side and run `make route-matrix` again.
+* If your route genuinely cannot be exercised on some version, declare it in
+  [`route-exceptions.json`](route-exceptions.json) with one of the accepted
+  reasons and a link to the issue that tracks it. `todo` expires after 90
+  days.
+
 ## Code review
 
 Changes must be reviewed before they are accepted, no matter who makes the change even if it is an owner or a maintainer.

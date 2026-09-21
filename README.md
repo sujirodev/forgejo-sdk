@@ -43,6 +43,15 @@ version -- not from reading the tests -- and CI regenerates it on every pull
 request, so a stale table is a red build instead of a promise nobody checked.
 
 <!-- route-matrix:start -->
+| Forgejo | Routes ok | n/a (guard) | Declared exception | Total |
+|---|---|---|---|---|
+| 11.0.16 (LTS) | 331 | 2 | 8 | 341 |
+| 15.0.9 (LTS) | 333 | 0 | 8 | 341 |
+| 16.0.5 (latest stable) | 333 | 0 | 8 | 341 |
+
+Generated from the integration suite on every pull request.
+Per-route detail: [`ROUTES.md`](ROUTES.md).
+Declared exceptions: [`route-exceptions.json`](route-exceptions.json).
 <!-- route-matrix:end -->
 
 ## Contributing

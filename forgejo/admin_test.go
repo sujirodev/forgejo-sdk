@@ -33,12 +33,27 @@ func TestAdminOrg(t *testing.T) {
 	assert.NotEmpty(t, newOrg)
 	assert.Equal(t, orgName, newOrg.UserName)
 
-	orgs, _, err := c.AdminListOrgs(AdminListOrgsOptions{})
-	require.NoError(t, err)
-	if assert.GreaterOrEqual(t, len(orgs), 1) {
-		orgs = orgs[len(orgs)-1:]
-		assert.Equal(t, newOrg.ID, orgs[0].ID)
+	// Page through the listing looking for the org we just created, instead
+	// of assuming it is the last entry of the first page: the suite creates
+	// enough organizations now that "the newest org" and "the last org on
+	// page one" stopped being the same thing.
+	found := false
+	for page := 1; page <= 20 && !found; page++ {
+		orgs, _, err := c.AdminListOrgs(AdminListOrgsOptions{
+			ListOptions: ListOptions{Page: page, PageSize: 50},
+		})
+		require.NoError(t, err)
+		if len(orgs) == 0 {
+			break
+		}
+		for _, org := range orgs {
+			if org.ID == newOrg.ID {
+				found = true
+				break
+			}
+		}
 	}
+	assert.True(t, found, "AdminListOrgs should list the org that was just created")
 
 	_, err = c.DeleteOrg(orgName)
 	require.NoError(t, err)

@@ -13,6 +13,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/models"
 )
 
 // AdminListUsersOptions options for listing admin users
@@ -130,5 +132,119 @@ func (c *Client) AdminDeleteUserPublicKey(user string, keyID int) (*Response, er
 		return nil, err
 	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/admin/users/%s/keys/%d", user, keyID), nil, nil)
+	return resp, err
+}
+
+// AdminListUserEmails lists all email addresses for a user.
+func (c *Client) AdminListUserEmails(user string) ([]*Email, *Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, nil, err
+	}
+	emails := make([]*Email, 0)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/admin/users/%s/emails", user), jsonHeader, nil, &emails)
+	return emails, resp, err
+}
+
+// AdminDeleteUserEmails deletes email addresses from a user's account.
+func (c *Client) AdminDeleteUserEmails(user string, opt DeleteEmailOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/admin/users/%s/emails", user), jsonHeader, bytes.NewReader(body))
+	return resp, err
+}
+
+// AdminGetUserQuota returns the given user's quota info.
+func (c *Client) AdminGetUserQuota(user string) (models.QuotaInfo, *Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return models.QuotaInfo{}, nil, err
+	}
+	var quota models.QuotaInfo
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/admin/users/%s/quota", user), jsonHeader, nil, &quota)
+	return quota, resp, err
+}
+
+// SetUserQuotaGroupsOption options for setting a user's quota groups
+type SetUserQuotaGroupsOption struct {
+	// Groups is the complete list of quota groups the user shall be a member of.
+	Groups []string `json:"groups"`
+}
+
+// AdminSetUserQuotaGroups sets the user's quota groups to the given list,
+// replacing any existing group membership.
+func (c *Client) AdminSetUserQuotaGroups(user string, opt SetUserQuotaGroupsOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("POST", fmt.Sprintf("/admin/users/%s/quota/groups", user), jsonHeader, bytes.NewReader(body))
+	return resp, err
+}
+
+// RenameUserOption options for renaming a user
+type RenameUserOption struct {
+	// NewName is the new username for this user. It cannot already be in use
+	// by any other user.
+	NewName string `json:"new_username"`
+}
+
+// AdminRenameUser renames a user.
+func (c *Client) AdminRenameUser(user string, opt RenameUserOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("POST", fmt.Sprintf("/admin/users/%s/rename", user), jsonHeader, bytes.NewReader(body))
+	return resp, err
+}
+
+// AdminListUserAccessTokensOptions options for listing a user's access tokens as an admin
+type AdminListUserAccessTokensOptions struct {
+	ListOptions
+}
+
+// AdminListUserAccessTokens lists the specified user's access tokens.
+func (c *Client) AdminListUserAccessTokens(user string, opt AdminListUserAccessTokensOptions) ([]*AccessToken, *Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, nil, err
+	}
+	opt.setDefaults()
+	tokens := make([]*AccessToken, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/admin/users/%s/tokens?%s", user, opt.getURLQuery().Encode()), jsonHeader, nil, &tokens)
+	return tokens, resp, err
+}
+
+// AdminCreateUserAccessToken creates an access token for the specified user,
+// without needing that user's password.
+func (c *Client) AdminCreateUserAccessToken(user string, opt CreateAccessTokenOption) (*AccessToken, *Response, error) {
+	if err := escapeValidatePathSegments(&user); err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	t := new(AccessToken)
+	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/admin/users/%s/tokens", user), jsonHeader, bytes.NewReader(body), t)
+	return t, resp, err
+}
+
+// AdminDeleteUserAccessToken deletes an access token for the specified user,
+// identified by ID and if not available by name.
+func (c *Client) AdminDeleteUserAccessToken(user, token string) (*Response, error) {
+	if err := escapeValidatePathSegments(&user, &token); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/admin/users/%s/tokens/%s", user, token), nil, nil)
 	return resp, err
 }

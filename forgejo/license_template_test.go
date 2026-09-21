@@ -22,7 +22,7 @@ func TestListLicenseTemplates(t *testing.T) {
 
 	found := false
 	for _, l := range licenses {
-		if l.Key == "mit" {
+		if l.Key == "MIT" {
 			found = true
 			break
 		}
@@ -34,9 +34,9 @@ func TestGetLicenseTemplate(t *testing.T) {
 	log.Println("== TestGetLicenseTemplate ==")
 	c := newTestClient()
 
-	info, _, err := c.GetLicenseTemplate(t.Context(), "mit")
+	info, _, err := c.GetLicenseTemplate(t.Context(), "MIT")
 	require.NoError(t, err)
-	assert.Equal(t, "mit", info.Key)
+	assert.Equal(t, "MIT", info.Key)
 	assert.NotEmpty(t, info.Name)
 	assert.NotEmpty(t, info.Body)
 }

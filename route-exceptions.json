@@ -99,6 +99,16 @@
       "detail": "404s because neither the local Docker instance nor the CI ephemeral instance configures an instance SSH signing key; unlike the GPG counterpart, Forgejo has no lazy default for it",
       "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
       "since": ""
+    },
+    {
+      "route": "GetNodeInfo",
+      "versions": [
+        "*"
+      ],
+      "reason": "needs-config",
+      "detail": "404s with federation disabled (the harness's default); enabling [federation] to fix that was tried and reverted because it makes StarRepo 500 on Forgejo 16.0.5 in this same harness, which is worse",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "since": ""
     }
   ]
 }

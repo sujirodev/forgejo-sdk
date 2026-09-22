@@ -34,6 +34,11 @@ func (c *Client) GetBlob(user, repo, sha string) (*GitBlobResponse, *Response, e
 
 // GetBlobs gets multiple blobs of a repository, given a list of blob SHAs
 func (c *Client) GetBlobs(user, repo string, shas []string) ([]*GitBlobResponse, *Response, error) {
+	// Confirmed absent on a live 11.0.16 instance (404) and present by
+	// 15.0.9.
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&user, &repo); err != nil {
 		return nil, nil, err
 	}

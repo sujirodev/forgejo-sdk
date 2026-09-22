@@ -18,6 +18,11 @@ type SyncForkInfo struct {
 
 // GetSyncForkDefaultInfo gets information about syncing a fork's default branch with its base branch
 func (c *Client) GetSyncForkDefaultInfo(owner, repo string) (*SyncForkInfo, *Response, error) {
+	// Confirmed absent on a live 11.0.16 instance (404) and present by
+	// 15.0.9.
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
 		return nil, nil, err
 	}
@@ -28,6 +33,9 @@ func (c *Client) GetSyncForkDefaultInfo(owner, repo string) (*SyncForkInfo, *Res
 
 // SyncForkDefault syncs a fork's default branch with its base branch
 func (c *Client) SyncForkDefault(owner, repo string) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, err
+	}
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
 		return nil, err
 	}
@@ -37,6 +45,9 @@ func (c *Client) SyncForkDefault(owner, repo string) (*Response, error) {
 
 // GetSyncForkBranchInfo gets information about syncing a fork branch with its base branch
 func (c *Client) GetSyncForkBranchInfo(owner, repo, branch string) (*SyncForkInfo, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&owner, &repo, &branch); err != nil {
 		return nil, nil, err
 	}
@@ -47,6 +58,9 @@ func (c *Client) GetSyncForkBranchInfo(owner, repo, branch string) (*SyncForkInf
 
 // SyncForkBranch syncs a fork branch with its base branch
 func (c *Client) SyncForkBranch(owner, repo, branch string) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, err
+	}
 	if err := escapeValidatePathSegments(&owner, &repo, &branch); err != nil {
 		return nil, err
 	}

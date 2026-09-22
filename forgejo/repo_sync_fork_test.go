@@ -28,6 +28,15 @@ func TestSyncFork(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, forkRepo)
 
+	// Confirmed absent on a live 11.0.16 instance and present by 15.0.9;
+	// below that the SDK's guard refuses the call, which is the documented
+	// behavior and worth asserting.
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.GetSyncForkDefaultInfo(forkRepo.Owner.UserName, forkRepo.Name)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
 	// nothing to sync right after forking
 	info, _, err := c.GetSyncForkDefaultInfo(forkRepo.Owner.UserName, forkRepo.Name)
 	require.NoError(t, err)

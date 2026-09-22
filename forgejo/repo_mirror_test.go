@@ -33,12 +33,16 @@ func TestPushMirrors(t *testing.T) {
 
 // TestPushMirrorsLifecycle exercises the rest of the push-mirror surface
 // (list, get-by-name, sync, delete) that TestPushMirrors above doesn't
-// reach. It uses an unreachable remote on purpose: PushMirrorSync only
-// asserts the request round-trips, not that a real sync happened.
+// reach. Needs [migrations] ALLOW_LOCALNETWORKS = true on the test
+// instance, same as TestPushMirrors: an "example.invalid" remote gets
+// "Permission denied" instead of a network error, so this points at a
+// real repo too.
 func TestPushMirrorsLifecycle(t *testing.T) {
 	log.Println("== TestPushMirrorsLifecycle ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "PushMirrorsLifecycle", c)
+	require.NoError(t, err)
+	target, err := createTestRepo(t, "PushMirrorsLifecycleTarget", c)
 	require.NoError(t, err)
 
 	pml, _, err := c.ListPushMirrors(repo.Owner.UserName, repo.Name, ListPushMirrorsOptions{})
@@ -46,8 +50,10 @@ func TestPushMirrorsLifecycle(t *testing.T) {
 	assert.Empty(t, pml)
 
 	pm, _, err := c.PushMirrors(repo.Owner.UserName, repo.Name, CreatePushMirrorOption{
-		Interval:      "8h",
-		RemoteAddress: "https://example.invalid/push-mirror-target.git",
+		Interval:       "8h",
+		RemoteAddress:  target.CloneURL,
+		RemoteUsername: getForgejoUsername(),
+		RemotePassword: getForgejoPassword(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, pm)

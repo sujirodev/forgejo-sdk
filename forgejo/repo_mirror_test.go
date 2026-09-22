@@ -12,10 +12,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Needs [migrations] ALLOW_LOCALNETWORKS = true on the test instance (see
+// docs/PLANO-COBERTURA-TESTES.md section 4 / scripts/check-test-instance-settings.sh):
+// otherwise Forgejo refuses a remote address that resolves to itself.
 func TestPushMirrors(t *testing.T) {
-	log.Println("== TestPushMirrors ==")
 	c := newTestClient()
-	repo, err := createTestRepo(t, "PushMirrors", c)
+	source := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+	target := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+
+	mirror, _, err := c.PushMirrors(source.Owner.UserName, source.Name, CreatePushMirrorOption{
+		RemoteAddress:  target.CloneURL,
+		RemoteUsername: getForgejoUsername(),
+		RemotePassword: getForgejoPassword(),
+		Interval:       "8h0m0s",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, source.Name, mirror.RepoName)
+	assert.Contains(t, mirror.RemoteAddress, target.Name)
+}
+
+// TestPushMirrorsLifecycle exercises the rest of the push-mirror surface
+// (list, get-by-name, sync, delete) that TestPushMirrors above doesn't
+// reach. It uses an unreachable remote on purpose: PushMirrorSync only
+// asserts the request round-trips, not that a real sync happened.
+func TestPushMirrorsLifecycle(t *testing.T) {
+	log.Println("== TestPushMirrorsLifecycle ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "PushMirrorsLifecycle", c)
 	require.NoError(t, err)
 
 	pml, _, err := c.ListPushMirrors(repo.Owner.UserName, repo.Name, ListPushMirrorsOptions{})

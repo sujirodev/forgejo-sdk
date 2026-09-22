@@ -34,7 +34,7 @@ func TestVersion(t *testing.T) {
 	c.ignoreVersion = true
 	require.NoError(t, c.checkServerVersionGreaterThanOrEqual(version1_15_0))
 
-	c, err = NewClient(getForgejoURL(), newTestClientAuth(), SetForgejoVersion("1.12.123"))
+	c, err = newTestClientOpts(SetForgejoVersion("1.12.123"))
 	require.NoError(t, err)
 	require.NoError(t, c.CheckServerVersionConstraint("=1.12.123"))
 }

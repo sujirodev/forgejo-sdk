@@ -8,7 +8,11 @@
 
 package forgejo
 
-import "fmt"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+)
 
 // ListFollowersOptions options for listing followers
 type ListFollowersOptions struct {
@@ -93,5 +97,23 @@ func (c *Client) Unfollow(target string) (*Response, error) {
 		return nil, err
 	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/user/following/%s", target), nil, nil)
+	return resp, err
+}
+
+// APRemoteFollowOption options for following a remote ActivityPub actor
+type APRemoteFollowOption struct {
+	// Target is the remote actor to follow, e.g. "user@remote.example".
+	Target string `json:"target"`
+}
+
+// ActivityPubFollow makes the current user follow a remote ActivityPub
+// actor. Unlike Follow/Unfollow above, which operate on a user local to
+// this instance, this federates a follow request to a remote instance.
+func (c *Client) ActivityPubFollow(opt APRemoteFollowOption) (*Response, error) {
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("POST", "/user/activitypub/follow", jsonHeader, bytes.NewReader(body))
 	return resp, err
 }

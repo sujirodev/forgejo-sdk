@@ -91,3 +91,34 @@ func (c *Client) DeleteGPGKey(keyID int64) (*Response, error) {
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/user/gpg_keys/%d", keyID), nil, nil)
 	return resp, err
 }
+
+// GetGPGKeyVerificationToken gets a token that the user must sign with a GPG
+// key to prove ownership of it, for use with VerifyGPGKey.
+func (c *Client) GetGPGKeyVerificationToken() (string, *Response, error) {
+	body, resp, err := c.getResponse("GET", "/user/gpg_key_token", nil, nil)
+	if err != nil {
+		return "", resp, err
+	}
+	return string(body), resp, nil
+}
+
+// VerifyGPGKeyOption options for verifying a GPG key
+type VerifyGPGKeyOption struct {
+	// KeyID is the ID of the GPG key being verified.
+	KeyID string `json:"key_id"`
+	// Signature is the armored signature produced by signing the token from
+	// GetGPGKeyVerificationToken with the key being verified.
+	Signature string `json:"armored_signature"`
+}
+
+// VerifyGPGKey verifies and adds a GPG key to the current user's account,
+// using the token from GetGPGKeyVerificationToken signed by that key.
+func (c *Client) VerifyGPGKey(opt VerifyGPGKeyOption) (*GPGKey, *Response, error) {
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	key := new(GPGKey)
+	resp, err := c.getParsedResponse("POST", "/user/gpg_key_verify", jsonHeader, bytes.NewReader(body), key)
+	return key, resp, err
+}

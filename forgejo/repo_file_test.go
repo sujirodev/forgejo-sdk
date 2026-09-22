@@ -11,6 +11,7 @@ package forgejo
 import (
 	"bytes"
 	"encoding/base64"
+	"io"
 	"log"
 	"testing"
 
@@ -243,4 +244,19 @@ func TestGetEditorConfig(t *testing.T) {
 	assert.NotNil(t, resp)
 	assert.Equal(t, "space", def["indent_style"])
 	assert.Equal(t, "2", def["indent_size"])
+}
+
+func TestGetFileReader(t *testing.T) {
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true, Readme: "Default"})
+
+	reader, resp, err := c.GetFileReader(repo.Owner.UserName, repo.Name, "main", "README.md")
+	require.NoError(t, err)
+	require.NotNil(t, reader)
+	defer reader.Close()
+	assert.Equal(t, 200, resp.StatusCode)
+
+	data, err := io.ReadAll(reader)
+	require.NoError(t, err)
+	assert.NotEmpty(t, data)
 }

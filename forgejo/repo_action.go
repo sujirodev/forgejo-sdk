@@ -92,6 +92,11 @@ func (c *Client) DeleteRepoActionSecret(owner, repo, secretName string) (*Respon
 
 // ListRepoActionRuns lists a repository's action runs
 func (c *Client) ListRepoActionRuns(owner, repo string, opt ListActionRunsOption) (*ListActionRunsResponse, *Response, error) {
+	// /repos/{owner}/{repo}/actions/runs was added in Forgejo 12.0.0; on
+	// 11.x the router has no such route and answers a bare 404 page.
+	if err := c.checkServerVersionGreaterThanOrEqual(version12_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
 		return nil, nil, err
 	}
@@ -107,6 +112,10 @@ func (c *Client) ListRepoActionRuns(owner, repo string, opt ListActionRunsOption
 
 // GetRepoActionRun gets a specific action run
 func (c *Client) GetRepoActionRun(owner, repo string, runID int64) (*ActionRun, *Response, error) {
+	// Added in Forgejo 12.0.0 together with ListRepoActionRuns.
+	if err := c.checkServerVersionGreaterThanOrEqual(version12_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
 		return nil, nil, err
 	}

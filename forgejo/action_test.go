@@ -6,6 +6,7 @@ package forgejo
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 	"time"
 
@@ -57,4 +58,53 @@ func TestActionRunUnmarshal(t *testing.T) {
 	// Verify the missing fields are now populated
 	assert.Equal(t, int64(561), run.RunNumber, "RunNumber should be populated from index_in_repo")
 	assert.True(t, run.IsRefDeleted, "IsRefDeleted should be populated from is_ref_deleted")
+}
+
+// TestUnit_GetActionsRun exercises GetActionsRun against an httptest server
+// instead of a real Forgejo instance: the endpoint is only meaningful when
+// authenticated with an ephemeral actions-job token
+// (ACTIONS_RUNTIME_TOKEN/forgejo.token), which a plain integration test has
+// no way to obtain, so the wire behavior (path, auth header, body decoding)
+// is what gets pinned here.
+func TestUnit_GetActionsRun(t *testing.T) {
+	var gotPath, gotAuth string
+	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotAuth = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(ActionRun{
+			ID:         42,
+			WorkflowID: "test.yml",
+			Status:     "running",
+		})
+	})
+
+	c := newUnitTestClient(t, srv, SetToken("actions-job-token"))
+
+	run, resp, err := c.GetActionsRun()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, run)
+	assert.Equal(t, "/api/v1/actions/run", gotPath)
+	assert.Equal(t, "token actions-job-token", gotAuth)
+	assert.Equal(t, int64(42), run.ID)
+	assert.Equal(t, "test.yml", run.WorkflowID)
+	assert.Equal(t, "running", run.Status)
+}
+
+// TestUnit_GetActionsRun_Unauthenticated pins the error path: without a
+// valid actions-job token, the server rejects the request and the SDK
+// surfaces that as an error rather than a zero-value ActionRun.
+func TestUnit_GetActionsRun_Unauthenticated(t *testing.T) {
+	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(map[string]string{"message": "unauthorized"})
+	})
+
+	c := newUnitTestClient(t, srv)
+
+	_, resp, err := c.GetActionsRun()
+	require.Error(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }

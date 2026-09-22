@@ -137,3 +137,17 @@ func TestGetCommitPullRequest(t *testing.T) {
 	assert.NotNil(t, commitPR)
 	assert.Equal(t, pr.ID, commitPR.ID)
 }
+
+func TestGetSingleCommit(t *testing.T) {
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+
+	commits, _, err := c.ListRepoCommits(repo.Owner.UserName, repo.Name, ListCommitOptions{})
+	require.NoError(t, err)
+	require.Len(t, commits, 1)
+
+	commit, _, err := c.GetSingleCommit(repo.Owner.UserName, repo.Name, commits[0].SHA)
+	require.NoError(t, err)
+	assert.Equal(t, commits[0].SHA, commit.SHA)
+	assert.Equal(t, "Initial commit\n", commit.RepoCommit.Message)
+}

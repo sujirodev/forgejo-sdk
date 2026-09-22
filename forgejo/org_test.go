@@ -45,6 +45,40 @@ func TestListAllOrgs(t *testing.T) {
 	assert.NoError(t, err, "failed to delete org")
 }
 
+func TestOrgs_ListMyListUserEdit(t *testing.T) {
+	c := newTestClient()
+	org := newTestOrg(t, c)
+
+	myOrgs, _, err := c.ListMyOrgs(ListOrgsOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsOrgName(myOrgs, org.UserName))
+
+	me, _, err := c.GetMyUserInfo()
+	require.NoError(t, err)
+	userOrgs, _, err := c.ListUserOrgs(me.UserName, ListOrgsOptions{})
+	require.NoError(t, err)
+	assert.True(t, containsOrgName(userOrgs, org.UserName))
+
+	_, err = c.EditOrg(org.UserName, EditOrgOption{
+		FullName:   "Edited by EditOrg",
+		Visibility: VisibleTypePublic,
+	})
+	require.NoError(t, err)
+
+	edited, _, err := c.GetOrg(org.UserName)
+	require.NoError(t, err)
+	assert.Equal(t, "Edited by EditOrg", edited.FullName)
+}
+
+func containsOrgName(orgs []*Organization, name string) bool {
+	for _, o := range orgs {
+		if o.UserName == name {
+			return true
+		}
+	}
+	return false
+}
+
 func createTestOrgRepo(t *testing.T, c *Client, name string) (func(), *Repository, error) {
 	_, _, err := c.GetOrg(name)
 	if err == nil {

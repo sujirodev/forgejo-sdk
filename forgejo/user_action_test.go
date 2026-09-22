@@ -101,6 +101,16 @@ func TestUserRunners(t *testing.T) {
 	log.Println("== TestUserRunners ==")
 	c := newTestClient()
 
+	// User-level Actions runner CRUD was added in Forgejo 12.0.0, the same
+	// rollout as the repo-level Actions run routes; below that the SDK's
+	// guard refuses the call, which is the documented behavior and worth
+	// asserting.
+	if !serverAtLeast(t, c, "12.0.0") {
+		_, _, err := c.RegisterUserRunner(RegisterRunnerOption{Name: "TestUserRunner"})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
 	runnerName := "TestUserRunner"
 
 	registered, resp, err := c.RegisterUserRunner(RegisterRunnerOption{Name: runnerName})

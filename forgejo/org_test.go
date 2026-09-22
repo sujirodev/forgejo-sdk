@@ -78,8 +78,14 @@ func TestRenameOrg(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, newName, renamed.UserName)
 
-	_, _, err = c.GetOrg(oldName)
-	assert.Error(t, err)
+	// Confirmed against a live Forgejo instance: the server answers a
+	// redirect (307) for the old org name, not a 404, and the SDK's HTTP
+	// client follows it -- so this is expected to keep resolving, to the
+	// same org, not to error out (same behavior already found for
+	// AdminRenameUser).
+	stillResolves, _, err := c.GetOrg(oldName)
+	require.NoError(t, err)
+	assert.Equal(t, renamed.ID, stillResolves.ID)
 }
 
 func TestOrgs_ListMyListUserEdit(t *testing.T) {

@@ -16,6 +16,16 @@ The project welcomes submissions but please let everyone know what you're workin
 
 Before starting to write something new for the Forgejo SDK project, please [file an issue](https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/new).
 
+## Branching
+
+Pull requests target `develop`, not `main`. `main` only receives the
+release train: a single PR from `develop` into `main`, opened whenever
+`develop` is green and ready to publish. There is no hotfix path directly
+into `main`.
+
+Every merge — a feature PR into `develop`, and the train from `develop`
+into `main` — uses a merge commit, never squash or rebase.
+
 ## Testing redux
 
 Before sending code out for review, run all the tests using `make test`, to make sure the changes don't break other usage. In order to run the test, you'll need a test instance. You can create one using `make test-instance`.

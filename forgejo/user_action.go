@@ -188,3 +188,57 @@ func (c *Client) GetUserActionRunnerRegistrationToken() (*RunnerRegistrationToke
 	resp, err := c.getParsedResponse("GET", "/user/actions/runners/registration-token", jsonHeader, nil, token)
 	return token, resp, err
 }
+
+// GetUserRunners lists the authenticated user's Actions runners.
+// Set opt.Visible to also include runners visible to the user beyond the
+// ones they directly own.
+func (c *Client) GetUserRunners(opt ListActionRunnersOptions) ([]*ActionRunner, *Response, error) {
+	// Added in Forgejo 12.0.0, the same rollout as the repo-level Actions
+	// run routes in repo_action.go.
+	if err := c.checkServerVersionGreaterThanOrEqual(version12_0_0); err != nil {
+		return nil, nil, err
+	}
+	opt.setDefaults()
+
+	link, _ := url.Parse("/user/actions/runners")
+	link.RawQuery = opt.QueryEncode()
+
+	runners := make([]*ActionRunner, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", link.String(), jsonHeader, nil, &runners)
+	return runners, resp, err
+}
+
+// RegisterUserRunner registers a new user-level Actions runner and returns
+// the token needed to configure the runner daemon.
+func (c *Client) RegisterUserRunner(opt RegisterRunnerOption) (*RegisterRunnerResponse, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version12_0_0); err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	runner := new(RegisterRunnerResponse)
+	resp, err := c.getParsedResponse("POST", "/user/actions/runners", jsonHeader, bytes.NewReader(body), runner)
+	return runner, resp, err
+}
+
+// GetUserRunner gets a particular runner that belongs to the authenticated user.
+func (c *Client) GetUserRunner(runnerID int64) (*ActionRunner, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version12_0_0); err != nil {
+		return nil, nil, err
+	}
+	runner := new(ActionRunner)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/user/actions/runners/%d", runnerID), jsonHeader, nil, runner)
+	return runner, resp, err
+}
+
+// DeleteUserRunner deletes a particular user-level Actions runner.
+func (c *Client) DeleteUserRunner(runnerID int64) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version12_0_0); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/user/actions/runners/%d", runnerID), jsonHeader, nil)
+	return resp, err
+}

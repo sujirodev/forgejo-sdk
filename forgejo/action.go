@@ -74,6 +74,57 @@ type RunnerRegistrationToken struct {
 	Token string `json:"token"`
 }
 
+// ActionRunner represents a Forgejo Actions runner
+type ActionRunner struct {
+	ID          int64  `json:"id"`
+	UUID        string `json:"uuid"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	OwnerID     int64  `json:"owner_id"`
+	RepoID      int64  `json:"repo_id"`
+	Description string `json:"description"`
+	// Status is one of "offline", "idle" or "active".
+	Status    string   `json:"status"`
+	Ephemeral bool     `json:"ephemeral"`
+	Labels    []string `json:"labels"`
+}
+
+// ListActionRunnersOptions options for listing runners
+type ListActionRunnersOptions struct {
+	ListOptions
+	// Visible includes all runners visible to the caller, not just the ones
+	// directly owned by the scope being queried.
+	Visible bool
+}
+
+// QueryEncode encodes options to query parameters
+func (opt *ListActionRunnersOptions) QueryEncode() string {
+	query := opt.getURLQuery()
+	if opt.Visible {
+		query.Add("visible", "true")
+	}
+	return query.Encode()
+}
+
+// RegisterRunnerOption options for registering a new runner
+type RegisterRunnerOption struct {
+	// Name of the runner to register. It does not have to be unique.
+	Name string `json:"name"`
+	// Description provides optional details about this runner.
+	Description string `json:"description,omitempty"`
+	// Ephemeral registers a runner that only takes a single job before being
+	// removed. See https://forgejo.org/docs/latest/admin/actions/security/#ephemeral-runner
+	Ephemeral bool `json:"ephemeral,omitempty"`
+}
+
+// RegisterRunnerResponse contains the details of the just-registered runner,
+// including the token needed to configure the runner daemon.
+type RegisterRunnerResponse struct {
+	ID    int64  `json:"id"`
+	Token string `json:"token"`
+	UUID  string `json:"uuid"`
+}
+
 // ListActionRunsOption options for listing action runs
 type ListActionRunsOption struct {
 	ListOptions

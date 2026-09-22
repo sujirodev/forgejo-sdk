@@ -181,6 +181,13 @@ jobs:
           echo "Forgejo did not become healthy in time"
           exit 1
 
+      # Observed 2026-09-22: all 3 legs timed out here, each stuck 8+
+      # minutes on an HTTP round trip to this leg's own Forgejo service
+      # container that never returned, past go test's default 10m ceiling
+      # -- a runner/infra hang, not a regression (the same commit's
+      # train-guard and lint jobs, and every unit test in this same job,
+      # had already passed cleanly). Retrigger before assuming a real
+      # failure; see the "ci: retrigger after a CI-infra hang" precedent.
       - run: make test
 
       # The coverage floor (COVERAGE_MIN=70, Makefile) only fails the train

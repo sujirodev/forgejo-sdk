@@ -2,14 +2,6 @@ name: integration
 
 on:
   workflow_dispatch:
-  push:
-    branches: [develop]
-    # The post-release sync (release.yml, train_head/Fast-forward develop)
-    # pushes a single commit to develop that only touches CHANGELOG.md.
-    # Nothing to test there, and it would cost 3 integration legs per
-    # release.
-    paths-ignore:
-      - CHANGELOG.md
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -194,7 +186,7 @@ jobs:
       # PR (develop -> main). On a feature PR the number is still measured
       # and printed, but as a warning: the debt is visible without
       # blocking the PR, and gets collected all at once when the train
-      # leaves. On push (BASE_REF empty) it also only reports.
+      # leaves.
       - name: Coverage
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}

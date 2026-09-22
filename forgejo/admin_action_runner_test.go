@@ -16,6 +16,15 @@ func TestAdminActionRunners(t *testing.T) {
 	log.Println("== TestAdminActionRunners ==")
 	c := newTestClient()
 
+	// Confirmed absent on a live 13.0.0 instance and present by 15.0.9;
+	// below that the SDK's guard refuses the call, which is the documented
+	// behavior and worth asserting.
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.AdminRegisterRunner(RegisterRunnerOption{Name: "sdk-admin-runner-test"})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
 	reg, resp, err := c.AdminRegisterRunner(RegisterRunnerOption{
 		Name:        "sdk-admin-runner-test",
 		Description: "created by forgejo-sdk admin runner test",
@@ -56,6 +65,12 @@ func TestAdminActionRunners(t *testing.T) {
 func TestAdminListActionRunJobs(t *testing.T) {
 	log.Println("== TestAdminListActionRunJobs ==")
 	c := newTestClient()
+
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.AdminListActionRunJobs(ListActionJobsOption{})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
 
 	// jobs may be empty on a fresh instance, but the call itself must succeed.
 	jobs, resp, err := c.AdminListActionRunJobs(ListActionJobsOption{})

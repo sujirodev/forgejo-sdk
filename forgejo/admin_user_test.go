@@ -16,6 +16,15 @@ func TestAdminUserEmails(t *testing.T) {
 	log.Println("== TestAdminUserEmails ==")
 	c := newTestClient()
 
+	// Confirmed absent on a live 13.0.0 instance and present by 15.0.9;
+	// below that the SDK's guard refuses the call, which is the documented
+	// behavior and worth asserting.
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.AdminListUserEmails("test01")
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
 	user := createTestUser(t, "admin_user_emails_test", c)
 
 	emails, resp, err := c.AdminListUserEmails(user.UserName)
@@ -116,6 +125,13 @@ func TestAdminRenameUser(t *testing.T) {
 func TestAdminUserAccessTokens(t *testing.T) {
 	log.Println("== TestAdminUserAccessTokens ==")
 	c := newTestClient()
+
+	// Confirmed absent on a live 15.0.9 instance (404) and present by 16.0.0.
+	if !serverAtLeast(t, c, "16.0.0") {
+		_, _, err := c.AdminCreateUserAccessToken("test01", CreateAccessTokenOption{Name: "sdk-admin-token-test"})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
 
 	user := createTestUser(t, "admin_user_tokens_test", c)
 

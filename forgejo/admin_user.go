@@ -137,6 +137,12 @@ func (c *Client) AdminDeleteUserPublicKey(user string, keyID int) (*Response, er
 
 // AdminListUserEmails lists all email addresses for a user.
 func (c *Client) AdminListUserEmails(user string) ([]*Email, *Response, error) {
+	// Confirmed absent on a live 13.0.0 instance (404) and present by
+	// 15.0.9; 14.x was not verified (no such image tag exists to test
+	// against), so this guard may be more conservative than the true floor.
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&user); err != nil {
 		return nil, nil, err
 	}
@@ -147,6 +153,9 @@ func (c *Client) AdminListUserEmails(user string) ([]*Email, *Response, error) {
 
 // AdminDeleteUserEmails deletes email addresses from a user's account.
 func (c *Client) AdminDeleteUserEmails(user string, opt DeleteEmailOption) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, err
+	}
 	if err := escapeValidatePathSegments(&user); err != nil {
 		return nil, err
 	}
@@ -215,6 +224,11 @@ type AdminListUserAccessTokensOptions struct {
 
 // AdminListUserAccessTokens lists the specified user's access tokens.
 func (c *Client) AdminListUserAccessTokens(user string, opt AdminListUserAccessTokensOptions) ([]*AccessToken, *Response, error) {
+	// Confirmed absent on a live 15.0.9 instance (404) and present by
+	// 16.0.0.
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&user); err != nil {
 		return nil, nil, err
 	}
@@ -227,6 +241,9 @@ func (c *Client) AdminListUserAccessTokens(user string, opt AdminListUserAccessT
 // AdminCreateUserAccessToken creates an access token for the specified user,
 // without needing that user's password.
 func (c *Client) AdminCreateUserAccessToken(user string, opt CreateAccessTokenOption) (*AccessToken, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&user); err != nil {
 		return nil, nil, err
 	}
@@ -242,6 +259,9 @@ func (c *Client) AdminCreateUserAccessToken(user string, opt CreateAccessTokenOp
 // AdminDeleteUserAccessToken deletes an access token for the specified user,
 // identified by ID and if not available by name.
 func (c *Client) AdminDeleteUserAccessToken(user, token string) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, err
+	}
 	if err := escapeValidatePathSegments(&user, &token); err != nil {
 		return nil, err
 	}

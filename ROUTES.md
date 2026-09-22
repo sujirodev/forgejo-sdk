@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 343 | 2 | 11 | 0 | 356 |
-| V15.x | 345 | 0 | 11 | 0 | 356 |
-| V16.x (latest) | 345 | 0 | 11 | 0 | 356 |
+| V11.x | 368 | 12 | 13 | 0 | 393 |
+| V15.x | 377 | 3 | 13 | 0 | 393 |
+| V16.x (latest) | 380 | 0 | 13 | 0 | 393 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -23,15 +23,52 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AddTeamMember` | ok | ok | ok | adds a member to a team |
 | `AddTeamRepository` | ok | ok | ok | adds a repository to a team |
 | `AddTime` | ok | ok | ok | adds time to issue with the given index |
+| `AdminAddRuleToQuotaGroup` | ok | ok | ok | adds an existing quota rule to a quota group. |
+| `AdminAddUserToQuotaGroup` | ok | ok | ok | adds a user to a quota group. |
+| `AdminAdoptRepository` | negative-only | negative-only | negative-only | adopts unadopted files as a repository owned by the |
+| `AdminCreateHook` | ok | ok | ok | creates a global (system) webhook. |
 | `AdminCreateOrg` | ok | ok | ok | create an organization |
+| `AdminCreateQuotaGroup` | ok | ok | ok | creates a new quota group. |
+| `AdminCreateQuotaRule` | ok | ok | ok | creates a new quota rule. |
 | `AdminCreateRepo` | ok | ok | ok | create a repo |
 | `AdminCreateUser` | ok | ok | ok | create a user |
+| `AdminCreateUserAccessToken` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | creates an access token for the specified user, |
 | `AdminCreateUserPublicKey` | ok | ok | ok | adds a public key for the user |
+| `AdminDeleteHook` | ok | ok | ok | deletes a global (system) webhook by its ID. |
+| `AdminDeleteQuotaGroup` | ok | ok | ok | deletes the given quota group. |
+| `AdminDeleteQuotaRule` | ok | ok | ok | deletes the given quota rule. |
+| `AdminDeleteRunner` | n/a (>= 15.0.0) | ok | ok | deletes a particular runner, no matter whether it is a |
+| `AdminDeleteUnadoptedRepository` | negative-only | negative-only | negative-only | deletes unadopted files that would otherwise |
 | `AdminDeleteUser` | ok | ok | ok | delete one user according name |
+| `AdminDeleteUserAccessToken` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | deletes an access token for the specified user, |
+| `AdminDeleteUserEmails` | n/a (>= 15.0.0) | ok | ok | deletes email addresses from a user's account. |
 | `AdminDeleteUserPublicKey` | ok | ok | ok | deletes a user's public key |
+| `AdminEditHook` | ok | ok | ok | edits a global (system) webhook by its ID. |
+| `AdminEditQuotaRule` | ok | ok | ok | changes an existing quota rule. |
 | `AdminEditUser` | ok | ok | ok | modify user informations |
+| `AdminGetHook` | ok | ok | ok | gets a global (system) webhook by its ID. |
+| `AdminGetQuotaGroup` | ok | ok | ok | gets information about the given quota group. |
+| `AdminGetQuotaRule` | ok | ok | ok | gets information about the given quota rule. |
+| `AdminGetRunner` | n/a (>= 15.0.0) | ok | ok | gets a particular runner, no matter whether it is a global |
+| `AdminGetUserQuota` | ok | ok | ok | returns the given user's quota info. |
+| `AdminListActionRunJobs` | n/a (>= 15.0.0) | ok | ok | gets action run jobs across the whole instance, |
+| `AdminListAllEmails` | ok | ok | ok | lists all users' email addresses. |
+| `AdminListHooks` | ok | ok | ok | lists all the global (system) webhooks. |
 | `AdminListOrgs` | ok | ok | ok | lists all orgs |
+| `AdminListQuotaGroups` | ok | ok | ok | lists the available quota groups. |
+| `AdminListQuotaRules` | ok | ok | ok | lists the available quota rules. |
+| `AdminListRunners` | n/a (>= 15.0.0) | ok | ok | lists all runners, no matter whether they are global |
+| `AdminListUnadopted` | ok | ok | ok | lists unadopted repositories, i.e. directories in the |
+| `AdminListUserAccessTokens` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | lists the specified user's access tokens. |
+| `AdminListUserEmails` | n/a (>= 15.0.0) | ok | ok | lists all email addresses for a user. |
 | `AdminListUsers` | ok | ok | ok | lists all users |
+| `AdminListUsersInQuotaGroup` | ok | ok | ok | lists the users in a quota group. |
+| `AdminRegisterRunner` | n/a (>= 15.0.0) | ok | ok | registers a new global runner. |
+| `AdminRemoveRuleFromQuotaGroup` | ok | ok | ok | removes a quota rule from a quota group. |
+| `AdminRemoveUserFromQuotaGroup` | ok | ok | ok | removes a user from a quota group. |
+| `AdminRenameUser` | ok | ok | ok | renames a user. |
+| `AdminSearchEmails` | ok | ok | ok | searches users' email addresses. |
+| `AdminSetUserQuotaGroups` | ok | ok | ok | sets the user's quota groups to the given list, |
 | `CheckIssueSubscription` | ok | ok | ok | check if current user is subscribed to an issue |
 | `CheckMyQuota` | ok | ok | ok | checks if the authenticated user is over quota. |
 | `CheckNotifications` | ok | ok | ok | list users's notification threads |

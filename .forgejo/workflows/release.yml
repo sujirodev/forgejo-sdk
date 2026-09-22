@@ -19,6 +19,14 @@ name: release
 # the same one again) and the script skips the changelog section it already
 # added, so nothing is duplicated. If the commit fails, nothing was created
 # at all.
+#
+# Once the release exists, a second phase publishes what goes with it: the
+# module is resolved on proxy.golang.org (which is what actually makes the
+# version installable and gets it onto pkg.go.dev), an SBOM and the route
+# contract are attached, and the notes gain the install instructions. That
+# phase never fails the release -- the tag and the notes are already public
+# by then, so a hiccup there must not leave the job red over work that is
+# done. Steps that can legitimately come up empty warn instead of exiting.
 on:
   pull_request:
     types: [closed]
@@ -41,7 +49,11 @@ jobs:
   release:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The asset phase adds a Go toolchain, a build of cyclonedx-gomod from
+    # source (setup-go runs with cache: false here, like every other job) and
+    # up to 10 x 15s of waiting on the proxy, none of which fit in the 10
+    # minutes that were enough for the tag-and-notes job alone.
+    timeout-minutes: 20
     env:
       RELEASE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
     steps:
@@ -172,6 +184,7 @@ jobs:
       # commit), so a separate "create tag" call isn't needed.
       - name: Publish release
         if: steps.version.outputs.tag
+        id: release
         env:
           TAG: ${{ steps.version.outputs.tag }}
           NOTE: ${{ steps.changelog.outputs.entry }}
@@ -183,9 +196,204 @@ jobs:
             --arg target "main" \
             --arg note "$NOTE" \
             '{tag_name:$tag, name:$name, target_commitish:$target, body:$note}')
-          curl -sSf -X POST \
+          response=$(curl -sSf -X POST \
             -H "Authorization: token ${RELEASE_TOKEN}" \
             -H "Content-Type: application/json" \
             -d "$body" \
-            "${api}/repos/${GITHUB_REPOSITORY}/releases" >/dev/null
-          echo "published ${TAG}"
+            "${api}/repos/${GITHUB_REPOSITORY}/releases")
+          release_id=$(jq -r '.id' <<<"$response")
+          echo "published ${TAG} as release ${release_id}"
+          echo "id=${release_id}" >> "$GITHUB_OUTPUT"
+
+      # ---------------------------------------------------------------------
+      # Release assets.
+      #
+      # The .zip/.tar.gz on a release page are NOT assets: Codeberg generates
+      # a source archive for every tag and there is nothing to configure about
+      # them. Until this block existed, every release had `assets: []`.
+      #
+      # A pure Go library has no binary to ship either -- the artifact people
+      # actually consume is the module, served by proxy.golang.org straight
+      # from the tag. So what is worth attaching is the two things the module
+      # zip does not carry: provenance (an SBOM) and the route contract that
+      # says which Forgejo versions this tag was proven against.
+      # ---------------------------------------------------------------------
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        if: steps.release.outputs.id
+        continue-on-error: true
+        with:
+          go-version-file: forgejo/go.mod
+          check-latest: true
+          cache: false
+
+      # `go get` against the public proxy is what makes the new version exist
+      # for consumers: it warms proxy.golang.org, gets the version notarized
+      # in sum.golang.org, and lands it in index.golang.org, which is what
+      # pkg.go.dev polls to build the docs page. Doing it here (instead of
+      # waiting for the first user to ask for the version) also gives us the
+      # authoritative go.sum lines for the release notes.
+      #
+      # The tag is seconds old, so the proxy may still be serving its cached
+      # "not found" for it; retry rather than fail the release over it.
+      - name: Resolve the module on the public Go proxy
+        if: steps.release.outputs.id
+        id: proxy
+        continue-on-error: true
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          GOPROXY: https://proxy.golang.org
+          GOSUMDB: sum.golang.org
+          GOFLAGS: -mod=mod
+          GOPRIVATE: ""
+          GONOPROXY: ""
+          GONOSUMDB: ""
+        run: |
+          module=$(awk '/^module /{print $2}' forgejo/go.mod)
+          # Tags are prefixed with the module's subdirectory; the version the
+          # Go tooling uses is the tag without that prefix.
+          version="${TAG##*/}"
+          probe="${RUNNER_TEMP:-/tmp}/proxy-probe"
+          mkdir -p "$probe"
+          cd "$probe"
+          go mod init release.probe >/dev/null
+          resolved=false
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if go get "${module}@${version}"; then
+              resolved=true
+              break
+            fi
+            echo "proxy does not serve ${version} yet (attempt ${attempt}/10)"
+            sleep 15
+          done
+          if [ "$resolved" != "true" ]; then
+            echo "::warning::proxy.golang.org still does not serve ${module}@${version}; it will be fetched on first use instead"
+            exit 0
+          fi
+          echo "module=${module}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          {
+            echo "gosum<<__GOSUM_EOF__"
+            grep "^${module} ${version}[ /]" go.sum
+            echo "__GOSUM_EOF__"
+          } >> "$GITHUB_OUTPUT"
+          # pkg.go.dev builds the docs page on first request; ask for it now
+          # so the page is live when the release notes point people at it.
+          curl -sS -o /dev/null "https://pkg.go.dev/${module}@${version}" || true
+
+      # cyclonedx-gomod reads the main module's license from the module
+      # directory, and forgejo/ is a subdirectory of a repository whose
+      # LICENSE sits at the root; copy it in for the run only. It also stamps
+      # the version from a `git describe`, which cannot work here -- the tag
+      # was just created through the API and the checkout predates it -- so
+      # the version is written in afterwards instead.
+      - name: Generate the SBOM
+        if: steps.release.outputs.id
+        continue-on-error: true
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          version="${TAG##*/}"
+          # The copy must not survive the step even if the generator fails:
+          # the runner's workspace is shared between jobs, so a leftover file
+          # is somebody else's confusing untracked file later on.
+          trap 'rm -f forgejo/LICENSE' EXIT
+          cp LICENSE forgejo/LICENSE
+          go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.9.0 \
+            mod -json -licenses -assert-licenses -noserial -type library \
+            -output sbom.raw.json ./forgejo
+          # Two fixups, both so the document says what is actually true:
+          #   - the version, which the tool could not read from VCS;
+          #   - the purls, which the tool qualifies with the goos/goarch it
+          #     happened to run on. `mod` reads the module graph, not a build,
+          #     so that qualifier is noise: the component set is identical on
+          #     every platform (checked against GOOS=linux and GOOS=windows)
+          #     and pinning it to the runner's would understate the SBOM's
+          #     scope. Dropping it also makes the file byte-identical no
+          #     matter which runner produced it.
+          jq --arg v "$version" '
+            ("pkg:golang/" + .metadata.component.name + "@" + $v + "?type=module") as $ref
+            | .metadata.component["bom-ref"] as $old
+            | .metadata.component.version = $v
+            | .metadata.component["bom-ref"] = $ref
+            | .metadata.component.purl = $ref
+            | .components |= map(.purl |= (sub("&goos=[^&]*"; "") | sub("&goarch=[^&]*"; "")))
+            | .dependencies |= map(if .ref == $old then .ref = $ref else . end)
+          ' sbom.raw.json > "forgejo-sdk-${version}.cdx.json"
+          echo "SBOM: $(jq -r '.metadata.component.purl' "forgejo-sdk-${version}.cdx.json"), $(jq '.components | length' "forgejo-sdk-${version}.cdx.json") dependencies"
+
+      # ROUTES.md is the per-Forgejo-version route contract the integration
+      # suite produces (docs/PLANO-CONTRATO-ROTAS.md). It is committed, so it
+      # is already in the checkout; attaching a copy pinned to the tag lets
+      # anyone answer "does this version cover Forgejo 16.x?" without cloning.
+      - name: Attach the release assets
+        if: steps.release.outputs.id
+        continue-on-error: true
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_ID: ${{ steps.release.outputs.id }}
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          version="${TAG##*/}"
+          cp ROUTES.md "ROUTES-${version}.md"
+          for asset in "forgejo-sdk-${version}.cdx.json" "ROUTES-${version}.md"; do
+            curl -sSf -X POST \
+              -H "Authorization: token ${RELEASE_TOKEN}" \
+              -F "attachment=@${asset}" \
+              "${api}/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?name=${asset}" >/dev/null
+            echo "attached ${asset}"
+          done
+
+      # The release is named after the tag (forgejo/v3.2.4) but `go get` takes
+      # the version without the prefix (v3.2.4). That trips people up often
+      # enough to be worth spelling out on the page itself, together with the
+      # go.sum lines -- which matter to anyone whose GOPRIVATE/GONOSUMDB keeps
+      # them from checking sum.golang.org.
+      - name: Add the install instructions to the release notes
+        if: steps.release.outputs.id && steps.proxy.outputs.version
+        continue-on-error: true
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          NOTE: ${{ steps.changelog.outputs.entry }}
+          MODULE: ${{ steps.proxy.outputs.module }}
+          VERSION: ${{ steps.proxy.outputs.version }}
+          GOSUM: ${{ steps.proxy.outputs.gosum }}
+          RELEASE_ID: ${{ steps.release.outputs.id }}
+        run: |
+          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          fence='```'
+          install=$(cat <<EOF
+          ${NOTE}
+
+          ---
+
+          ### Instalação
+
+          ${fence}sh
+          go get ${MODULE}@${VERSION}
+          ${fence}
+
+          A tag é \`${TAG}\`, porque o módulo vive no subdiretório \`forgejo/\`.
+          Para o Go a versão é \`${VERSION}\`, sem o prefixo.
+
+          Documentação: https://pkg.go.dev/${MODULE}@${VERSION}
+
+          ### go.sum
+
+          ${fence}
+          ${GOSUM}
+          ${fence}
+
+          ### Anexos
+
+          - \`forgejo-sdk-${VERSION}.cdx.json\` — SBOM CycloneDX 1.6 do módulo e das suas dependências.
+          - \`ROUTES-${VERSION}.md\` — contrato de rotas: quais rotas esta versão cobre, por versão do Forgejo.
+          EOF
+          )
+          body=$(jq -n --arg note "$install" '{body:$note}')
+          curl -sSf -X PATCH \
+            -H "Authorization: token ${RELEASE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$body" \
+            "${api}/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" >/dev/null
+          echo "release notes updated with the install instructions"

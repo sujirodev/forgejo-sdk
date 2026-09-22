@@ -315,6 +315,32 @@ func TestDispatchRepoWorkflow(t *testing.T) {
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	assert.Nil(t, dispatched)
+
+	// ReturnRunInfo: true takes the other branch, a parsed 200 body instead
+	// of a bare 204.
+	withInfo, resp, err := c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "test.yml", DispatchWorkflowOption{
+		Ref:           "main",
+		ReturnRunInfo: true,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, withInfo)
+	assert.NotZero(t, withInfo.ID)
+	assert.Contains(t, withInfo.Jobs, "noop", "Jobs is the list of job names, not full ActionRunJob records")
+
+	// A workflow file that does not exist is documented as a 404 in the
+	// swagger ("workflow not found" in DispatchRepoWorkflow), but this
+	// server answers with a bare 500 instead (confirmed with plain curl,
+	// same on a bogus ref against a real workflow file) -- so what's
+	// actually reachable here is the default/"unexpected Status" branch,
+	// not the 404 one. Asserting "workflow not found" would just be wrong.
+	// Confirmed identical on Forgejo 11.0.16 and 15.0.9 too, so it's not a
+	// version regression -- reported upstream as
+	// https://codeberg.org/forgejo/forgejo/issues/14521.
+	_, _, err = c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "does-not-exist.yml", DispatchWorkflowOption{
+		Ref: "main",
+	})
+	require.EqualError(t, err, "unexpected Status: 500")
 }
 
 func TestListRepoActionTasks(t *testing.T) {

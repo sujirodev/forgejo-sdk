@@ -225,6 +225,28 @@ func TestUnitsMapSerialization(t *testing.T) {
 	assert.Equal(t, "write", team.UnitsMap["repo.releases"])
 }
 
+func TestGetTeamRepo(t *testing.T) {
+	log.Println("== TestGetTeamRepo ==")
+	c := newTestClient()
+
+	orgName := "GetTeamRepoTestOrg"
+	cleanup, repo, err := createTestOrgRepo(t, c, orgName)
+	require.NoError(t, err)
+	defer cleanup()
+
+	team, err := createTestOrgTeams(t, c, orgName, "repo-team", AccessModeRead, map[string]string{RepoUnitCode.String(): string(AccessModeRead)})
+	require.NoError(t, err)
+
+	resp, err := c.AddTeamRepository(team.ID, orgName, repo.Name)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	got, resp, err := c.GetTeamRepo(team.ID, orgName, repo.Name)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, repo.Name, got.Name)
+}
+
 func TestUnitsMapBackwardCompatibility(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestUnitsMapBackwardCompatibility ==")

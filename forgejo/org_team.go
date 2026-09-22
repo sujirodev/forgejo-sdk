@@ -289,6 +289,16 @@ func (c *Client) ListTeamRepositories(id int64, opt ListTeamRepositoriesOptions)
 	return repos, resp, err
 }
 
+// GetTeamRepo gets a particular repository of a team
+func (c *Client) GetTeamRepo(id int64, org, repo string) (*Repository, *Response, error) {
+	if err := escapeValidatePathSegments(&org, &repo); err != nil {
+		return nil, nil, err
+	}
+	r := new(Repository)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/teams/%d/repos/%s/%s", id, org, repo), nil, nil, r)
+	return r, resp, err
+}
+
 // AddTeamRepository adds a repository to a team
 func (c *Client) AddTeamRepository(id int64, org, repo string) (*Response, error) {
 	if err := escapeValidatePathSegments(&org, &repo); err != nil {

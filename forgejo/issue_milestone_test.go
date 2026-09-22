@@ -18,6 +18,7 @@ import (
 )
 
 func TestMilestones(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestMilestones ==")
 	c := newTestClient()
 
@@ -86,6 +87,7 @@ func TestMilestones(t *testing.T) {
 }
 
 func TestMilestoneByName_EditDelete(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
@@ -113,6 +115,7 @@ func TestMilestoneByName_EditDelete(t *testing.T) {
 // same real server, just with the client's cached version overridden to
 // look old (see TestGetPullRequestDiff_LegacyPath for why that's enough).
 func TestMilestoneByName_EditLegacyPath(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 

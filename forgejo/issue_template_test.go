@@ -13,6 +13,7 @@ import (
 )
 
 func TestGetIssueTemplates(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 

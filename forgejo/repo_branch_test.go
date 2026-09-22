@@ -17,6 +17,7 @@ import (
 )
 
 func TestRepoBranches(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoBranches ==")
 	c := newTestClient()
 	repoName := "branches"
@@ -71,6 +72,7 @@ func TestRepoBranches(t *testing.T) {
 }
 
 func TestRepoBranchProtection(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoBranchProtection ==")
 	c := newTestClient()
 	repoName := "BranchProtection"
@@ -145,6 +147,7 @@ func TestRepoBranchProtection(t *testing.T) {
 }
 
 func TestUpdateRepoBranch(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUpdateRepoBranch ==")
 	c := newTestClient()
 	repoName := "UpdateBranch"

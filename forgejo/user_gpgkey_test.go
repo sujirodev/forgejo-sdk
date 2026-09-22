@@ -13,6 +13,7 @@ import (
 )
 
 func TestGetGPGKeyVerificationToken(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetGPGKeyVerificationToken ==")
 	c := newTestClient()
 
@@ -27,6 +28,7 @@ func TestGetGPGKeyVerificationToken(t *testing.T) {
 // token from GetGPGKeyVerificationToken, which this environment does not
 // have available, so it is not live-verified here.
 func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestVerifyGPGKeyRejectsBogusSignature ==")
 	c := newTestClient()
 
@@ -42,6 +44,7 @@ func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
 // (test01@forgejo.org), so it attaches to the default test client's own
 // user rather than needing a second one.
 func TestUserGPGKeys(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 
 	baseline, _, err := c.ListMyGPGKeys(&ListGPGKeysOptions{})

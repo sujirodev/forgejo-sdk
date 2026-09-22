@@ -55,6 +55,7 @@ func remoteFollowActivity(target string) ActivityPubObject {
 }
 
 func TestActivityPubInstanceActor(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubInstanceActor ==")
 	c := newTestClient()
 
@@ -71,6 +72,7 @@ func TestActivityPubInstanceActor(t *testing.T) {
 }
 
 func TestActivityPubInstanceActorInbox(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubInstanceActorInbox ==")
 	c := newTestClient()
 
@@ -88,6 +90,7 @@ func TestActivityPubInstanceActorInbox(t *testing.T) {
 }
 
 func TestActivityPubRepository(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubRepository ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "activitypub-repo", c)
@@ -106,6 +109,7 @@ func TestActivityPubRepository(t *testing.T) {
 }
 
 func TestActivityPubRepositoryInbox(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubRepositoryInbox ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "activitypub-repo-inbox", c)
@@ -122,6 +126,7 @@ func TestActivityPubRepositoryInbox(t *testing.T) {
 }
 
 func TestActivityPubPerson(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubPerson ==")
 	c := newTestClient()
 	me, _, err := c.GetMyUserInfo()
@@ -140,6 +145,7 @@ func TestActivityPubPerson(t *testing.T) {
 }
 
 func TestActivityPubPersonInbox(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubPersonInbox ==")
 	c := newTestClient()
 	me, _, err := c.GetMyUserInfo()
@@ -156,6 +162,7 @@ func TestActivityPubPersonInbox(t *testing.T) {
 }
 
 func TestActivityPubPersonActivity(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubPersonActivity ==")
 	c := newTestClient()
 	me, _, err := c.GetMyUserInfo()

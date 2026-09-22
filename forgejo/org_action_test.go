@@ -37,6 +37,7 @@ func newActionTestOrg(t *testing.T, c *Client, prefix string) string {
 }
 
 func TestOrgActionSecrets(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgActionSecrets ==")
 	c := newTestClient()
 
@@ -199,6 +200,7 @@ func TestOrgActionSecrets(t *testing.T) {
 }
 
 func TestCreateSecretOption_Validate(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCreateSecretOption_Validate ==")
 	tests := []struct {
 		name    string
@@ -356,6 +358,7 @@ func TestCreateSecretOption_Validate(t *testing.T) {
 }
 
 func TestDeleteOrgActionSecret(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeleteOrgActionSecret ==")
 	c := newTestClient()
 
@@ -375,6 +378,7 @@ func TestDeleteOrgActionSecret(t *testing.T) {
 }
 
 func TestListOrgActionJobs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListOrgActionJobs ==")
 	c := newTestClient()
 
@@ -391,6 +395,7 @@ func TestListOrgActionJobs(t *testing.T) {
 }
 
 func TestOrgActionVariables(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgActionVariables ==")
 	c := newTestClient()
 
@@ -433,6 +438,7 @@ func TestOrgActionVariables(t *testing.T) {
 }
 
 func TestGetOrgActionRunnerRegistrationToken(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetOrgActionRunnerRegistrationToken ==")
 	c := newTestClient()
 

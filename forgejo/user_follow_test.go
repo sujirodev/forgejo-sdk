@@ -14,6 +14,7 @@ import (
 // federation may not even be enabled on it), so a full follow against a
 // live remote instance is not exercised here.
 func TestActivityPubFollow(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestActivityPubFollow ==")
 	c := newTestClient()
 

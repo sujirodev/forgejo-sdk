@@ -40,6 +40,7 @@ func newPendingTransfer(t *testing.T, c *Client) (source, recipient *User, repoN
 }
 
 func TestRepoTransfer_AcceptByRecipient(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	source, recipient, repoName := newPendingTransfer(t, c)
 
@@ -57,6 +58,7 @@ func TestRepoTransfer_AcceptByRecipient(t *testing.T) {
 }
 
 func TestRepoTransfer_RejectByRecipient(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	source, recipient, repoName := newPendingTransfer(t, c)
 	t.Cleanup(func() { _, _ = c.DeleteRepo(source.UserName, repoName) })

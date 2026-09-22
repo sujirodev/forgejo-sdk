@@ -17,6 +17,7 @@ import (
 )
 
 func TestListAllOrgs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListAllOrgs ==")
 	c := newTestClient()
 
@@ -46,6 +47,7 @@ func TestListAllOrgs(t *testing.T) {
 }
 
 func TestOrgs_ListMyListUserEdit(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	org := newTestOrg(t, c)
 

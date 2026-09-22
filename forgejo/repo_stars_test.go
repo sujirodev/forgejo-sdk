@@ -18,6 +18,7 @@ import (
 )
 
 func TestRepoStaring(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoStaring ==")
 
 	// init user2

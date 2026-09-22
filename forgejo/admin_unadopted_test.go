@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminListUnadopted(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminListUnadopted ==")
 	c := newTestClient()
 
@@ -25,6 +26,7 @@ func TestAdminListUnadopted(t *testing.T) {
 }
 
 func TestAdminAdoptAndDeleteUnadoptedRepository_NotFound(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminAdoptAndDeleteUnadoptedRepository_NotFound ==")
 	c := newTestClient()
 

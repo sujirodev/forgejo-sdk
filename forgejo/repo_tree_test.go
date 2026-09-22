@@ -14,6 +14,7 @@ import (
 )
 
 func TestRepoTrees(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoTrees ==")
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()

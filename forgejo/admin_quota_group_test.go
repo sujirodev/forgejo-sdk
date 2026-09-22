@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminQuotaGroups(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminQuotaGroups ==")
 	c := newTestClient()
 

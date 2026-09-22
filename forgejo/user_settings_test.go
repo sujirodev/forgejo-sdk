@@ -17,6 +17,7 @@ import (
 )
 
 func TestUserSettings(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserSettings ==")
 	c := newTestClient()
 	owner := createTestUser(t, uniqueName(t, "setowner"), c)

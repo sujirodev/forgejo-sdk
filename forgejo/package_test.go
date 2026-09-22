@@ -57,6 +57,7 @@ func createTestPackage(t *testing.T, c *Client) (string, error) {
 }
 
 func TestListPackages(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListPackages ==")
 	c := newTestClient()
 	org, err := createTestPackage(t, c)
@@ -121,6 +122,7 @@ func TestListPackages(t *testing.T) {
 }
 
 func TestGetPackage(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetPackage ==")
 	c := newTestClient()
 	org, err := createTestPackage(t, c)
@@ -135,6 +137,7 @@ func TestGetPackage(t *testing.T) {
 }
 
 func TestDeletePackage(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeletePackage ==")
 	c := newTestClient()
 	org, err := createTestPackage(t, c)
@@ -155,6 +158,7 @@ func TestDeletePackage(t *testing.T) {
 }
 
 func TestListPackageFiles(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListPackageFiles ==")
 	c := newTestClient()
 	org, err := createTestPackage(t, c)
@@ -167,6 +171,7 @@ func TestListPackageFiles(t *testing.T) {
 }
 
 func TestLinkPackage(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestLinkPackage ==")
 	c := newTestClient()
 	org, err := createTestPackage(t, c)
@@ -186,6 +191,7 @@ func TestLinkPackage(t *testing.T) {
 }
 
 func TestUnlinkPackage(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUnlinkPackage ==")
 	c := newTestClient()
 	org, err := createTestPackage(t, c)

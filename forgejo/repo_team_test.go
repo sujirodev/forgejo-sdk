@@ -17,6 +17,7 @@ import (
 )
 
 func TestRepoTeamManagement(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoTeamManagement ==")
 	c := newTestClient()
 

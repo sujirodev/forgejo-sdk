@@ -12,6 +12,7 @@ import (
 )
 
 func TestIssueStopwatch_StartStop(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	owner := createTestUser(t, uniqueName(t, "swowner"), c)
 	c.SetSudo(owner.UserName)
@@ -43,6 +44,7 @@ func TestIssueStopwatch_StartStop(t *testing.T) {
 }
 
 func TestIssueStopwatch_Delete(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	owner := createTestUser(t, uniqueName(t, "swowner"), c)
 	c.SetSudo(owner.UserName)

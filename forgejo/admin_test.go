@@ -17,6 +17,7 @@ import (
 )
 
 func TestAdminOrg(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminOrg ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -60,6 +61,7 @@ func TestAdminOrg(t *testing.T) {
 }
 
 func TestAdminListEditUsers(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	// "adminedit" would embed the substring "it", which TestUserSearch (in
 	// user_test.go) searches for globally: keep prefixes free of that word
@@ -91,6 +93,7 @@ func TestAdminListEditUsers(t *testing.T) {
 }
 
 func TestAdminUserPublicKeys(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	owner := createTestUser(t, uniqueName(t, "adminkey"), c)
 
@@ -115,6 +118,7 @@ func TestAdminUserPublicKeys(t *testing.T) {
 }
 
 func TestAdminCronTasks(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminCronTasks ==")
 	c := newTestClient()
 

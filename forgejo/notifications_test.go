@@ -18,6 +18,7 @@ import (
 )
 
 func TestNotifications(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestNotifications ==")
 
 	c := newTestClient()

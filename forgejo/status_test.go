@@ -17,6 +17,7 @@ import (
 )
 
 func TestCommitStatus(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCommitStatus ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -71,6 +72,7 @@ func TestCommitStatus(t *testing.T) {
 }
 
 func TestListCommitStatuses(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListCommitStatuses ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()

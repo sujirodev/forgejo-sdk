@@ -17,6 +17,7 @@ import (
 const testAvatarPNGBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 
 func TestRepoAvatar(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoAvatar ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "RepoAvatar", c)

@@ -12,6 +12,7 @@ import (
 )
 
 func TestIssueReactions(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	issue := createTestIssue(t, c, repo.Name, "Reaction target", "", nil, nil, 0, nil, false, false)

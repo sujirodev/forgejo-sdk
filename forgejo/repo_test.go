@@ -20,6 +20,7 @@ import (
 )
 
 func TestCreateRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCreateRepo ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -40,6 +41,7 @@ func TestCreateRepo(t *testing.T) {
 }
 
 func TestRepoMigrateAndLanguages(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestMigrateRepo ==")
 	c := newTestClient()
 	user, _, uErr := c.GetMyUserInfo()
@@ -83,6 +85,7 @@ func TestRepoMigrateAndLanguages(t *testing.T) {
 }
 
 func TestSearchRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestSearchRepo ==")
 	c := newTestClient()
 
@@ -135,6 +138,7 @@ func TestSearchRepo(t *testing.T) {
 }
 
 func TestDeleteRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeleteRepo ==")
 	c := newTestClient()
 	repo, _ := createTestRepo(t, "TestDeleteRepo", c)
@@ -143,6 +147,7 @@ func TestDeleteRepo(t *testing.T) {
 }
 
 func TestGetArchive(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetArchive ==")
 	c := newTestClient()
 	repo, _ := createTestRepo(t, "ToDownload", c)
@@ -154,6 +159,7 @@ func TestGetArchive(t *testing.T) {
 }
 
 func TestGetArchiveReader(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetArchiveReader ==")
 	c := newTestClient()
 	repo, _ := createTestRepo(t, "ToDownloadReader", c)
@@ -170,6 +176,7 @@ func TestGetArchiveReader(t *testing.T) {
 }
 
 func TestGetRepoByID(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoByID ==")
 	c := newTestClient()
 	testrepo, _ := createTestRepo(t, "TestGetRepoByID", c)
@@ -219,6 +226,7 @@ func createTestRepo(t *testing.T, name string, c *Client) (*Repository, error) {
 }
 
 func TestRepos_ListMyListUserListOrg(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
@@ -254,6 +262,7 @@ func TestRepos_ListMyListUserListOrg(t *testing.T) {
 // docs/PLANO-COBERTURA-TESTES.md section 4 / scripts/check-test-instance-settings.sh):
 // otherwise Forgejo refuses a clone address that resolves to itself.
 func TestMirrorSync(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	source := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 

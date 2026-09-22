@@ -15,6 +15,7 @@ import (
 // docs/PLANO-COBERTURA-TESTES.md section 4 / scripts/check-test-instance-settings.sh):
 // with the default (true), these routes 404.
 func TestRepoGitHooks(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 

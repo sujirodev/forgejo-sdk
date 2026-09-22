@@ -14,6 +14,7 @@ import (
 )
 
 func TestRepoWiki(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoWiki ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "RepoWiki", c)

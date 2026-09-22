@@ -21,6 +21,7 @@ import (
 )
 
 func TestUnit_DoRequest_DebugMode(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -31,6 +32,7 @@ func TestUnit_DoRequest_DebugMode(t *testing.T) {
 }
 
 func TestUnit_DoRequestWithContext_DebugMode(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -42,6 +44,7 @@ func TestUnit_DoRequestWithContext_DebugMode(t *testing.T) {
 }
 
 func TestUnit_GetWebResponse_DebugMode(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("diff body"))
 	})
@@ -54,6 +57,7 @@ func TestUnit_GetWebResponse_DebugMode(t *testing.T) {
 }
 
 func TestUnit_DoRequest_BadMethod(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 
@@ -64,6 +68,7 @@ func TestUnit_DoRequest_BadMethod(t *testing.T) {
 }
 
 func TestUnit_DoRequestWithContext_BadMethod(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 
@@ -72,6 +77,7 @@ func TestUnit_DoRequestWithContext_BadMethod(t *testing.T) {
 }
 
 func TestUnit_GetWebResponse_BadMethod(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 
@@ -80,6 +86,7 @@ func TestUnit_GetWebResponse_BadMethod(t *testing.T) {
 }
 
 func TestUnit_DoRequest_UnreachableHost(t *testing.T) {
+	t.Parallel()
 	// A well-formed request that http.Client.Do can never complete: no
 	// listener on this port.
 	c, err := NewClient("http://127.0.0.1:1", SetForgejoVersion("16.0.5"))
@@ -90,6 +97,7 @@ func TestUnit_DoRequest_UnreachableHost(t *testing.T) {
 }
 
 func TestUnit_DoRequestWithContext_UnreachableHost(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://127.0.0.1:1", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 
@@ -98,6 +106,7 @@ func TestUnit_DoRequestWithContext_UnreachableHost(t *testing.T) {
 }
 
 func TestUnit_GetWebResponse_UnreachableHost(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://127.0.0.1:1", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 

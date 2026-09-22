@@ -18,6 +18,7 @@ import (
 )
 
 func TestMyUser(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestMyUser ==")
 
 	var expectedAvatarURL, expectedHTMLURL string
@@ -43,6 +44,7 @@ func TestMyUser(t *testing.T) {
 }
 
 func TestUserApp(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserApp ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -67,6 +69,7 @@ func TestUserApp(t *testing.T) {
 }
 
 func TestUserSearch(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserSearch ==")
 	c := newTestClient()
 
@@ -92,6 +95,7 @@ func TestUserSearch(t *testing.T) {
 }
 
 func TestUserFollow(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserFollow ==")
 	c := newTestClient()
 	me := createTestUser(t, uniqueName(t, "flwowner"), c)
@@ -166,6 +170,7 @@ func TestUserFollow(t *testing.T) {
 }
 
 func TestUserEmail(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserEmail ==")
 	c := newTestClient()
 	userN := "TestUserEmail"
@@ -210,6 +215,7 @@ func TestUserEmail(t *testing.T) {
 }
 
 func TestGetUserByID(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetUserByID ==")
 	c := newTestClient()
 

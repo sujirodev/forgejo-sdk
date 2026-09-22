@@ -17,6 +17,7 @@ import (
 )
 
 func TestRepoCollaborator(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoCollaborator ==")
 	c := newTestClient()
 
@@ -100,6 +101,7 @@ func TestRepoCollaborator(t *testing.T) {
 }
 
 func TestIsCollaborator(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	collaborator := createTestUser(t, uniqueName(t, "collab"), c)

@@ -20,6 +20,7 @@ import (
 )
 
 func TestFileCreateUpdateGet(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestFileCRUD ==")
 	c := newTestClient()
 
@@ -150,6 +151,7 @@ func TestFileCreateUpdateGet(t *testing.T) {
 }
 
 func TestGetContentsList(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetContentsList ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "ContentsList", c)
@@ -172,6 +174,7 @@ func TestGetContentsList(t *testing.T) {
 }
 
 func TestChangeFiles(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestChangeFiles ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "ChangeFilesBatch", c)
@@ -225,6 +228,7 @@ func TestChangeFiles(t *testing.T) {
 }
 
 func TestGetEditorConfig(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetEditorConfig ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "EditorConfig", c)
@@ -247,6 +251,7 @@ func TestGetEditorConfig(t *testing.T) {
 }
 
 func TestGetFileReader(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true, Readme: "Default"})
 

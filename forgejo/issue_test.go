@@ -20,6 +20,7 @@ import (
 // TestIssue is main func witch call all Tests for Issue API
 // (to make sure they are on correct order)
 func TestIssue(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 
 	createIssue(t, c)

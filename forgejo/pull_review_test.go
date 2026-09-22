@@ -17,6 +17,7 @@ import (
 )
 
 func TestPullReview(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestPullReview ==")
 	c := newTestClient()
 
@@ -190,6 +191,7 @@ func TestPullReview(t *testing.T) {
 }
 
 func TestPullReviewComments(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestPullReviewComments ==")
 	c := newTestClient()
 

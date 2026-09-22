@@ -12,6 +12,7 @@ import (
 )
 
 func TestIssueTrackedTime(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	issue := createTestIssue(t, c, repo.Name, "Tracked time target", "", nil, nil, 0, nil, false, false)

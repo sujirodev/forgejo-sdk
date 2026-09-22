@@ -17,6 +17,7 @@ import (
 // 200 with an empty body rather than an error when none is configured, so
 // this skips on either signal: no transport error, but also no key.
 func TestGetSigningKey(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetSigningKey ==")
 	c := newTestClient()
 
@@ -33,6 +34,7 @@ func TestGetSigningKey(t *testing.T) {
 
 // TestGetSSHSigningKey mirrors TestGetSigningKey for the SSH signing key.
 func TestGetSSHSigningKey(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetSSHSigningKey ==")
 	c := newTestClient()
 

@@ -17,6 +17,7 @@ import (
 )
 
 func TestRepoWatch(t *testing.T) {
+	t.Parallel()
 	log.Printf("== TestRepoWatch ==")
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()

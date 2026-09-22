@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccessToken_DeleteByIDAndByName(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	owner := createTestUser(t, uniqueName(t, "tokenowner"), c)
 

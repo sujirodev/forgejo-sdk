@@ -1,5 +1,17 @@
 # Changelog
 
+## [v3.2.5](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.5) - 2026-09-22
+
+* MISC
+  * SDK: cobrir rotas de organização — runners, quota, avatar e block/unblock (#47)
+  * SDK: implementar attachments e dependências de Issue (21 rotas, Forgejo 16.0.5) (#48)
+  * chore(deps): update ghcr.io/renovatebot/renovate docker tag to v44.106.0 (#61)
+  * ci: release train (integration.yml, compute-release-version.sh, release.yml, docs) (#64)
+  * ci(release): publicar o que um release de biblioteca Go deveria carregar (#66)
+  * test: close the coverage gap PR #49 reopened (fase 8) (#67)
+  * test: run the integration suite in parallel (291s -> ~105s) (#68)
+
+
 ## [v3.2.4](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.4) - 2026-09-22
 
 * MISC

@@ -35,3 +35,6 @@ test-cache
 swagger.v1.json
 # Local analysis/working notes, not part of the published docs
 /docs
+
+# Route coverage evidence, written by TestMain (one per test leg)
+route-report*.json

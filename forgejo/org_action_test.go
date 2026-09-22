@@ -18,8 +18,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test constant for org action tests
-var testOrgName = "testorg"
+// newActionTestOrg creates an organization owned by a throwaway user and
+// returns its name.
+//
+// The tests below used to target a fixed "testorg" that nothing in the suite
+// ever created. Every call against it answered 404, the test skipped, and the
+// eight routes it was meant to cover were never exercised while the suite
+// stayed green -- see issue #27. Each test now owns the organization it acts
+// on, like TestOrgActionSecrets already did.
+func newActionTestOrg(t *testing.T, c *Client, prefix string) string {
+	t.Helper()
+	user := createTestUser(t, uniqueName(t, prefix+"u"), c)
+	c.SetSudo(user.UserName)
+	org, _, err := c.CreateOrg(CreateOrgOption{Name: uniqueName(t, prefix)})
+	require.NoError(t, err)
+	require.NotNil(t, org)
+	return org.UserName
+}
 
 func TestOrgActionSecrets(t *testing.T) {
 	log.Println("== TestOrgActionSecrets ==")
@@ -344,16 +359,17 @@ func TestDeleteOrgActionSecret(t *testing.T) {
 	log.Println("== TestDeleteOrgActionSecret ==")
 	c := newTestClient()
 
-	// First create a secret to delete
-	_, err := c.CreateOrgActionSecret(testOrgName, CreateSecretOption{
+	org := newActionTestOrg(t, c, "secdel")
+
+	// First create a secret to delete. A failure here is a failure, not a
+	// reason to skip: skipping is what hid this route for so long.
+	_, err := c.CreateOrgActionSecret(org, CreateSecretOption{
 		Name: "DELETE_TEST_SECRET",
 		Data: "test_value",
 	})
-	if err != nil {
-		t.Skip("Could not create secret, skipping delete test")
-	}
+	require.NoError(t, err)
 
-	resp, err := c.DeleteOrgActionSecret(testOrgName, "DELETE_TEST_SECRET")
+	resp, err := c.DeleteOrgActionSecret(org, "DELETE_TEST_SECRET")
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 }
@@ -378,32 +394,32 @@ func TestOrgActionVariables(t *testing.T) {
 	log.Println("== TestOrgActionVariables ==")
 	c := newTestClient()
 
+	org := newActionTestOrg(t, c, "orgvar")
 	variableName := "TEST_ORG_VARIABLE"
 
-	// Create
-	resp, err := c.CreateOrgActionVariable(testOrgName, CreateVariableOption{
+	// Create. A failure here used to skip the whole test, taking the four
+	// routes below with it.
+	resp, err := c.CreateOrgActionVariable(org, CreateVariableOption{
 		Name: variableName,
 		Data: "test_value",
 	})
-	if err != nil {
-		t.Skip("Could not create variable, skipping test")
-	}
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 
 	// List
-	variables, resp, err := c.ListOrgActionVariables(testOrgName, ListOptions{})
+	variables, resp, err := c.ListOrgActionVariables(org, ListOptions{})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotNil(t, variables)
 
 	// Get
-	variable, resp, err := c.GetOrgActionVariable(testOrgName, variableName)
+	variable, resp, err := c.GetOrgActionVariable(org, variableName)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, variableName, variable.Name)
 
 	// Update
-	resp, err = c.UpdateOrgActionVariable(testOrgName, variableName, CreateVariableOption{
+	resp, err = c.UpdateOrgActionVariable(org, variableName, CreateVariableOption{
 		Name: variableName,
 		Data: "updated_value",
 	})
@@ -411,7 +427,7 @@ func TestOrgActionVariables(t *testing.T) {
 	require.NotNil(t, resp)
 
 	// Delete
-	resp, err = c.DeleteOrgActionVariable(testOrgName, variableName)
+	resp, err = c.DeleteOrgActionVariable(org, variableName)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 }
@@ -420,11 +436,12 @@ func TestGetOrgActionRunnerRegistrationToken(t *testing.T) {
 	log.Println("== TestGetOrgActionRunnerRegistrationToken ==")
 	c := newTestClient()
 
-	token, resp, err := c.GetOrgActionRunnerRegistrationToken(testOrgName)
-	if err == nil {
-		require.NotNil(t, resp)
-		assert.NotEmpty(t, token.Token)
-	}
+	org := newActionTestOrg(t, c, "runtok")
+
+	token, resp, err := c.GetOrgActionRunnerRegistrationToken(org)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.NotEmpty(t, token.Token)
 }
 
 func TestOrgRunnersCRUD(t *testing.T) {

@@ -5,6 +5,7 @@
 package forgejo
 
 import (
+	"encoding/base64"
 	"log"
 	"net/http"
 	"strings"
@@ -15,6 +16,41 @@ import (
 )
 
 // createTestRepo creates a test user and repo for action tests
+// newWorkflowRepo creates an initialized repository that holds one
+// workflow_dispatch workflow, so the routes that need an actual workflow (and,
+// once dispatched, an actual run) have something real to act on. The tests
+// that need this used to fire at a "test.yml" nothing ever created: the call
+// got a 500 or the test skipped, and the route went unexercised while the
+// suite stayed green (issues #25 and #27).
+func newWorkflowRepo(t *testing.T, c *Client, prefix string) (*Repository, func()) {
+	t.Helper()
+	user := createTestUser(t, uniqueName(t, prefix+"u"), c)
+	c.SetSudo(user.UserName)
+
+	repo, _, err := c.CreateRepo(CreateRepoOption{
+		Name:          uniqueName(t, prefix),
+		AutoInit:      true,
+		DefaultBranch: "main",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, repo)
+
+	workflow := `on: workflow_dispatch
+jobs:
+  noop:
+    runs-on: docker
+    steps:
+      - run: echo dispatched
+`
+	_, _, err = c.CreateFile(repo.Owner.UserName, repo.Name, ".forgejo/workflows/test.yml", CreateFileOptions{
+		FileOptions: FileOptions{Message: "add a dispatchable workflow", BranchName: "main"},
+		Content:     base64.StdEncoding.EncodeToString([]byte(workflow)),
+	})
+	require.NoError(t, err)
+
+	return repo, func() { c.SetSudo("") }
+}
+
 func createTestRepoForActions(t *testing.T, c *Client, suffix string) (*Repository, func()) {
 	t.Helper()
 	user := createTestUser(t, "repo_action_"+suffix, c)
@@ -214,10 +250,17 @@ func TestListRepoActionRuns(t *testing.T) {
 	repo, cleanup := createTestRepoForActions(t, c, "list_runs")
 	defer cleanup()
 
-	runs, resp, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
-	if err != nil {
-		t.Skipf("ListRepoActionRuns not supported by this Forgejo version: %v", err)
+	// /actions/runs arrived in Forgejo 12.0.0, and the SDK now guards it.
+	// Assert both sides: the route works above the guard, and below it the
+	// SDK refuses without contacting the server.
+	if !serverAtLeast(t, c, "12.0.0") {
+		_, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
 	}
+
+	runs, resp, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.NotNil(t, runs)
 	assert.GreaterOrEqual(t, runs.TotalCount, int64(0))
@@ -227,38 +270,51 @@ func TestGetRepoActionRun(t *testing.T) {
 	log.Println("== TestGetRepoActionRun ==")
 	c := newTestClient()
 
-	repo, cleanup := createTestRepoForActions(t, c, "get_run")
+	repo, cleanup := newWorkflowRepo(t, c, "getrun")
 	defer cleanup()
 
-	// First list runs to get a valid ID (if any exist)
-	runs, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
-	if err != nil {
-		t.Skipf("ListRepoActionRuns not supported by this Forgejo version: %v", err)
+	// Dispatching creates the run record. No runner picks it up here, which
+	// is fine: the route reads the record, it does not wait for the job.
+	_, _, err := c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "test.yml", DispatchWorkflowOption{
+		Ref: "main",
+	})
+	require.NoError(t, err)
+
+	// Reading the run needs Forgejo 12.0.0; below that the SDK's guard
+	// refuses, which is the documented behavior and worth asserting.
+	if !serverAtLeast(t, c, "12.0.0") {
+		_, _, err := c.GetRepoActionRun(repo.Owner.UserName, repo.Name, 1)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
 	}
 
-	if len(runs.WorkflowRuns) > 0 {
-		run, resp, err := c.GetRepoActionRun(repo.Owner.UserName, repo.Name, runs.WorkflowRuns[0].ID)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assert.Equal(t, runs.WorkflowRuns[0].ID, run.ID)
-	}
+	runs, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+	require.NoError(t, err)
+	require.NotNil(t, runs)
+	require.NotEmpty(t, runs.WorkflowRuns, "the dispatch above should have created a run")
+
+	run, resp, err := c.GetRepoActionRun(repo.Owner.UserName, repo.Name, runs.WorkflowRuns[0].ID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, runs.WorkflowRuns[0].ID, run.ID)
 }
 
 func TestDispatchRepoWorkflow(t *testing.T) {
 	log.Println("== TestDispatchRepoWorkflow ==")
 	c := newTestClient()
 
-	repo, cleanup := createTestRepoForActions(t, c, "dispatch_wf")
+	repo, cleanup := newWorkflowRepo(t, c, "dispwf")
 	defer cleanup()
 
-	// Note: This test requires a workflow file to exist in the repo
-	// It may fail if no workflow exists - that's expected
-	resp, _, err := c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "test.yml", DispatchWorkflowOption{
+	// Without ReturnRunInfo the endpoint answers 204, so the decoded body is
+	// nil by design: the HTTP response is what there is to assert on.
+	dispatched, resp, err := c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "test.yml", DispatchWorkflowOption{
 		Ref: "main",
 	})
-	// We don't assert NoError because the workflow may not exist
-	_ = resp
-	_ = err
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	assert.Nil(t, dispatched)
 }
 
 func TestListRepoActionTasks(t *testing.T) {

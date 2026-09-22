@@ -57,9 +57,9 @@ request, so a stale table is a red build instead of a promise nobody checked.
 <!-- route-matrix:start -->
 | Forgejo | Routes ok | n/a (guard) | Declared exception | Total |
 |---|---|---|---|---|
-| 11.0.16 (LTS) | 430 | 25 | 29 | 484 |
-| 15.0.9 (LTS) | 449 | 3 | 32 | 484 |
-| 16.0.5 (latest stable) | 446 | 0 | 38 | 484 |
+| 11.0.16 (LTS) | 436 | 25 | 23 | 484 |
+| 15.0.9 (LTS) | 455 | 3 | 26 | 484 |
+| 16.0.5 (latest stable) | 452 | 0 | 32 | 484 |
 
 Generated from the integration suite on every pull request.
 Per-route detail: [`ROUTES.md`](ROUTES.md).

@@ -7,13 +7,14 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 348 | 2 | 17 | 0 | 367 |
-| V15.x | 348 | 0 | 19 | 0 | 367 |
-| V16.x (latest) | 342 | 0 | 25 | 0 | 367 |
+| V11.x | 356 | 6 | 19 | 0 | 381 |
+| V15.x | 360 | 0 | 21 | 0 | 381 |
+| V16.x (latest) | 354 | 0 | 27 | 0 | 381 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
 | `AcceptRepoTransfer` | ok | ok | ok | accepts a repo transfer. |
+| `ActivityPubFollow` | negative-only | negative-only | negative-only | makes the current user follow a remote ActivityPub |
 | `AddCollaborator` | ok | ok | ok | add some user as a collaborator of a repository |
 | `AddEmail` | ok | ok | ok | add one email to current user with options |
 | `AddIssueLabels` | ok | ok | ok | add one or more labels to one issue |
@@ -32,6 +33,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AdminEditUser` | ok | ok | ok | modify user informations |
 | `AdminListOrgs` | ok | ok | ok | lists all orgs |
 | `AdminListUsers` | ok | ok | ok | lists all users |
+| `BlockUser` | ok | ok | ok | blocks the given user from interacting with the authenticated user. |
 | `CheckIssueSubscription` | ok | ok | ok | check if current user is subscribed to an issue |
 | `CheckMyQuota` | ok | ok | ok | checks if the authenticated user is over quota. |
 | `CheckNotifications` | ok | ok | ok | list users's notification threads |
@@ -126,6 +128,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteTime` | ok | ok | ok | delete a specific tracked time by id of a single issue for a given repository |
 | `DeleteUserActionSecret` | ok | ok | ok | deletes a secret for the authenticated user |
 | `DeleteUserActionVariable` | ok | ok | ok | deletes an action variable for the authenticated user |
+| `DeleteUserAvatar` | ok | ok | ok | deletes the avatar of the currently authenticated user. |
+| `DeleteUserRunner` | n/a (>= 12.0.0) | ok | ok | deletes a particular user-level Actions runner. |
 | `DiffPatchFile` | ok | ok | ok | apply a diff patch to a file in a repository |
 | `DismissPullReview` | ok | ok | ok | dismiss a review for a pull request |
 | `DispatchRepoWorkflow` | ok | ok | ok | triggers a workflow dispatch event |
@@ -172,6 +176,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetFile` | ok | ok | ok | downloads a file of repository, ref can be branch/tag/commit. |
 | `GetFileReader` | ok | ok | ok | return reader for download a file of repository, ref can be branch/tag/commit. |
 | `GetGPGKey` | ok | ok | ok | get current user's GPG key by key id |
+| `GetGPGKeyVerificationToken` | ok | ok | ok | gets a token that the user must sign with a GPG |
 | `GetGitignoreTemplate` | ok | ok | ok | returns the name and content of a single gitignore |
 | `GetGlobalAPISettings` | ok | ok | ok | get global api settings witch are exposed by it |
 | `GetGlobalAttachmentSettings` | ok | ok | ok | get global repository settings witch are exposed by API |
@@ -241,7 +246,10 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetUserActionRunnerRegistrationToken` | ok | ok | ok | gets a runner registration token for the authenticated user |
 | `GetUserActionVariable` | ok | ok | ok | gets a specific user action variable |
 | `GetUserByID` | ok | ok | ok | returns user by a given user ID |
+| `GetUserHeatmapData` | ok | ok | ok | gets a user's heatmap data. |
 | `GetUserInfo` | ok | ok | ok | get user info by user's name |
+| `GetUserRunner` | n/a (>= 12.0.0) | ok | ok | gets a particular runner that belongs to the authenticated user. |
+| `GetUserRunners` | n/a (>= 12.0.0) | ok | ok | lists the authenticated user's Actions runners. |
 | `GetUserSettings` | ok | ok | ok | returns user settings |
 | `GetWatchedRepos` | ok | ok | ok | list all the watched repos of user |
 | `IsCollaborator` | ok | ok | ok | check if a user is a collaborator of a repository |
@@ -253,6 +261,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `IssueUnSubscribe` | ok | ok | ok | unsubscribe current user from an issue |
 | `LinkPackage` | ok | ok | ok | links a package to a repository |
 | `ListAccessTokens` | ok | ok | ok | lists all the access tokens of user |
+| `ListBlockedUsers` | ok | ok | ok | lists the users blocked by the currently authenticated user. |
 | `ListBranchProtections` | ok | ok | ok | list branch protections for a repo |
 | `ListCollaborators` | ok | ok | ok | list a repository's collaborators |
 | `ListContents` | ok | ok | ok | gets a list of entries in a dir |
@@ -326,6 +335,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListTeamRepositories` | ok | ok | ok | lists all repositories of a team |
 | `ListUserActionJobs` | ok | ok | ok | searches for user action jobs |
 | `ListUserActionVariables` | ok | ok | ok | lists action variables for the authenticated user |
+| `ListUserActivityFeeds` | ok | ok | ok | lists a user's activity feeds. |
 | `ListUserOrgs` | ok | ok | ok | list all of some user's organizations |
 | `ListUserRepos` | ok | ok | ok | list all repositories of one user by user's name |
 | `MergePullRequest` | ok | ok | ok | merge a PR to repository by PR id |
@@ -337,6 +347,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ReadNotification` | ok | ok | ok | mark notification thread as read by ID |
 | `ReadNotifications` | ok | ok | ok | mark notification threads as read |
 | `ReadRepoNotifications` | ok | ok | ok | mark notification threads as read on a specific repo |
+| `RegisterUserRunner` | n/a (>= 12.0.0) | ok | ok | registers a new user-level Actions runner and returns |
 | `RejectRepoTransfer` | ok | ok | ok | rejects a repo transfer. |
 | `RemoveRepoTeam` | ok | ok | ok | delete a team from a repository |
 | `RemoveTeamMember` | ok | ok | ok | removes a member from a team |
@@ -371,6 +382,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UnDismissPullReview` | ok | ok | ok | cancel to dismiss a review for a pull request |
 | `UnStarRepo` | ok | ok | known-bug | remove star to specified repo as the authenticated user |
 | `UnWatchRepo` | ok | ok | ok | stop to watch a repository |
+| `UnblockUser` | ok | ok | ok | removes a block placed on the given user by the authenticated user. |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |
 | `UnlinkPackage` | ok | ok | ok | unlinks a package from a repository |
 | `UpdateFile` | ok | ok | ok | update a file in a repository |
@@ -378,7 +390,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UpdateOrgActionVariable` | ok | ok | ok | updates an action variable for an organization |
 | `UpdateRepoActionVariable` | ok | ok | ok | updates an action variable for a repository |
 | `UpdateUserActionVariable` | ok | ok | ok | updates an action variable for the authenticated user |
+| `UpdateUserAvatar` | ok | ok | ok | updates the avatar of the currently authenticated user. |
 | `UpdateUserSettings` | ok | ok | ok | returns user settings |
+| `VerifyGPGKey` | negative-only | negative-only | negative-only | verifies and adds a GPG key to the current user's account, |
 | `WatchRepo` | ok | ok | ok | start to watch a repository |
 
 Cell values: `ok` (the suite called it and the server answered 2xx),

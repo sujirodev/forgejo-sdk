@@ -33,14 +33,17 @@ func TestRepoGitNotes(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
 
+	// Forgejo stores the note via `git notes add`, which appends a trailing
+	// newline the same way a commit message would, so the message read back
+	// is never byte-identical to the one sent.
 	note, _, err := c.SetNote(repo.Owner.UserName, repo.Name, sha, NoteOptions{Message: "a note"})
 	require.NoError(t, err)
 	require.NotNil(t, note)
-	assert.Equal(t, "a note", note.Message)
+	assert.Equal(t, "a note\n", note.Message)
 
 	got, _, err := c.GetNote(repo.Owner.UserName, repo.Name, sha)
 	require.NoError(t, err)
-	assert.Equal(t, "a note", got.Message)
+	assert.Equal(t, "a note\n", got.Message)
 
 	_, err = c.RemoveNote(repo.Owner.UserName, repo.Name, sha)
 	require.NoError(t, err)

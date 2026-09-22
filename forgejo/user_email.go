@@ -19,6 +19,10 @@ type Email struct {
 	Email    string `json:"email"`
 	Verified bool   `json:"verified"`
 	Primary  bool   `json:"primary"`
+	// UserID is only populated by admin endpoints that list emails across users.
+	UserID int64 `json:"user_id,omitempty"`
+	// UserName is only populated by admin endpoints that list emails across users.
+	UserName string `json:"username,omitempty"`
 }
 
 // ListEmailsOptions options for listing current's user emails

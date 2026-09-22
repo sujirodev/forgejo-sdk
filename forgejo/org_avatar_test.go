@@ -11,9 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// a 1x1 transparent PNG, base64 encoded
-const testAvatarPNGBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
-
 func TestOrgAvatar(t *testing.T) {
 	log.Println("== TestOrgAvatar ==")
 	c := newTestClient()

@@ -80,3 +80,13 @@ func (c *Client) GetRepoRefs(user, repo, ref string) ([]*Reference, *Response, e
 
 	return nil, resp, fmt.Errorf("unmarshalling failed for both single and multiple refs: %s and %s", refErr, refsErr)
 }
+
+// GetRepoAllGitRefs get list of all of a repository's refs
+func (c *Client) GetRepoAllGitRefs(user, repo string) ([]*Reference, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, nil, err
+	}
+	rs := make([]*Reference, 0, 10)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/git/refs", user, repo), nil, nil, &rs)
+	return rs, resp, err
+}

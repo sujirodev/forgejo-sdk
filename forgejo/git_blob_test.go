@@ -6,6 +6,7 @@ package forgejo
 
 import (
 	"encoding/base64"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,4 +35,37 @@ func TestGetBlob(t *testing.T) {
 	decoded, err := base64.StdEncoding.DecodeString(blob.Content)
 	require.NoError(t, err)
 	assert.NotEmpty(t, decoded)
+}
+
+func TestGetBlobs(t *testing.T) {
+	log.Println("== TestGetBlobs ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "GetBlobs", c)
+	require.NoError(t, err)
+
+	dir, _, err := c.ListContents(repo.Owner.UserName, repo.Name, "", "")
+	require.NoError(t, err)
+	require.NotEmpty(t, dir)
+
+	shas := make([]string, 0, len(dir))
+	for _, entry := range dir {
+		shas = append(shas, entry.SHA)
+	}
+
+	blob, _, err := c.GetBlob(repo.Owner.UserName, repo.Name, shas[0])
+	require.NoError(t, err)
+	require.NotNil(t, blob)
+
+	// Confirmed absent on a live 11.0.16 instance and present by 15.0.9;
+	// below that the SDK's guard refuses the call, which is the documented
+	// behavior and worth asserting.
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.GetBlobs(repo.Owner.UserName, repo.Name, shas)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
+	blobs, _, err := c.GetBlobs(repo.Owner.UserName, repo.Name, shas)
+	require.NoError(t, err)
+	assert.Len(t, blobs, len(shas))
 }

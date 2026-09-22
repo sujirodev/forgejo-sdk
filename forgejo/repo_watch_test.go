@@ -54,4 +54,11 @@ func TestRepoWatch(t *testing.T) {
 	require.NoError(t, err)
 	isWatching, _, _ = c.CheckRepoWatch(repo1.Owner.UserName, repo1.Name)
 	assert.True(t, isWatching)
+
+	// ListRepoSubscribers
+	subs, _, err := c.ListRepoSubscribers(repo1.Owner.UserName, repo1.Name, ListRepoSubscribersOptions{})
+	require.NoError(t, err)
+	if assert.Len(t, subs, 1) {
+		assert.Equal(t, "test01", subs[0].UserName)
+	}
 }

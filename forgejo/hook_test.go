@@ -5,6 +5,7 @@
 package forgejo
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -144,4 +145,27 @@ func TestMyHooks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, hooks)
 	})
+}
+
+func TestTestRepoHook(t *testing.T) {
+	log.Println("== TestTestRepoHook ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "TestHook", c)
+	require.NoError(t, err)
+
+	h, _, err := c.CreateRepoHook(repo.Owner.UserName, repo.Name, CreateHookOption{
+		Type: HookTypeForgejo,
+		Config: map[string]string{
+			"url":          "http://localhost:1/webhook",
+			"content_type": "json",
+		},
+		Events: []string{"push"},
+		Active: false,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, h)
+	assert.False(t, h.Active)
+
+	_, err = c.TestRepoHook(repo.Owner.UserName, repo.Name, h.ID, "main")
+	require.NoError(t, err)
 }

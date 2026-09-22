@@ -83,6 +83,24 @@ func newTestOrg(t *testing.T, c *Client) *Organization {
 	return org
 }
 
+// listAllRepos pages through a repo listing call until a short page ends
+// it, since the server clamps the response to its own max page size no
+// matter how large a PageSize the caller asks for.
+func listAllRepos(list func(ListOptions) ([]*Repository, *Response, error)) ([]*Repository, error) {
+	const pageSize = 50
+	var all []*Repository
+	for page := 1; ; page++ {
+		repos, _, err := list(ListOptions{Page: page, PageSize: pageSize})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, repos...)
+		if len(repos) < pageSize {
+			return all, nil
+		}
+	}
+}
+
 // asUser runs fn with c impersonating username via the sudo header (c must
 // be an admin client), then restores c's previous sudo value. This is the
 // established pattern in this suite (see createTestRepoForActions in

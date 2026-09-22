@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.2.4](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.4) - 2026-09-22
+
+* MISC
+  * routes: implementar 48 das 62 rotas de repositório faltando (Forgejo 16.0.5) (#49)
+
+
 ## [v3.2.3](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.3) - 2026-09-22
 
 * MISC

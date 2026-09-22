@@ -298,6 +298,76 @@ func (c *Client) DeleteFile(owner, repo, filepath string, opt DeleteFileOptions)
 	return resp, nil
 }
 
+// GetContentsList gets the metadata of all the entries of the root dir
+// ref is optional
+func (c *Client) GetContentsList(owner, repo, ref string) ([]*ContentsResponse, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	crl := make([]*ContentsResponse, 0)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/contents?ref=%s", owner, repo, url.QueryEscape(ref)), jsonHeader, nil, &crl)
+	return crl, resp, err
+}
+
+// ChangeFileOperation for creating, updating or deleting a file
+type ChangeFileOperation struct {
+	// indicates what to do with the file, either "create", "update" or "delete"
+	Operation string `json:"operation"`
+	// path to the existing or new file
+	Path string `json:"path"`
+	// new or updated file content, must be base64 encoded
+	Content string `json:"content"`
+	// sha is the SHA for the file that already exists, required for update or delete
+	SHA string `json:"sha"`
+	// old path of the file to move
+	FromPath string `json:"from_path"`
+}
+
+// ChangeFilesOptions options for creating, updating or deleting multiple files
+// Note: `author` and `committer` are optional (if only one is given, it will be used for the other, otherwise the authenticated user will be used)
+type ChangeFilesOptions struct {
+	FileOptions
+	// list of file operations
+	Files []*ChangeFileOperation `json:"files"`
+}
+
+// FilesResponse contains information about multiple files from a repo
+type FilesResponse struct {
+	Files        []*ContentsResponse        `json:"files"`
+	Commit       *FileCommitResponse        `json:"commit"`
+	Verification *PayloadCommitVerification `json:"verification"`
+}
+
+// ChangeFiles creates, updates or deletes multiple files in a repository in a single commit
+func (c *Client) ChangeFiles(owner, repo string, opt ChangeFilesOptions) (*FilesResponse, *Response, error) {
+	var err error
+	if opt.BranchName, err = c.setDefaultBranchForOldVersions(owner, repo, opt.BranchName); err != nil {
+		return nil, nil, err
+	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	fr := new(FilesResponse)
+	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/contents", owner, repo), jsonHeader, bytes.NewReader(body), fr)
+	return fr, resp, err
+}
+
+// GetEditorConfig gets the EditorConfig definitions for a file path in a repository.
+// ref is optional
+func (c *Client) GetEditorConfig(owner, repo, filepath, ref string) (map[string]string, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	filepath = pathEscapeSegments(filepath)
+	def := make(map[string]string)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/editorconfig/%s?ref=%s", owner, repo, filepath, url.QueryEscape(ref)), jsonHeader, nil, &def)
+	return def, resp, err
+}
+
 func (c *Client) setDefaultBranchForOldVersions(owner, repo, branch string) (string, error) {
 	if len(branch) == 0 {
 		// Forgejo >= 1.12.0 Use DefaultBranch on "", mimic this for older versions

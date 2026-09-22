@@ -313,6 +313,56 @@ func (c *Client) DismissPullReview(owner, repo string, index, id int64, opt Dism
 	return resp, err
 }
 
+// CreatePullReviewCommentOptions are options to add a comment to an existing pull review
+type CreatePullReviewCommentOptions struct {
+	// the tree path
+	Path string `json:"path"`
+	Body string `json:"body"`
+	// if comment to old file line or 0
+	OldLineNum int64 `json:"old_position"`
+	// if comment to new file line or 0
+	NewLineNum int64 `json:"new_position"`
+}
+
+// CreatePullReviewComment adds a new comment to an existing pull request review
+func (c *Client) CreatePullReviewComment(owner, repo string, index, id int64, opt CreatePullReviewCommentOptions) (*PullReviewComment, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	rc := new(PullReviewComment)
+	resp, err := c.getParsedResponse("POST",
+		fmt.Sprintf("/repos/%s/%s/pulls/%d/reviews/%d/comments", owner, repo, index, id),
+		jsonHeader, bytes.NewReader(body), rc)
+	return rc, resp, err
+}
+
+// GetPullReviewComment gets a specific comment of a pull request review
+func (c *Client) GetPullReviewComment(owner, repo string, index, id, comment int64) (*PullReviewComment, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	rc := new(PullReviewComment)
+	resp, err := c.getParsedResponse("GET",
+		fmt.Sprintf("/repos/%s/%s/pulls/%d/reviews/%d/comments/%d", owner, repo, index, id, comment),
+		jsonHeader, nil, rc)
+	return rc, resp, err
+}
+
+// DeletePullReviewComment deletes a specific comment of a pull request review
+func (c *Client) DeletePullReviewComment(owner, repo string, index, id, comment int64) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("DELETE",
+		fmt.Sprintf("/repos/%s/%s/pulls/%d/reviews/%d/comments/%d", owner, repo, index, id, comment),
+		jsonHeader, nil)
+	return resp, err
+}
+
 // UnDismissPullReview cancel to dismiss a review for a pull request
 func (c *Client) UnDismissPullReview(owner, repo string, index, id int64) (*Response, error) {
 	if err := escapeValidatePathSegments(&owner, &repo); err != nil {

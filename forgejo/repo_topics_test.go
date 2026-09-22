@@ -57,4 +57,15 @@ func TestRepoTopics(t *testing.T) {
 	sort.Strings(tl)
 	sort.Strings(newTopics)
 	assert.Equal(t, newTopics, tl)
+
+	// SearchTopics
+	results, _, err := c.SearchTopics(SearchTopicsOptions{Query: "digital"})
+	require.NoError(t, err)
+	found := false
+	for _, r := range results {
+		if r.Name == "digital" {
+			found = true
+		}
+	}
+	assert.True(t, found)
 }

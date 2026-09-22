@@ -386,6 +386,45 @@ func fixPullHeadSha(client *Client, pr *PullRequest) error {
 	return nil
 }
 
+// CancelScheduledAutoMerge cancels the scheduled auto merge for the given pull request
+func (c *Client) CancelScheduledAutoMerge(owner, repo string, index int64) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/pulls/%d/merge", owner, repo, index), nil, nil)
+	return resp, err
+}
+
+// UpdatePullRequestOptions options for updating a pull request by merging its
+// base branch into its head branch
+type UpdatePullRequestOptions struct {
+	// Style is how to update the pull request, either "merge" or "rebase". Defaults to "merge"
+	Style string
+}
+
+// UpdatePullRequest merges the pull request's baseBranch into its headBranch
+func (c *Client) UpdatePullRequest(owner, repo string, index int64, opt UpdatePullRequestOptions) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
+	path := fmt.Sprintf("/repos/%s/%s/pulls/%d/update", owner, repo, index)
+	if len(opt.Style) != 0 {
+		path += "?style=" + url.QueryEscape(opt.Style)
+	}
+	_, resp, err := c.getResponse("POST", path, nil, nil)
+	return resp, err
+}
+
+// ListPinnedPullRequests lists a repo's pinned pull requests
+func (c *Client) ListPinnedPullRequests(owner, repo string) ([]*PullRequest, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	prs := make([]*PullRequest, 0, 5)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/pulls/pinned", owner, repo), jsonHeader, nil, &prs)
+	return prs, resp, err
+}
+
 // ListPullRequestFilesOptions options for listing pull request files
 type ListPullRequestFilesOptions struct {
 	ListOptions

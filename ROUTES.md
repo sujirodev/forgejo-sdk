@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 333 | 2 | 8 | 0 | 343 |
-| V15.x | 335 | 0 | 8 | 0 | 343 |
-| V16.x (latest) | 335 | 0 | 8 | 0 | 343 |
+| V11.x | 337 | 2 | 15 | 0 | 354 |
+| V15.x | 337 | 0 | 17 | 0 | 354 |
+| V16.x (latest) | 331 | 0 | 23 | 0 | 354 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -148,6 +148,14 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `EditTagProtection` | ok | ok | ok | edits a tag protection for a repo |
 | `EditTeam` | ok | ok | ok | edits a team of an organization |
 | `Follow` | ok | ok | ok | set current user follow the target |
+| `GetActivityPubActor` | ok | ok | ok | returns the instance's Actor (Application) document. |
+| `GetActivityPubActorOutbox` | needs-config | ok | needs-config | returns the instance actor's outbox, an |
+| `GetActivityPubPerson` | ok | needs-config | needs-config | returns the Person actor for the user with the given ID. |
+| `GetActivityPubPersonActivity` | needs-config | needs-config | needs-config | returns a specific activity recorded for the user. |
+| `GetActivityPubPersonActivityNote` | needs-config | needs-config | needs-config | returns the Note object of a specific |
+| `GetActivityPubPersonOutbox` | needs-config | needs-config | needs-config | lists the user's recorded activity (their outbox). |
+| `GetActivityPubRepository` | ok | needs-config | needs-config | returns the Repository actor for the repo with the given ID. |
+| `GetActivityPubRepositoryOutbox` | needs-config | needs-config | needs-config | returns a repository's outbox, an |
 | `GetAnnotatedTag` | ok | ok | ok | get the tag object of an annotated tag (not lightweight tags) of a repository |
 | `GetArchive` | ok | ok | ok | get an archive of a repository by git reference |
 | `GetArchiveReader` | ok | ok | ok | gets a `git archive` for a particular tree-ish git reference |
@@ -217,7 +225,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetRepoTeams` | ok | ok | ok | return teams from a repository |
 | `GetReviewers` | ok | ok | ok | return all users that can be requested to review in this repo |
 | `GetSingleCommit` | ok | ok | ok | returns a single commit |
-| `GetStarredRepos` | ok | ok | ok | returns the repos that the given user has starred |
+| `GetStarredRepos` | ok | ok | known-bug | returns the repos that the given user has starred |
 | `GetTag` | ok | ok | ok | get the tag of a repository |
 | `GetTagProtection` | ok | ok | ok | gets a tag protection |
 | `GetTeam` | ok | ok | ok | gets a team by ID |
@@ -232,7 +240,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `IsCollaborator` | ok | ok | ok | check if a user is a collaborator of a repository |
 | `IsFollowing` | ok | ok | ok | if current user followed the target |
 | `IsPullRequestMerged` | ok | ok | ok | test if one PR is merged to one repository |
-| `IsRepoStarring` | ok | ok | ok | returns whether the authenticated user has starred the repo or not |
+| `IsRepoStarring` | ok | ok | known-bug | returns whether the authenticated user has starred the repo or not |
 | `IsUserFollowing` | ok | ok | ok | if the user followed the target |
 | `IssueSubscribe` | ok | ok | ok | subscribe current user to an issue |
 | `IssueUnSubscribe` | ok | ok | ok | unsubscribe current user from an issue |
@@ -298,7 +306,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoMilestones` | ok | ok | ok | list all the milestones of one repository |
 | `ListRepoNotifications` | ok | ok | ok | list users's notification threads on a specific repo |
 | `ListRepoPullRequests` | ok | ok | ok | list PRs of one repository |
-| `ListRepoStargazers` | ok | ok | ok | list a repository's stargazers |
+| `ListRepoStargazers` | ok | ok | known-bug | list a repository's stargazers |
 | `ListRepoTags` | ok | ok | ok | list all the branches of one repository |
 | `ListRepoTopics` | ok | ok | ok | list all repository's topics |
 | `ListRepoTrackedTimes` | ok | ok | ok | list tracked times of a repository |
@@ -329,6 +337,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `SearchOrgTeams` | ok | ok | ok | search for teams in a org. |
 | `SearchRepos` | ok | ok | ok | searches for repositories matching the given filters |
 | `SearchUsers` | ok | ok | ok | finds users by query |
+| `SendActivityPubActorInbox` | ok | negative-only | negative-only | delivers an Activity to the instance actor's inbox. |
+| `SendActivityPubPersonInbox` | needs-config | needs-config | needs-config | delivers an Activity to a user's inbox. |
+| `SendActivityPubRepositoryInbox` | needs-config | needs-config | needs-config | delivers an Activity to a repository's inbox. |
 | `ServerVersion` | ok | ok | ok | returns the version of the server |
 | `SetBasicAuth` | no-http | no-http | no-http | sets username and password |
 | `SetContext` | no-http | no-http | no-http | set default context witch is used for http requests |
@@ -339,13 +350,13 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `SetSudo` | no-http | no-http | no-http | sets username to impersonate. |
 | `SetUserAgent` | no-http | no-http | no-http | sets the user-agent to send with every request. |
 | `SignRequest` | no-http | no-http | no-http | signs a HTTP request |
-| `StarRepo` | ok | ok | ok | star specified repo as the authenticated user |
+| `StarRepo` | ok | ok | known-bug | star specified repo as the authenticated user |
 | `StartIssueStopWatch` | ok | ok | ok | starts a stopwatch for an existing issue for a given |
 | `StopIssueStopWatch` | ok | ok | ok | stops an existing stopwatch for an issue in a given |
 | `SubmitPullReview` | ok | ok | ok | submit a pending review to an pull request |
 | `TransferRepo` | ok | ok | ok | transfers the ownership of a repository |
 | `UnDismissPullReview` | ok | ok | ok | cancel to dismiss a review for a pull request |
-| `UnStarRepo` | ok | ok | ok | remove star to specified repo as the authenticated user |
+| `UnStarRepo` | ok | ok | known-bug | remove star to specified repo as the authenticated user |
 | `UnWatchRepo` | ok | ok | ok | stop to watch a repository |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |
 | `UnlinkPackage` | ok | ok | ok | unlinks a package from a repository |

@@ -43,7 +43,7 @@ func (c *Client) SendActivityPubActorInbox(activity ActivityPubObject) (*Respons
 // empty.
 func (c *Client) GetActivityPubActorOutbox() (*ActivityPubObject, *Response, error) {
 	obj := new(ActivityPubObject)
-	resp, err := c.getParsedResponse("POST", "/activitypub/actor/outbox", nil, nil, obj)
+	resp, err := c.getParsedResponse("GET", "/activitypub/actor/outbox", nil, nil, obj)
 	return obj, resp, err
 }
 
@@ -68,7 +68,7 @@ func (c *Client) SendActivityPubRepositoryInbox(repoID int64, activity ActivityP
 // ActivityStreams OrderedCollection.
 func (c *Client) GetActivityPubRepositoryOutbox(repoID int64) (*ActivityPubObject, *Response, error) {
 	obj := new(ActivityPubObject)
-	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/activitypub/repository-id/%d/outbox", repoID), nil, nil, obj)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/activitypub/repository-id/%d/outbox", repoID), nil, nil, obj)
 	return obj, resp, err
 }
 

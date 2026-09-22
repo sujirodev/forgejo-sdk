@@ -19,7 +19,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AddEmail` | ok | ok | ok | add one email to current user with options |
 | `AddIssueLabels` | ok | ok | ok | add one or more labels to one issue |
 | `AddIssueSubscription` | ok | ok | ok | Subscribe user to issue |
-| `AddRepoFlag` | needs-config | needs-config | needs-config | adds a flag to a repository |
+| `AddRepoFlag` | ok | ok | ok | adds a flag to a repository |
 | `AddRepoTeam` | ok | ok | ok | add a team to a repository |
 | `AddRepoTopic` | ok | ok | ok | adds a topic to a repo's topics list |
 | `AddTeamMember` | ok | ok | ok | adds a member to a team |
@@ -80,7 +80,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `CheckOrgMembership` | ok | ok | ok | Check if a user is a member of an organization |
 | `CheckOrgQuota` | ok | ok | ok | checks if the organization is over quota for the given subject. |
 | `CheckPublicOrgMembership` | ok | ok | ok | Check if a user is a member of an organization |
-| `CheckRepoFlag` | needs-config | needs-config | needs-config | checks whether a repository has a given flag |
+| `CheckRepoFlag` | ok | ok | ok | checks whether a repository has a given flag |
 | `CheckRepoTeam` | ok | ok | ok | check if team is assigned to repo by name and return it. |
 | `CheckRepoWatch` | ok | ok | ok | check if the current user is watching a repo |
 | `CheckServerVersionConstraint` | no-http | no-http | no-http | validates that the login's server satisfies a |
@@ -129,7 +129,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteAccessToken` | ok | ok | ok | delete token, identified by ID and if not available by name. |
 | `DeleteAccessTokenByID` | ok | ok | ok | deletes a token identified by its ID. |
 | `DeleteAccessTokenByName` | ok | ok | ok | deletes a token identified by its name. |
-| `DeleteAllRepoFlags` | needs-config | needs-config | needs-config | removes all flags from a repository |
+| `DeleteAllRepoFlags` | ok | ok | ok | removes all flags from a repository |
 | `DeleteBranchProtection` | ok | ok | ok | deletes a branch protection for a repo |
 | `DeleteCollaborator` | ok | ok | ok | remove a collaborator from a repository |
 | `DeleteDeployKey` | ok | ok | ok | delete deploy key with key id |
@@ -169,7 +169,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteRepoActionVariable` | ok | ok | ok | deletes an action variable from a repository |
 | `DeleteRepoAvatar` | ok | ok | ok | deletes a repository's avatar |
 | `DeleteRepoBranch` | ok | ok | ok | delete a branch in a repository |
-| `DeleteRepoFlag` | needs-config | needs-config | needs-config | removes a flag from a repository |
+| `DeleteRepoFlag` | ok | ok | ok | removes a flag from a repository |
 | `DeleteRepoGitHook` | ok | ok | ok | delete one Git hook from a repository |
 | `DeleteRepoHook` | ok | ok | ok | delete one hook from a repository, with hook id |
 | `DeleteRepoTopic` | ok | ok | ok | deletes a topic from repo's topics list |
@@ -397,7 +397,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoActivityFeeds` | ok | ok | ok | lists a repository's activity feeds |
 | `ListRepoBranches` | ok | ok | ok | list all the branches of one repository |
 | `ListRepoCommits` | ok | ok | ok | return list of commits from a repo |
-| `ListRepoFlags` | needs-config | needs-config | needs-config | lists the flags of a repository |
+| `ListRepoFlags` | ok | ok | ok | lists the flags of a repository |
 | `ListRepoGitHooks` | ok | ok | ok | list all the Git hooks of one repository |
 | `ListRepoHooks` | ok | ok | ok | list all the hooks of one repository |
 | `ListRepoIssueComments` | ok | ok | ok | list comments for a given repo. |
@@ -447,7 +447,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `RenderMarkdown` | ok | ok | ok | renders a markdown document as HTML. |
 | `RenderMarkdownRaw` | ok | ok | ok | renders a raw markdown document (plain text, not |
 | `RenderMarkup` | ok | ok | ok | renders a markup document (markdown, or another markup |
-| `ReplaceAllRepoFlags` | needs-config | needs-config | needs-config | replaces all the flags of a repository |
+| `ReplaceAllRepoFlags` | ok | ok | ok | replaces all the flags of a repository |
 | `ReplaceIssueLabels` | ok | ok | ok | replace old labels of issue with new labels |
 | `ResetIssueTime` | ok | ok | ok | reset tracked time of a single issue for a given repository |
 | `RunCronTasks` | ok | ok | ok | run a cron task |

@@ -153,3 +153,15 @@ func (opt *CreateVariableOption) Validate() error {
 	}
 	return nil
 }
+
+// GetActionsRun returns the workflow run associated with the token used to
+// authenticate the request. Unlike the rest of the Client's methods, this
+// one must be authenticated with the automatic actions token
+// (`forgejo.token` / `ACTIONS_RUNTIME_TOKEN` in a running job, set via
+// SetToken like any other token) rather than a personal access token; the
+// token is tied to the job and only valid while it is still running.
+func (c *Client) GetActionsRun() (*ActionRun, *Response, error) {
+	run := new(ActionRun)
+	resp, err := c.getParsedResponse("GET", "/actions/run", jsonHeader, nil, run)
+	return run, resp, err
+}

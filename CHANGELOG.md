@@ -1,5 +1,17 @@
 # Changelog
 
+## [v3.2.2](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.2) - 2026-09-22
+
+* MISC
+  * SDK: implementar as 11 rotas de ActivityPub (Forgejo 16.0.5) (#45)
+
+
+## [v3.2.1](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.1) - 2026-09-22
+
+* MISC
+  * SDK: cobrir rotas de usuário — avatar, bloqueio, GPG e runners pessoais (#44)
+
+
 ## [v3.2.0](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.0) - 2026-09-22
 
 * MISC

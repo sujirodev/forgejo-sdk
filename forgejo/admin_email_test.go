@@ -19,7 +19,10 @@ func TestAdminListAllEmails(t *testing.T) {
 	me, _, err := c.GetMyUserInfo()
 	require.NoError(t, err)
 
-	emails, resp, err := c.AdminListAllEmails(AdminListAllEmailsOptions{})
+	// A large PageSize, not the server's DEFAULT_PAGING_NUM: this suite
+	// creates hundreds of users across its full run, and the admin's own
+	// email can land past the first page of an unpaginated request.
+	emails, resp, err := c.AdminListAllEmails(AdminListAllEmailsOptions{ListOptions: ListOptions{PageSize: 500}})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 

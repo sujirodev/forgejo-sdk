@@ -72,9 +72,10 @@ func TestAdminListActionRunJobs(t *testing.T) {
 		return
 	}
 
-	// jobs may be empty on a fresh instance, but the call itself must succeed.
-	jobs, resp, err := c.AdminListActionRunJobs(ListActionJobsOption{})
+	// jobs may be empty (decoded as a nil slice, when the server answers
+	// an empty list as JSON null) on a fresh instance, but the call itself
+	// must succeed.
+	_, resp, err := c.AdminListActionRunJobs(ListActionJobsOption{})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.NotNil(t, jobs)
 }

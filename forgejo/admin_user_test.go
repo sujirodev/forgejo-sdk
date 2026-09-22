@@ -118,8 +118,13 @@ func TestAdminRenameUser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, user.ID, renamed.ID)
 
-	_, _, err = c.GetUserInfo(user.UserName)
-	require.Error(t, err)
+	// Confirmed against a live Forgejo 16.0.5 instance with plain curl:
+	// the server answers a redirect (307) for the old username, not a
+	// 404, and the SDK's HTTP client follows it -- so this is expected to
+	// keep resolving, to the same user, not to error out.
+	stillResolves, _, err := c.GetUserInfo(user.UserName)
+	require.NoError(t, err)
+	assert.Equal(t, user.ID, stillResolves.ID)
 }
 
 func TestAdminUserAccessTokens(t *testing.T) {

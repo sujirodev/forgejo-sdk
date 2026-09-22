@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Fails when an exported *Client method (a "route": one HTTP call to the
 # Forgejo API) has no test referencing it. Without --strict, any *_test.go
-# call site `.Method(` counts. With --strict, the method must additionally
-# be called from inside a TestUnit_* function AND from inside a non-unit
-# (integration) Test* function.
+# call site `.Method(` counts, and so does a method-value reference
+# `(*Client).Method` (the table-driven style used to share test logic across
+# structurally identical endpoints, e.g. issue_dependency_test.go). With
+# --strict, the method must additionally be called from inside a TestUnit_*
+# function AND from inside a non-unit (integration) Test* function.
 set -euo pipefail
 cd "$(dirname "$0")/../forgejo"
 
@@ -21,13 +23,14 @@ is_exception() {
 
 test_files=(*_test.go)
 
-# Prints "1" if $2 is called (`.method(`) from inside a function whose name
-# matches $1 (an ERE anchored to the function line), "0" otherwise.
+# Prints "1" if $2 is referenced (`.method(` or `(*Client).method` as a
+# method value) from inside a function whose name matches $1 (an ERE
+# anchored to the function line), "0" otherwise.
 called_from() {
   local fn_pattern=$1 method=$2
   awk -v fnpat="$fn_pattern" -v m="$method" '
     /^func / { infn = ($0 ~ fnpat) }
-    infn && $0 ~ ("\\." m "\\(") { found = 1 }
+    infn && ($0 ~ ("\\." m "\\(") || $0 ~ ("\\(\\*Client\\)\\." m "([^A-Za-z0-9_]|$)")) { found = 1 }
     END { print found + 0 }
   ' "${test_files[@]}"
 }
@@ -66,14 +69,14 @@ for f in *.go; do
       in_integration_only=$(awk -v m="$m" '
         /^func TestUnit_/ { infn = 0; next }
         /^func Test[A-Za-z0-9_]+/ { infn = 1; next }
-        infn && $0 ~ ("\\." m "\\(") { found = 1 }
+        infn && ($0 ~ ("\\." m "\\(") || $0 ~ ("\\(\\*Client\\)\\." m "([^A-Za-z0-9_]|$)")) { found = 1 }
         END { print found + 0 }
       ' "${test_files[@]}")
       referenced=0
       [ "$in_unit" -ge 1 ] && [ "$in_integration_only" -ge 1 ] && referenced=1
     else
       referenced=0
-      grep -qE "\.$m\(" "${test_files[@]}" && referenced=1
+      grep -qE "\.$m\(|\(\*Client\)\.$m([^A-Za-z0-9_]|\$)" "${test_files[@]}" && referenced=1
     fi
 
     if [ "$referenced" -eq 1 ]; then

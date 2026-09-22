@@ -302,7 +302,11 @@ func (r *Response) parseLinkHeader() {
 	}
 }
 
-func (c *Client) getWebResponse(method, path string, body io.Reader) ([]byte, *Response, error) {
+// getWebResponse issues a request against the web UI (not /api/v1) origin,
+// used by getPullRequestDiffOrPatch's pre-1.13.0 fallback. body is always
+// nil at its only call site (a GET), but kept so the signature stays
+// symmetric with doRequest/doRequestWithContext.
+func (c *Client) getWebResponse(method, path string, body io.Reader) ([]byte, *Response, error) { //nolint:unparam
 	c.mutex.RLock()
 	debug := c.debug
 	if debug {

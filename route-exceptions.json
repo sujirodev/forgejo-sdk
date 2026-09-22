@@ -131,6 +131,26 @@
       "since": ""
     },
     {
+      "route": "AdminAdoptRepository",
+      "versions": [
+        "*"
+      ],
+      "reason": "negative-only",
+      "detail": "adopts a directory that exists under the server's repository root on disk but isn't tracked in the database; there's no way to create that state through the REST API, so the test can only exercise the request against a path guaranteed not to exist (a 404)",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/60",
+      "since": ""
+    },
+    {
+      "route": "AdminDeleteUnadoptedRepository",
+      "versions": [
+        "*"
+      ],
+      "reason": "negative-only",
+      "detail": "same missing setup as AdminAdoptRepository -- no way to create an unadopted directory through the API",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/60",
+      "since": ""
+    },
+    {
       "route": "StarRepo",
       "versions": [
         "latest-stable"

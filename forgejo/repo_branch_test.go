@@ -141,6 +141,30 @@ func TestRepoBranchProtection(t *testing.T) {
 	assert.Len(t, bpl, 1)
 }
 
+func TestUpdateRepoBranch(t *testing.T) {
+	log.Println("== TestUpdateRepoBranch ==")
+	c := newTestClient()
+	repoName := "UpdateBranch"
+
+	repo := prepareBranchTest(t, c, repoName)
+	if repo == nil {
+		return
+	}
+
+	_, err := c.UpdateRepoBranch(repo.Owner.UserName, repo.Name, "update", UpdateBranchRepoOption{Name: "updated"})
+	require.NoError(t, err)
+
+	b, _, err := c.GetRepoBranch(repo.Owner.UserName, repo.Name, "updated")
+	require.NoError(t, err)
+	assert.Equal(t, "updated", b.Name)
+
+	_, _, err = c.GetRepoBranch(repo.Owner.UserName, repo.Name, "update")
+	require.Error(t, err)
+
+	_, err = c.UpdateRepoBranch(repo.Owner.UserName, repo.Name, "does-not-exist", UpdateBranchRepoOption{Name: "whatever"})
+	require.Error(t, err)
+}
+
 func prepareBranchTest(t *testing.T, c *Client, repoName string) *Repository {
 	origRepo, err := createTestRepo(t, repoName, c)
 	if !assert.NoError(t, err) { //nolint:testifylint

@@ -189,6 +189,49 @@ func TestPullReview(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestPullReviewComments(t *testing.T) {
+	log.Println("== TestPullReviewComments ==")
+	c := newTestClient()
+
+	repoName := "ReviewComments"
+	repo, pull, submitter, reviewer, success := preparePullReviewTest(t, c, repoName)
+	if !success {
+		return
+	}
+
+	r, _, err := c.CreatePullReview(repo.Owner.UserName, repo.Name, pull.Index, CreatePullReviewOptions{
+		State: ReviewStateComment,
+		Body:  "let's discuss this",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, r)
+
+	rc, _, err := c.CreatePullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, CreatePullReviewCommentOptions{
+		Path:       "WOW-file",
+		Body:       "why this name?",
+		NewLineNum: 1,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, rc)
+	assert.Equal(t, "why this name?", rc.Body)
+
+	got, _, err := c.GetPullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, rc.ID)
+	require.NoError(t, err)
+	assert.Equal(t, rc.ID, got.ID)
+	assert.Equal(t, rc.Body, got.Body)
+
+	_, err = c.DeletePullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, rc.ID)
+	require.NoError(t, err)
+
+	_, _, err = c.GetPullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, rc.ID)
+	require.Error(t, err)
+
+	_, err = c.AdminDeleteUser(reviewer.UserName)
+	require.NoError(t, err)
+	_, err = c.AdminDeleteUser(submitter.UserName)
+	require.NoError(t, err)
+}
+
 func preparePullReviewTest(t *testing.T, c *Client, repoName string) (*Repository, *PullRequest, *User, *User, bool) {
 	repo, err := createTestRepo(t, repoName, c)
 	if !assert.NoError(t, err) { //nolint

@@ -212,11 +212,21 @@ func TestRepos_ListMyListUserListOrg(t *testing.T) {
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
-	myRepos, _, err := c.ListMyRepos(ListReposOptions{})
+	// By the time this test runs, the account may already own more repos
+	// than fit in a single page: the server caps the response to its own
+	// max page size (confirmed via curl: a requested limit=1000 is silently
+	// clamped), regardless of what the SDK asks for, so a single call can't
+	// be trusted to return everything. Page through until a short page ends
+	// the listing.
+	myRepos, err := listAllRepos(func(opt ListOptions) ([]*Repository, *Response, error) {
+		return c.ListMyRepos(ListReposOptions{ListOptions: opt})
+	})
 	require.NoError(t, err)
 	assert.True(t, containsRepoName(myRepos, repo.Name))
 
-	userRepos, _, err := c.ListUserRepos(repo.Owner.UserName, ListReposOptions{})
+	userRepos, err := listAllRepos(func(opt ListOptions) ([]*Repository, *Response, error) {
+		return c.ListUserRepos(repo.Owner.UserName, ListReposOptions{ListOptions: opt})
+	})
 	require.NoError(t, err)
 	assert.True(t, containsRepoName(userRepos, repo.Name))
 

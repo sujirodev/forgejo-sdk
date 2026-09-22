@@ -5,11 +5,37 @@
 package forgejo
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestGetGPGKeyVerificationToken(t *testing.T) {
+	log.Println("== TestGetGPGKeyVerificationToken ==")
+	c := newTestClient()
+
+	token, resp, err := c.GetGPGKeyVerificationToken()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.NotEmpty(t, token)
+}
+
+// TestVerifyGPGKeyRejectsBogusSignature only exercises the failure path.
+// A full round trip would need a real GPG keypair to sign the verification
+// token from GetGPGKeyVerificationToken, which this environment does not
+// have available, so it is not live-verified here.
+func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
+	log.Println("== TestVerifyGPGKeyRejectsBogusSignature ==")
+	c := newTestClient()
+
+	_, _, err := c.VerifyGPGKey(VerifyGPGKeyOption{
+		KeyID:     "0000000000000000",
+		Signature: "not a real signature",
+	})
+	require.Error(t, err)
+}
 
 // TestUserGPGKeys uses the fixture in testdata/gpg_test01.asc, whose UID
 // email matches the CI/local test instance's admin account

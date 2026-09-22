@@ -145,3 +145,22 @@ func (c *Client) CreateBranch(owner, repo string, opt CreateBranchOption) (*Bran
 	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/repos/%s/%s/branches", owner, repo), jsonHeader, bytes.NewReader(body), branch)
 	return branch, resp, err
 }
+
+// UpdateBranchRepoOption options when renaming a branch
+type UpdateBranchRepoOption struct {
+	// New branch name
+	Name string `json:"name"`
+}
+
+// UpdateRepoBranch renames a branch of a repository
+func (c *Client) UpdateRepoBranch(owner, repo, branch string, opt UpdateBranchRepoOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo, &branch); err != nil {
+		return nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("PATCH", fmt.Sprintf("/repos/%s/%s/branches/%s", owner, repo, branch), jsonHeader, bytes.NewReader(body))
+	return resp, err
+}

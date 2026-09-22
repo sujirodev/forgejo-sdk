@@ -108,7 +108,7 @@ test-unit: ## Run the client's own unit tests (no Forgejo instance needed).
 test: ## Run the integration test suite (requires a running Forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
-	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \
+	    cd forgejo && $(GO) test -race -timeout 20m -cover -coverprofile coverage.out; \
 	fi
 
 .PHONY: check-forgejo-version
@@ -192,12 +192,15 @@ endif
 	echo "DB_TYPE = sqlite3" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[repository]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ROOT = ${WORK_DIR}/test/data/" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "ENABLE_FLAGS = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[server]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ROOT_URL = ${FORGEJO_SDK_TEST_URL}" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[quota]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ENABLED = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[migrations]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ALLOW_LOCALNETWORKS = true" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "[federation]" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "ENABLED = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	${WORK_DIR}/test/forgejo-main migrate -c ${WORK_DIR}/test/conf/app.ini; \
 	${WORK_DIR}/test/forgejo-main admin user create \
 		--username=${FORGEJO_SDK_TEST_USERNAME} \
@@ -228,12 +231,14 @@ endif
 		-e FORGEJO__security__INTERNAL_TOKEN=$$internal_token \
 		-e FORGEJO__security__PASSWORD_COMPLEXITY=off \
 		-e FORGEJO__security__DISABLE_GIT_HOOKS=false \
+		-e FORGEJO__repository__ENABLE_FLAGS=true \
 		-e FORGEJO__database__DB_TYPE=sqlite3 \
 		-e FORGEJO__server__ROOT_URL=${FORGEJO_SDK_TEST_URL} \
 		-e FORGEJO__service__DISABLE_REGISTRATION=false \
 		-e FORGEJO__admin__DISABLE_REGULAR_ORG_CREATION=false \
 		-e FORGEJO__quota__ENABLED=true \
 		-e FORGEJO__migrations__ALLOW_LOCALNETWORKS=true \
+		-e FORGEJO__federation__ENABLED=true \
 		codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} > /dev/null 2>&1 || true
 	@echo "Waiting for Forgejo to start..."
 	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do \

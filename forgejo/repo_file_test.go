@@ -149,6 +149,103 @@ func TestFileCreateUpdateGet(t *testing.T) {
 	assert.Equal(t, "TGluZSAxOiBXaGF0CkxpbmUgMjogQQpMaW5lIDM6IEJlYXV0aWZ1bApMaW5lIDQ6IFdvcmxkCg==", base64.StdEncoding.EncodeToString(patchedFileRaw))
 }
 
+func TestGetContentsList(t *testing.T) {
+	log.Println("== TestGetContentsList ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "ContentsList", c)
+	require.NoError(t, err)
+
+	dir, resp, err := c.GetContentsList(repo.Owner.UserName, repo.Name, "")
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, dir, 3)
+
+	names := make([]string, len(dir))
+	for i, entry := range dir {
+		names[i] = entry.Name
+	}
+	assert.ElementsMatch(t, []string{"README.md", "LICENSE", ".gitignore"}, names)
+
+	_, resp, err = c.GetContentsList(repo.Owner.UserName, repo.Name, "no-such-ref")
+	require.Error(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+}
+
+func TestChangeFiles(t *testing.T) {
+	log.Println("== TestChangeFiles ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "ChangeFilesBatch", c)
+	require.NoError(t, err)
+
+	fr, resp, err := c.ChangeFiles(repo.Owner.UserName, repo.Name, ChangeFilesOptions{
+		FileOptions: FileOptions{
+			Message:    "batch change",
+			BranchName: "main",
+		},
+		Files: []*ChangeFileOperation{
+			{
+				Operation: "create",
+				Path:      "batch-1",
+				Content:   "ZmlsZUEK",
+			},
+			{
+				Operation: "create",
+				Path:      "batch-2",
+				Content:   "ZmlsZUIK",
+			},
+		},
+	})
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	require.Len(t, fr.Files, 2)
+
+	raw1, _, err := c.GetFile(repo.Owner.UserName, repo.Name, "main", "batch-1")
+	require.NoError(t, err)
+	assert.Equal(t, "ZmlsZUEK", base64.StdEncoding.EncodeToString(raw1))
+
+	fr, _, err = c.ChangeFiles(repo.Owner.UserName, repo.Name, ChangeFilesOptions{
+		FileOptions: FileOptions{
+			Message:    "batch delete",
+			BranchName: "main",
+		},
+		Files: []*ChangeFileOperation{
+			{
+				Operation: "delete",
+				Path:      "batch-1",
+				SHA:       fr.Files[0].SHA,
+			},
+		},
+	})
+	require.NoError(t, err)
+	assert.NotNil(t, fr)
+
+	_, resp, err = c.GetFile(repo.Owner.UserName, repo.Name, "main", "batch-1")
+	require.Error(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+}
+
+func TestGetEditorConfig(t *testing.T) {
+	log.Println("== TestGetEditorConfig ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "EditorConfig", c)
+	require.NoError(t, err)
+
+	_, _, err = c.CreateFile(repo.Owner.UserName, repo.Name, ".editorconfig", CreateFileOptions{
+		FileOptions: FileOptions{
+			Message: "add editorconfig",
+		},
+		// root = true\n[M]\nindent_style = space\nindent_size = 2\n
+		Content: "cm9vdCA9IHRydWUKW01dCmluZGVudF9zdHlsZSA9IHNwYWNlCmluZGVudF9zaXplID0gMgo=",
+	})
+	require.NoError(t, err)
+
+	def, resp, err := c.GetEditorConfig(repo.Owner.UserName, repo.Name, "M", "main")
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "space", def["indent_style"])
+	assert.Equal(t, "2", def["indent_size"])
+}
+
 func TestGetFileReader(t *testing.T) {
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true, Readme: "Default"})

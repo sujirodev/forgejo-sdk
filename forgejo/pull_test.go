@@ -162,6 +162,51 @@ func TestPull(t *testing.T) {
 	assert.Equal(t, "create a file", pr.Title)
 }
 
+func TestPullUpdateAndPin(t *testing.T) {
+	log.Println("== TestPullUpdateAndPin ==")
+	c := newTestClient()
+	user, _, err := c.GetMyUserInfo()
+	require.NoError(t, err)
+
+	repoName := "repo_pull_update_test"
+	forkOrg := "ForkOrgUpdate"
+	if !preparePullTest(t, c, repoName, forkOrg) {
+		return
+	}
+
+	pinned, _, err := c.ListPinnedPullRequests(user.UserName, repoName)
+	require.NoError(t, err)
+	assert.Empty(t, pinned)
+
+	pull, _, err := c.CreatePullRequest(c.username, repoName, CreatePullRequestOption{
+		Base:  "main",
+		Head:  forkOrg + ":new_file",
+		Title: "update me",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, pull)
+
+	// give the base branch a new commit so the update has something to do
+	license, _, err := c.GetContents(user.UserName, repoName, "main", "LICENSE")
+	require.NoError(t, err)
+	_, _, err = c.UpdateFile(user.UserName, repoName, "LICENSE", UpdateFileOptions{
+		FileOptions: FileOptions{
+			Message:    "advance base",
+			BranchName: "main",
+		},
+		SHA:     license.SHA,
+		Content: "TmV3IExpY2Vuc2UgQ29udGVudAo=",
+	})
+	require.NoError(t, err)
+
+	_, err = c.UpdatePullRequest(user.UserName, repoName, pull.Index, UpdatePullRequestOptions{Style: "merge"})
+	require.NoError(t, err)
+
+	// there is nothing scheduled to auto merge, so cancelling it must fail
+	_, err = c.CancelScheduledAutoMerge(user.UserName, repoName, pull.Index)
+	require.Error(t, err)
+}
+
 func preparePullTest(t *testing.T, c *Client, repoName, forkOrg string) bool {
 	_, _ = c.DeleteRepo(forkOrg, repoName)
 	_, _ = c.DeleteRepo(c.username, repoName)

@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // ListRepoTopicsOptions options for listing repo's topics
@@ -69,4 +70,37 @@ func (c *Client) DeleteRepoTopic(user, repo, topic string) (*Response, error) {
 	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/topics/%s", user, repo, topic), nil, nil)
 	return resp, err
+}
+
+// TopicResponse for returning topics
+type TopicResponse struct {
+	ID        int64     `json:"id"`
+	Name      string    `json:"topic_name"`
+	RepoCount int       `json:"repo_count"`
+	Created   time.Time `json:"created"`
+	Updated   time.Time `json:"updated"`
+}
+
+// SearchTopicsOptions options for searching topics
+type SearchTopicsOptions struct {
+	ListOptions
+	// Keyword to search for
+	Query string
+}
+
+// QueryEncode turns options into querystring argument
+func (opt *SearchTopicsOptions) QueryEncode() string {
+	query := opt.getURLQuery()
+	query.Add("q", opt.Query)
+	return query.Encode()
+}
+
+// SearchTopics searches for topics by keyword
+func (c *Client) SearchTopics(opt SearchTopicsOptions) ([]*TopicResponse, *Response, error) {
+	opt.setDefaults()
+	result := struct {
+		Topics []*TopicResponse `json:"topics"`
+	}{}
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/topics/search?%s", opt.QueryEncode()), nil, nil, &result)
+	return result.Topics, resp, err
 }

@@ -89,3 +89,19 @@ func (c *Client) UnWatchRepo(owner, repo string) (*Response, error) {
 	}
 	return resp, fmt.Errorf("unexpected Status: %d", status)
 }
+
+// ListRepoSubscribersOptions options for listing a repository's subscribers
+type ListRepoSubscribersOptions struct {
+	ListOptions
+}
+
+// ListRepoSubscribers list a repo's subscribers (i.e. watchers)
+func (c *Client) ListRepoSubscribers(owner, repo string, opt ListRepoSubscribersOptions) ([]*User, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+	opt.setDefaults()
+	users := make([]*User, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/subscribers?%s", owner, repo, opt.getURLQuery().Encode()), nil, nil, &users)
+	return users, resp, err
+}

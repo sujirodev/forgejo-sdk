@@ -96,3 +96,51 @@ func TestGetUserActionRunnerRegistrationToken(t *testing.T) {
 		assert.NotEmpty(t, token.Token)
 	}
 }
+
+func TestUserRunners(t *testing.T) {
+	log.Println("== TestUserRunners ==")
+	c := newTestClient()
+
+	// User-level Actions runner CRUD was added in Forgejo 12.0.0, the same
+	// rollout as the repo-level Actions run routes; below that the SDK's
+	// guard refuses the call, which is the documented behavior and worth
+	// asserting.
+	if !serverAtLeast(t, c, "12.0.0") {
+		_, _, err := c.RegisterUserRunner(RegisterRunnerOption{Name: "TestUserRunner"})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
+	runnerName := "TestUserRunner"
+
+	registered, resp, err := c.RegisterUserRunner(RegisterRunnerOption{Name: runnerName})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.NotZero(t, registered.ID)
+	assert.NotEmpty(t, registered.Token)
+
+	runners, resp, err := c.GetUserRunners(ListActionRunnersOptions{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	var found *ActionRunner
+	for _, r := range runners {
+		if r.ID == registered.ID {
+			found = r
+		}
+	}
+	require.NotNil(t, found, "registered runner should show up in GetUserRunners")
+	assert.Equal(t, runnerName, found.Name)
+
+	got, resp, err := c.GetUserRunner(registered.ID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, runnerName, got.Name)
+
+	resp, err = c.DeleteUserRunner(registered.ID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	_, resp, err = c.GetUserRunner(registered.ID)
+	require.Error(t, err)
+	require.NotNil(t, resp)
+}

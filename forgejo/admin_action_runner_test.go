@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminActionRunners(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminActionRunners ==")
 	c := newTestClient()
 
@@ -63,6 +64,7 @@ func TestAdminActionRunners(t *testing.T) {
 }
 
 func TestAdminListActionRunJobs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminListActionRunJobs ==")
 	c := newTestClient()
 

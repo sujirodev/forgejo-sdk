@@ -19,6 +19,7 @@ import (
 // TestIssue is main func witch call all Tests for Issue API
 // (to make sure they are on correct order)
 func TestIssueSubscription(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestIssueSubscription ==")
 
 	c := newTestClient()
@@ -57,6 +58,7 @@ func TestIssueSubscription(t *testing.T) {
 }
 
 func TestIssueSubscription_AddDeleteOtherUser(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	issue := createTestIssue(t, c, repo.Name, "Subscription target", "", nil, nil, 0, nil, false, false)

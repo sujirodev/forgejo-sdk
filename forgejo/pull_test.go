@@ -17,6 +17,7 @@ import (
 )
 
 func TestPull(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestPull ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -163,6 +164,7 @@ func TestPull(t *testing.T) {
 }
 
 func TestPullUpdateAndPin(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestPullUpdateAndPin ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()

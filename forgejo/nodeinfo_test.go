@@ -15,6 +15,7 @@ import (
 // TestGetNodeInfo needs [federation] ENABLED = true on the test instance
 // (see TESTING.md, "Server configuration"); without it GetNodeInfo 404s.
 func TestGetNodeInfo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetNodeInfo ==")
 	c := newTestClient()
 

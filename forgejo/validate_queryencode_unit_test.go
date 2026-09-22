@@ -35,11 +35,13 @@ func newUnitVersionedClient(t *testing.T, version string) *Client {
 // --- action.go ---
 
 func TestUnit_ListActionRunnersOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	assert.NotContains(t, (&ListActionRunnersOptions{}).QueryEncode(), "visible")
 	assert.Contains(t, (&ListActionRunnersOptions{Visible: true}).QueryEncode(), "visible=true")
 }
 
 func TestUnit_ListActionRunsOption_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q := (&ListActionRunsOption{Event: "push", Status: "success", RunNumber: 5, HeadSHA: "abc123"}).QueryEncode()
 	for _, want := range []string{"event=push", "status=success", "run_number=5", "head_sha=abc123"} {
 		assert.Contains(t, q, want)
@@ -51,6 +53,7 @@ func TestUnit_ListActionRunsOption_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_CreateVariableOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, (&CreateVariableOption{}).Validate(), "name required")
 	require.EqualError(t, (&CreateVariableOption{Name: "n"}).Validate(), "data required")
 	require.NoError(t, (&CreateVariableOption{Name: "n", Data: "v"}).Validate())
@@ -59,6 +62,7 @@ func TestUnit_CreateVariableOption_Validate(t *testing.T) {
 // --- admin_user.go ---
 
 func TestUnit_CreateUserOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateUserOption{}.Validate(), "email is empty")
 	require.EqualError(t, CreateUserOption{Email: "a@b.c"}.Validate(), "username is empty")
 	require.NoError(t, CreateUserOption{Email: "a@b.c", Username: "u"}.Validate())
@@ -67,6 +71,7 @@ func TestUnit_CreateUserOption_Validate(t *testing.T) {
 // --- hook.go ---
 
 func TestUnit_CreateHookOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateHookOption{}.Validate(), "hook type needed")
 	require.NoError(t, CreateHookOption{Type: "gitea"}.Validate())
 }
@@ -74,6 +79,7 @@ func TestUnit_CreateHookOption_Validate(t *testing.T) {
 // --- issue.go ---
 
 func TestUnit_ListIssueOption_QueryEncode(t *testing.T) {
+	t.Parallel()
 	since := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	before := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	opt := &ListIssueOption{
@@ -113,12 +119,14 @@ func TestUnit_ListIssueOption_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_CreateIssueOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateIssueOption{}.Validate(), "title is empty")
 	require.EqualError(t, CreateIssueOption{Title: "   "}.Validate(), "title is empty")
 	require.NoError(t, CreateIssueOption{Title: "ok"}.Validate())
 }
 
 func TestUnit_EditIssueOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.NoError(t, EditIssueOption{}.Validate(), "empty title leaves the field untouched")
 	require.EqualError(t, EditIssueOption{Title: "   "}.Validate(), "title is empty")
 	require.NoError(t, EditIssueOption{Title: "ok"}.Validate())
@@ -127,6 +135,7 @@ func TestUnit_EditIssueOption_Validate(t *testing.T) {
 // --- issue_comment.go ---
 
 func TestUnit_ListRepoIssueCommentOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	since := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	before := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	q, err := url.ParseQuery((&ListRepoIssueCommentOptions{Since: since, Before: before}).QueryEncode())
@@ -139,6 +148,7 @@ func TestUnit_ListRepoIssueCommentOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_ListIssueCommentOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	since := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	q, err := url.ParseQuery((&ListIssueCommentOptions{Since: since}).QueryEncode())
 	require.NoError(t, err)
@@ -147,11 +157,13 @@ func TestUnit_ListIssueCommentOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_CreateIssueCommentOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateIssueCommentOption{}.Validate(), "body is empty")
 	require.NoError(t, CreateIssueCommentOption{Body: "ok"}.Validate())
 }
 
 func TestUnit_EditIssueCommentOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, EditIssueCommentOption{}.Validate(), "body is empty")
 	require.NoError(t, EditIssueCommentOption{Body: "ok"}.Validate())
 }
@@ -159,6 +171,7 @@ func TestUnit_EditIssueCommentOption_Validate(t *testing.T) {
 // --- issue_label.go ---
 
 func TestUnit_CreateLabelOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateLabelOption{Color: "zzzzzz", Name: "x"}.Validate(), "invalid color format")
 	require.EqualError(t, CreateLabelOption{Color: "00aabb", Name: "  "}.Validate(), "empty name not allowed")
 	require.NoError(t, CreateLabelOption{Color: "#00aabb", Name: "bug"}.Validate())
@@ -166,6 +179,7 @@ func TestUnit_CreateLabelOption_Validate(t *testing.T) {
 }
 
 func TestUnit_EditLabelOption_Validate(t *testing.T) {
+	t.Parallel()
 	badColor := "zzzzzz"
 	require.EqualError(t, EditLabelOption{Color: &badColor}.Validate(), "invalid color format")
 	goodColor := "#00aabb"
@@ -180,6 +194,7 @@ func TestUnit_EditLabelOption_Validate(t *testing.T) {
 // --- issue_milestone.go ---
 
 func TestUnit_ListMilestoneOption_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&ListMilestoneOption{State: StateClosed, Name: "v1"}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "closed", q.Get("state"))
@@ -190,11 +205,13 @@ func TestUnit_ListMilestoneOption_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_CreateMilestoneOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateMilestoneOption{}.Validate(), "title is empty")
 	require.NoError(t, CreateMilestoneOption{Title: "v1"}.Validate())
 }
 
 func TestUnit_EditMilestoneOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.NoError(t, EditMilestoneOption{}.Validate())
 	require.EqualError(t, EditMilestoneOption{Title: "   "}.Validate(), "title is empty")
 	require.NoError(t, EditMilestoneOption{Title: "v1"}.Validate())
@@ -203,6 +220,7 @@ func TestUnit_EditMilestoneOption_Validate(t *testing.T) {
 // --- issue_tracked_time.go ---
 
 func TestUnit_ListTrackedTimesOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	since := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	before := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	q, err := url.ParseQuery((&ListTrackedTimesOptions{Since: since, Before: before, User: "alice"}).QueryEncode())
@@ -214,6 +232,7 @@ func TestUnit_ListTrackedTimesOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_AddTimeOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, AddTimeOption{}.Validate(), "no time to add")
 	require.NoError(t, AddTimeOption{Time: 60}.Validate())
 }
@@ -221,6 +240,7 @@ func TestUnit_AddTimeOption_Validate(t *testing.T) {
 // --- notifications.go ---
 
 func TestUnit_ListNotificationOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	since := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	before := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	opt := &ListNotificationOptions{
@@ -238,6 +258,7 @@ func TestUnit_ListNotificationOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_ListNotificationOptions_Validate(t *testing.T) {
+	t.Parallel()
 	old := newUnitVersionedClient(t, "1.12.0")
 	require.NoError(t, ListNotificationOptions{}.Validate(old), "no status filter never checks the version")
 	require.Error(t, ListNotificationOptions{Status: []NotifyStatus{NotifyStatusUnread}}.Validate(old))
@@ -247,6 +268,7 @@ func TestUnit_ListNotificationOptions_Validate(t *testing.T) {
 }
 
 func TestUnit_MarkNotificationOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	lastRead := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	opt := &MarkNotificationOptions{
 		LastReadAt: lastRead,
@@ -262,6 +284,7 @@ func TestUnit_MarkNotificationOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_MarkNotificationOptions_Validate(t *testing.T) {
+	t.Parallel()
 	old := newUnitVersionedClient(t, "1.12.0")
 	require.NoError(t, MarkNotificationOptions{}.Validate(old))
 	require.Error(t, MarkNotificationOptions{Status: []NotifyStatus{NotifyStatusUnread}}.Validate(old))
@@ -274,6 +297,7 @@ func TestUnit_MarkNotificationOptions_Validate(t *testing.T) {
 // --- org.go ---
 
 func TestUnit_CreateOrgOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateOrgOption{}.Validate(), "empty org name")
 	require.EqualError(t, CreateOrgOption{Name: "acme", Visibility: "bogus"}.Validate(), "invalid visibility option")
 	require.NoError(t, CreateOrgOption{Name: "acme"}.Validate())
@@ -281,6 +305,7 @@ func TestUnit_CreateOrgOption_Validate(t *testing.T) {
 }
 
 func TestUnit_EditOrgOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, EditOrgOption{Visibility: "bogus"}.Validate(), "invalid visibility option")
 	require.NoError(t, EditOrgOption{}.Validate())
 	require.NoError(t, EditOrgOption{Visibility: VisibleTypeLimited}.Validate())
@@ -289,6 +314,7 @@ func TestUnit_EditOrgOption_Validate(t *testing.T) {
 // --- org_action.go ---
 
 func TestUnit_CreateSecretOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, (&CreateSecretOption{}).Validate(), "name required")
 	require.EqualError(t, (&CreateSecretOption{Name: strings.Repeat("a", 256)}).Validate(), "name too long (maximum 255 characters)")
 	require.EqualError(t, (&CreateSecretOption{Name: "bad name!"}).Validate(), "name must contain only alphanumeric characters and underscores")
@@ -301,6 +327,7 @@ func TestUnit_CreateSecretOption_Validate(t *testing.T) {
 // --- org_team.go ---
 
 func TestUnit_CreateTeamOption_Validate(t *testing.T) {
+	t.Parallel()
 	promoted := &CreateTeamOption{Permission: AccessModeOwner, Name: "n"}
 	require.NoError(t, promoted.Validate())
 	assert.Equal(t, AccessModeAdmin, promoted.Permission, "owner is downgraded to admin")
@@ -314,6 +341,7 @@ func TestUnit_CreateTeamOption_Validate(t *testing.T) {
 }
 
 func TestUnit_EditTeamOption_Validate(t *testing.T) {
+	t.Parallel()
 	promoted := &EditTeamOption{Permission: AccessModeOwner, Name: "n"}
 	require.NoError(t, promoted.Validate())
 	assert.Equal(t, AccessModeAdmin, promoted.Permission)
@@ -330,6 +358,7 @@ func TestUnit_EditTeamOption_Validate(t *testing.T) {
 // --- pull.go ---
 
 func TestUnit_ListPullRequestsOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&ListPullRequestsOptions{State: StateClosed, Sort: "oldest", Milestone: 3}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "closed", q.Get("state"))
@@ -341,6 +370,7 @@ func TestUnit_ListPullRequestsOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_EditPullRequestOption_Validate(t *testing.T) {
+	t.Parallel()
 	old := newUnitVersionedClient(t, "1.11.0")
 	require.EqualError(t, EditPullRequestOption{Title: "   "}.Validate(old), "title is empty")
 	require.NoError(t, EditPullRequestOption{}.Validate(old))
@@ -351,6 +381,7 @@ func TestUnit_EditPullRequestOption_Validate(t *testing.T) {
 }
 
 func TestUnit_MergePullRequestOption_Validate(t *testing.T) {
+	t.Parallel()
 	old := newUnitVersionedClient(t, "1.11.0")
 	require.NoError(t, MergePullRequestOption{Style: MergeStyleMerge}.Validate(old))
 	require.Error(t, MergePullRequestOption{Style: MergeStyleSquash}.Validate(old))
@@ -362,6 +393,7 @@ func TestUnit_MergePullRequestOption_Validate(t *testing.T) {
 // --- pull_review.go ---
 
 func TestUnit_CreatePullReviewOptions_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreatePullReviewOptions{}.Validate(), "body is empty")
 	require.NoError(t, CreatePullReviewOptions{State: ReviewStateApproved}.Validate(), "an approval needs no body")
 	require.NoError(t, CreatePullReviewOptions{Body: "lgtm"}.Validate())
@@ -374,12 +406,14 @@ func TestUnit_CreatePullReviewOptions_Validate(t *testing.T) {
 }
 
 func TestUnit_SubmitPullReviewOptions_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, SubmitPullReviewOptions{}.Validate(), "body is empty")
 	require.NoError(t, SubmitPullReviewOptions{State: ReviewStateApproved}.Validate())
 	require.NoError(t, SubmitPullReviewOptions{Body: "lgtm"}.Validate())
 }
 
 func TestUnit_CreatePullReviewComment_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreatePullReviewComment{}.Validate(), "body is empty")
 	require.EqualError(t,
 		CreatePullReviewComment{Body: "x", OldLineNum: 1, NewLineNum: 1}.Validate(),
@@ -391,6 +425,7 @@ func TestUnit_CreatePullReviewComment_Validate(t *testing.T) {
 // --- release.go ---
 
 func TestUnit_ListReleasesOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	isDraft, isPre := true, false
 	q, err := url.ParseQuery((&ListReleasesOptions{IsDraft: &isDraft, IsPreRelease: &isPre}).QueryEncode())
 	require.NoError(t, err)
@@ -400,6 +435,7 @@ func TestUnit_ListReleasesOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_CreateReleaseOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateReleaseOption{}.Validate(), "title is empty")
 	require.NoError(t, CreateReleaseOption{Title: "v1"}.Validate())
 }
@@ -407,6 +443,7 @@ func TestUnit_CreateReleaseOption_Validate(t *testing.T) {
 // --- repo.go ---
 
 func TestUnit_SearchRepoOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	isPrivate := true
 	isArchived := false
 	opt := &SearchRepoOptions{
@@ -446,6 +483,7 @@ func TestUnit_SearchRepoOptions_QueryEncode(t *testing.T) {
 }
 
 func TestUnit_CreateRepoOption_Validate(t *testing.T) {
+	t.Parallel()
 	c := newUnitVersionedClient(t, "16.0.5")
 	require.EqualError(t, CreateRepoOption{}.Validate(c), "name is empty")
 	require.EqualError(t, CreateRepoOption{Name: strings.Repeat("a", 101)}.Validate(c), "name has more than 100 chars")
@@ -461,6 +499,7 @@ func TestUnit_CreateRepoOption_Validate(t *testing.T) {
 // --- repo_activity.go ---
 
 func TestUnit_ListRepoActivityFeedsOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	assert.Contains(t, (&ListRepoActivityFeedsOptions{Date: "2024-01-01"}).QueryEncode(), "date=2024-01-01")
 	assert.NotContains(t, (&ListRepoActivityFeedsOptions{}).QueryEncode(), "date=")
 }
@@ -468,6 +507,7 @@ func TestUnit_ListRepoActivityFeedsOptions_QueryEncode(t *testing.T) {
 // --- repo_branch.go ---
 
 func TestUnit_CreateBranchOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateBranchOption{}.Validate(), "BranchName is empty")
 	require.EqualError(t, CreateBranchOption{BranchName: strings.Repeat("a", 101)}.Validate(), "BranchName to long")
 	require.EqualError(t, CreateBranchOption{BranchName: "n", OldBranchName: strings.Repeat("a", 101)}.Validate(), "OldBranchName to long")
@@ -477,6 +517,7 @@ func TestUnit_CreateBranchOption_Validate(t *testing.T) {
 // --- repo_collaborator.go ---
 
 func TestUnit_AddCollaboratorOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.NoError(t, (&AddCollaboratorOption{}).Validate(), "nil Permission leaves the default")
 
 	owner := AccessModeOwner
@@ -499,6 +540,7 @@ func TestUnit_AddCollaboratorOption_Validate(t *testing.T) {
 // --- repo_commit.go ---
 
 func TestUnit_ListCommitOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&ListCommitOptions{SHA: "main", Path: "README.md", Stat: true, Not: "old"}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "main", q.Get("sha"))
@@ -516,6 +558,7 @@ func TestUnit_ListCommitOptions_QueryEncode(t *testing.T) {
 // --- repo_key.go ---
 
 func TestUnit_ListDeployKeysOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&ListDeployKeysOptions{KeyID: 5, Fingerprint: "SHA256:xyz"}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "5", q.Get("key_id"))
@@ -528,6 +571,7 @@ func TestUnit_ListDeployKeysOptions_QueryEncode(t *testing.T) {
 // --- repo_migrate.go ---
 
 func TestUnit_MigrateRepoOption_Validate(t *testing.T) {
+	t.Parallel()
 	c := newUnitVersionedClient(t, "16.0.5")
 	require.EqualError(t, (&MigrateRepoOption{}).Validate(c), "CloneAddr required")
 	require.EqualError(t, (&MigrateRepoOption{CloneAddr: "x"}).Validate(c), "RepoName required")
@@ -565,6 +609,7 @@ func TestUnit_MigrateRepoOption_Validate(t *testing.T) {
 // --- repo_tag.go ---
 
 func TestUnit_CreateTagOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateTagOption{}.Validate(), "TagName is required")
 	require.NoError(t, CreateTagOption{TagName: "v1"}.Validate())
 }
@@ -572,6 +617,7 @@ func TestUnit_CreateTagOption_Validate(t *testing.T) {
 // --- repo_template.go ---
 
 func TestUnit_CreateRepoFromTemplateOption_Validate(t *testing.T) {
+	t.Parallel()
 	require.EqualError(t, CreateRepoFromTemplateOption{}.Validate(), "field Owner is required")
 	require.EqualError(t, CreateRepoFromTemplateOption{Owner: "o"}.Validate(), "field Name is required")
 	require.NoError(t, CreateRepoFromTemplateOption{Owner: "o", Name: "n"}.Validate())
@@ -580,12 +626,14 @@ func TestUnit_CreateRepoFromTemplateOption_Validate(t *testing.T) {
 // --- repo_topics.go ---
 
 func TestUnit_SearchTopicsOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	assert.Contains(t, (&SearchTopicsOptions{Query: "sdk"}).QueryEncode(), "q=sdk")
 }
 
 // --- status.go ---
 
 func TestUnit_ListCommitStatusesOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&ListCommitStatusesOptions{Sort: "recentupdate", State: "success"}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "recentupdate", q.Get("sort"))
@@ -598,6 +646,7 @@ func TestUnit_ListCommitStatusesOptions_QueryEncode(t *testing.T) {
 // --- user_activity.go ---
 
 func TestUnit_ListActivityFeedsOptions_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&ListActivityFeedsOptions{OnlyPerformedBy: true, Date: "2024-01-01"}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "true", q.Get("only-performed-by"))
@@ -610,6 +659,7 @@ func TestUnit_ListActivityFeedsOptions_QueryEncode(t *testing.T) {
 // --- user_search.go ---
 
 func TestUnit_SearchUsersOption_QueryEncode(t *testing.T) {
+	t.Parallel()
 	q, err := url.ParseQuery((&SearchUsersOption{ListOptions: ListOptions{Page: 2, PageSize: 30}, KeyWord: "alice"}).QueryEncode())
 	require.NoError(t, err)
 	assert.Equal(t, "2", q.Get("page"))

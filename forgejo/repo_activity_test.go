@@ -13,6 +13,7 @@ import (
 )
 
 func TestListRepoActivityFeeds(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListRepoActivityFeeds ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "ActivityFeeds", c)

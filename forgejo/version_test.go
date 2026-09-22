@@ -17,6 +17,7 @@ import (
 )
 
 func TestVersion(t *testing.T) {
+	t.Parallel()
 	log.Printf("== TestVersion ==")
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()

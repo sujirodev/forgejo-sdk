@@ -17,6 +17,7 @@ import (
 )
 
 func TestOauth2(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOauth2Application ==")
 	c := newTestClient()
 

@@ -62,6 +62,7 @@ func createTestRepoForActions(t *testing.T, c *Client, suffix string) (*Reposito
 }
 
 func TestRepoActionSecrets(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoActionSecrets ==")
 	c := newTestClient()
 
@@ -224,6 +225,7 @@ func TestRepoActionSecrets(t *testing.T) {
 }
 
 func TestDeleteRepoActionSecret(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeleteRepoActionSecret ==")
 	c := newTestClient()
 
@@ -244,6 +246,7 @@ func TestDeleteRepoActionSecret(t *testing.T) {
 }
 
 func TestListRepoActionRuns(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListRepoActionRuns ==")
 	c := newTestClient()
 
@@ -267,6 +270,7 @@ func TestListRepoActionRuns(t *testing.T) {
 }
 
 func TestGetRepoActionRun(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoActionRun ==")
 	c := newTestClient()
 
@@ -300,6 +304,7 @@ func TestGetRepoActionRun(t *testing.T) {
 }
 
 func TestDispatchRepoWorkflow(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDispatchRepoWorkflow ==")
 	c := newTestClient()
 
@@ -344,6 +349,7 @@ func TestDispatchRepoWorkflow(t *testing.T) {
 }
 
 func TestListRepoActionTasks(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListRepoActionTasks ==")
 	c := newTestClient()
 
@@ -358,6 +364,7 @@ func TestListRepoActionTasks(t *testing.T) {
 }
 
 func TestListRepoActionJobs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListRepoActionJobs ==")
 	c := newTestClient()
 
@@ -371,6 +378,7 @@ func TestListRepoActionJobs(t *testing.T) {
 }
 
 func TestRepoActionVariables(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoActionVariables ==")
 	c := newTestClient()
 
@@ -427,6 +435,7 @@ func TestRepoActionVariables(t *testing.T) {
 }
 
 func TestGetRepoActionRunnerRegistrationToken(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoActionRunnerRegistrationToken ==")
 	c := newTestClient()
 

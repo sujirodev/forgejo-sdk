@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminListAllEmails(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminListAllEmails ==")
 	c := newTestClient()
 
@@ -38,6 +39,7 @@ func TestAdminListAllEmails(t *testing.T) {
 }
 
 func TestAdminSearchEmails(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminSearchEmails ==")
 	c := newTestClient()
 

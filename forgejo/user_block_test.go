@@ -13,6 +13,7 @@ import (
 )
 
 func TestUserBlock(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserBlock ==")
 	c := newTestClient()
 

@@ -40,6 +40,7 @@ import (
 )
 
 func TestHTTPSigAuth(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestHTTPSigAuth ==")
 	admin := newTestClient()
 

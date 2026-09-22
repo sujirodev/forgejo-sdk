@@ -20,11 +20,16 @@ import (
 // TestIssue is main func witch call all Tests for Issue API
 // (to make sure they are on correct order)
 func TestIssue(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 
 	createIssue(t, c)
-	// Little sleep in order to give some time for forgejo to properly store all information on database. Without this sleep, CI is a bit unstable
-	time.Sleep(200 * time.Millisecond)
+	// Forgejo stores/indexes the issue asynchronously; poll instead of
+	// sleeping a fixed amount, which stops being enough under load.
+	eventually(t, func() bool {
+		issues, _, err := c.ListRepoIssues("test01", "IssueTestsRepo", ListIssueOption{State: StateOpen})
+		return err == nil && len(issues) > 0
+	})
 	editIssues(t, c)
 	listIssues(t, c)
 	deleteIssue(t, c)

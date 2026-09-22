@@ -31,6 +31,7 @@ func newRecordingClient(t *testing.T, url string, rec *routeRecorder) *Client {
 }
 
 func TestUnit_RouteRecorder_CreditsTheRoute(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/v1/repos/u/r/tags", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
@@ -57,6 +58,7 @@ func TestUnit_RouteRecorder_CreditsTheRoute(t *testing.T) {
 // DeleteMilestoneByName on a pre-1.13 server resolves the milestone through
 // ListRepoMilestones and then calls DeleteMilestone.
 func TestUnit_RouteRecorder_CreditsComposedRoutes(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
@@ -87,6 +89,7 @@ func TestUnit_RouteRecorder_CreditsComposedRoutes(t *testing.T) {
 // A route called 40 times that only ever got a 404 is not covered on that
 // version. This is the distinction the static checker cannot make.
 func TestUnit_RouteRecorder_FailedCallsAreNotOK(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
@@ -104,6 +107,7 @@ func TestUnit_RouteRecorder_FailedCallsAreNotOK(t *testing.T) {
 }
 
 func TestUnit_RouteRecorder_UnattributedRequests(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -123,6 +127,7 @@ func TestUnit_RouteRecorder_UnattributedRequests(t *testing.T) {
 }
 
 func TestUnit_RouteRecorder_ClientMethodName(t *testing.T) {
+	t.Parallel()
 	const pkg = "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
 
 	for _, tc := range []struct {

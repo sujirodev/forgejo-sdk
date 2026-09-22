@@ -26,6 +26,7 @@ import (
 // the missing calls against an org this test creates for itself.
 
 func TestOrgActionVariablesLifecycle_CoverageGap(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgActionVariablesLifecycle_CoverageGap ==")
 	c := newTestClient()
 	org := newTestOrg(t, c)
@@ -62,6 +63,7 @@ func TestOrgActionVariablesLifecycle_CoverageGap(t *testing.T) {
 }
 
 func TestDeleteOrgActionSecret_CoverageGap(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeleteOrgActionSecret_CoverageGap ==")
 	c := newTestClient()
 	org := newTestOrg(t, c)
@@ -93,6 +95,7 @@ func TestDeleteOrgActionSecret_CoverageGap(t *testing.T) {
 // request is sent at all, and resp is nil by design. Either shape exercises
 // the function; only the call itself is being checked here.
 func TestGetRepoActionRun_CoverageGap(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoActionRun_CoverageGap ==")
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{})
@@ -111,6 +114,7 @@ func TestGetRepoActionRun_CoverageGap(t *testing.T) {
 // and newUnitTestClient from client_unit_test.go.
 
 func TestUnit_Version_CoverageGap(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "3.0.0", Version())
 }
 
@@ -129,6 +133,7 @@ func versionOnlyUnitServer(t *testing.T) *httptest.Server {
 }
 
 func TestUnit_NewClientWithHTTP_CoverageGap(t *testing.T) {
+	t.Parallel()
 	srv := versionOnlyUnitServer(t)
 
 	c := NewClientWithHTTP(srv.URL, &http.Client{})
@@ -136,6 +141,7 @@ func TestUnit_NewClientWithHTTP_CoverageGap(t *testing.T) {
 }
 
 func TestUnit_SetContextOption_CoverageGap(t *testing.T) {
+	t.Parallel()
 	srv := versionOnlyUnitServer(t)
 
 	c, err := NewClient(srv.URL, SetContext(context.Background()))
@@ -144,6 +150,7 @@ func TestUnit_SetContextOption_CoverageGap(t *testing.T) {
 }
 
 func TestUnit_SetDebugModeOption_CoverageGap(t *testing.T) {
+	t.Parallel()
 	srv := versionOnlyUnitServer(t)
 
 	c, err := NewClient(srv.URL, SetDebugMode())
@@ -152,16 +159,19 @@ func TestUnit_SetDebugModeOption_CoverageGap(t *testing.T) {
 }
 
 func TestUnit_ErrUnknownVersion_Error_CoverageGap(t *testing.T) {
+	t.Parallel()
 	err := &ErrUnknownVersion{raw: "banana"}
 	assert.Equal(t, "unknown version: banana", err.Error())
 }
 
 func TestUnit_PullRequestDiffOptions_QueryEncode_CoverageGap(t *testing.T) {
+	t.Parallel()
 	opt := PullRequestDiffOptions{Binary: true}
 	assert.Equal(t, "binary=true", opt.QueryEncode())
 }
 
 func TestUnit_FixPullHeadSha_AlreadyResolved_CoverageGap(t *testing.T) {
+	t.Parallel()
 	// Head.Sha already set: fixPullHeadSha must be a no-op and never touch
 	// the client, so passing nil here is safe and proves it.
 	pr := &PullRequest{

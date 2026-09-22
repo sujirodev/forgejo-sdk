@@ -88,6 +88,7 @@ func writeSSHCert(t *testing.T, dir, principal string, validFor time.Duration) s
 // --- getSignerFromFile / newHTTPSign ---
 
 func TestUnit_NewHTTPSignWithPubkey_UnencryptedKey(t *testing.T) {
+	t.Parallel()
 	path, pub := writeEd25519Key(t, t.TempDir(), "")
 
 	sign, err := NewHTTPSignWithPubkey("", path, "")
@@ -98,6 +99,7 @@ func TestUnit_NewHTTPSignWithPubkey_UnencryptedKey(t *testing.T) {
 }
 
 func TestUnit_NewHTTPSignWithPubkey_EncryptedKey(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	path, _ := writeEd25519Key(t, dir, "s3cret")
 
@@ -110,11 +112,13 @@ func TestUnit_NewHTTPSignWithPubkey_EncryptedKey(t *testing.T) {
 }
 
 func TestUnit_NewHTTPSignWithPubkey_MissingFile(t *testing.T) {
+	t.Parallel()
 	_, err := NewHTTPSignWithPubkey("", filepath.Join(t.TempDir(), "nope"), "")
 	require.Error(t, err)
 }
 
 func TestUnit_NewHTTPSignWithCert_Valid(t *testing.T) {
+	t.Parallel()
 	path := writeSSHCert(t, t.TempDir(), "test01", time.Hour)
 
 	sign, err := NewHTTPSignWithCert("test01", path, "")
@@ -124,6 +128,7 @@ func TestUnit_NewHTTPSignWithCert_Valid(t *testing.T) {
 }
 
 func TestUnit_NewHTTPSignWithCert_MissingCertFile(t *testing.T) {
+	t.Parallel()
 	// A plain (non-certificate) key has no "-cert.pub" sibling.
 	path, _ := writeEd25519Key(t, t.TempDir(), "")
 
@@ -181,6 +186,7 @@ func fingerprintOf(s ssh.Signer) string {
 }
 
 func TestUnit_FindCertSigner(t *testing.T) {
+	t.Parallel()
 	forAlice := certSigner(t, "alice", time.Hour)
 	forBob := certSigner(t, "bob", time.Hour)
 	expired := certSigner(t, "alice", time.Second) // < the 10s grace window
@@ -200,6 +206,7 @@ func TestUnit_FindCertSigner(t *testing.T) {
 }
 
 func TestUnit_FindPubkeySigner(t *testing.T) {
+	t.Parallel()
 	a := plainSigner(t)
 	b := plainSigner(t)
 	cert := certSigner(t, "alice", time.Hour)
@@ -221,6 +228,7 @@ func TestUnit_FindPubkeySigner(t *testing.T) {
 // --- UseSSHCert / UseSSHPubkey version gate ---
 
 func TestUnit_UseSSHPubkey_VersionGate(t *testing.T) {
+	t.Parallel()
 	path, _ := writeEd25519Key(t, t.TempDir(), "")
 
 	_, err := NewClient("http://example.invalid", SetForgejoVersion("1.16.0"), UseSSHPubkey("", path, ""))
@@ -232,6 +240,7 @@ func TestUnit_UseSSHPubkey_VersionGate(t *testing.T) {
 }
 
 func TestUnit_UseSSHCert_VersionGate(t *testing.T) {
+	t.Parallel()
 	path := writeSSHCert(t, t.TempDir(), "test01", time.Hour)
 
 	_, err := NewClient("http://example.invalid", SetForgejoVersion("1.16.0"), UseSSHCert("test01", path, ""))
@@ -246,6 +255,7 @@ func TestUnit_UseSSHCert_VersionGate(t *testing.T) {
 // --- SignRequest ---
 
 func TestUnit_SignRequest_PubkeyMode(t *testing.T) {
+	t.Parallel()
 	path, _ := writeEd25519Key(t, t.TempDir(), "")
 
 	for _, tc := range []struct {
@@ -271,6 +281,7 @@ func TestUnit_SignRequest_PubkeyMode(t *testing.T) {
 }
 
 func TestUnit_SignRequest_CertMode(t *testing.T) {
+	t.Parallel()
 	path := writeSSHCert(t, t.TempDir(), "test01", time.Hour)
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"), UseSSHCert("test01", path, ""))
 	require.NoError(t, err)
@@ -284,6 +295,7 @@ func TestUnit_SignRequest_CertMode(t *testing.T) {
 }
 
 func TestUnit_SignRequest_WithBody(t *testing.T) {
+	t.Parallel()
 	path, _ := writeEd25519Key(t, t.TempDir(), "")
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"), UseSSHPubkey("", path, ""))
 	require.NoError(t, err)
@@ -296,6 +308,7 @@ func TestUnit_SignRequest_WithBody(t *testing.T) {
 }
 
 func TestUnit_SignRequest_GetBodyFailure(t *testing.T) {
+	t.Parallel()
 	path, _ := writeEd25519Key(t, t.TempDir(), "")
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"), UseSSHPubkey("", path, ""))
 	require.NoError(t, err)
@@ -310,6 +323,7 @@ func TestUnit_SignRequest_GetBodyFailure(t *testing.T) {
 }
 
 func TestUnit_SignRequest_CertMode_NonCertificateKey(t *testing.T) {
+	t.Parallel()
 	// A client whose httpsigner.cert is true but whose Signer carries an
 	// ordinary (non-certificate) public key: SignRequest must refuse to
 	// sign rather than send a bogus x-ssh-certificate header. This state

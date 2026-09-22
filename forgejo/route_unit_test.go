@@ -99,6 +99,7 @@ func runRouteCases(t *testing.T, cases []routeCase) {
 
 // TestUnit_Routes_AdminCron doubles as the runner's own worked example.
 func TestUnit_Routes_AdminCron(t *testing.T) {
+	t.Parallel()
 	runRouteCases(t, []routeCase{
 		{
 			name:         "ListCronTasks",
@@ -144,6 +145,7 @@ func TestUnit_Routes_AdminCron(t *testing.T) {
 // /repos/{owner}/{repo}/actions/runs does not exist on 11.x, where the router
 // answers a bare 404 page instead of an API error.
 func TestUnit_Routes_RepoActionRuns(t *testing.T) {
+	t.Parallel()
 	runRouteCases(t, []routeCase{
 		{
 			name:         "ListRepoActionRuns",

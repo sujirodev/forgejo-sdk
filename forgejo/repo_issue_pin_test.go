@@ -13,6 +13,7 @@ import (
 )
 
 func TestRepoIssuePins(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoIssuePins ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "IssuePins", c)

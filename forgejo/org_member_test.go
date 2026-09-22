@@ -21,6 +21,7 @@ import (
 func (c *Client) DeleteOrgMembership(org, user string) error {}
 */
 func TestOrgMembership(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgMembership ==")
 	c := newTestClient()
 

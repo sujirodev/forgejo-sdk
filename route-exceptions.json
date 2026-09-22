@@ -79,6 +79,36 @@
       "detail": "signs a request that another method then sends",
       "issue": "",
       "since": ""
+    },
+    {
+      "route": "GetActionsRun",
+      "versions": [
+        "*"
+      ],
+      "reason": "needs-config",
+      "detail": "authenticates with the ephemeral per-job ACTIONS_RUNTIME_TOKEN, which only exists inside a running Actions job; the integration suite calls the API externally with a regular admin token and can never legitimately hit this route",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "since": ""
+    },
+    {
+      "route": "GetSSHSigningKey",
+      "versions": [
+        "*"
+      ],
+      "reason": "needs-config",
+      "detail": "404s because neither the local Docker instance nor the CI ephemeral instance configures an instance SSH signing key; unlike the GPG counterpart, Forgejo has no lazy default for it",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "since": ""
+    },
+    {
+      "route": "GetNodeInfo",
+      "versions": [
+        "*"
+      ],
+      "reason": "needs-config",
+      "detail": "404s with federation disabled (the harness's default); enabling [federation] to fix that was tried and reverted because it makes StarRepo 500 on Forgejo 16.0.5 in this same harness, which is worse",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "since": ""
     }
   ]
 }

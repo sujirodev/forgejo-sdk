@@ -79,6 +79,26 @@
       "detail": "signs a request that another method then sends",
       "issue": "",
       "since": ""
+    },
+    {
+      "route": "ActivityPubFollow",
+      "versions": [
+        "*"
+      ],
+      "reason": "negative-only",
+      "detail": "needs a reachable remote ActivityPub actor to succeed; the harness only stands up a single instance, so the test targets an unreachable domain on purpose",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/57",
+      "since": ""
+    },
+    {
+      "route": "VerifyGPGKey",
+      "versions": [
+        "*"
+      ],
+      "reason": "negative-only",
+      "detail": "needs a real private key to sign the verification token; the test only exercises the bogus-signature rejection path",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/57",
+      "since": ""
     }
   ]
 }

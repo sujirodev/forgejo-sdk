@@ -7,13 +7,14 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 368 | 12 | 13 | 0 | 393 |
-| V15.x | 377 | 3 | 13 | 0 | 393 |
-| V16.x (latest) | 380 | 0 | 13 | 0 | 393 |
+| V11.x | 381 | 16 | 21 | 0 | 418 |
+| V15.x | 392 | 3 | 23 | 0 | 418 |
+| V16.x (latest) | 389 | 0 | 29 | 0 | 418 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
 | `AcceptRepoTransfer` | ok | ok | ok | accepts a repo transfer. |
+| `ActivityPubFollow` | negative-only | negative-only | negative-only | makes the current user follow a remote ActivityPub |
 | `AddCollaborator` | ok | ok | ok | add some user as a collaborator of a repository |
 | `AddEmail` | ok | ok | ok | add one email to current user with options |
 | `AddIssueLabels` | ok | ok | ok | add one or more labels to one issue |
@@ -69,6 +70,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AdminRenameUser` | ok | ok | ok | renames a user. |
 | `AdminSearchEmails` | ok | ok | ok | searches users' email addresses. |
 | `AdminSetUserQuotaGroups` | ok | ok | ok | sets the user's quota groups to the given list, |
+| `BlockUser` | ok | ok | ok | blocks the given user from interacting with the authenticated user. |
 | `CheckIssueSubscription` | ok | ok | ok | check if current user is subscribed to an issue |
 | `CheckMyQuota` | ok | ok | ok | checks if the authenticated user is over quota. |
 | `CheckNotifications` | ok | ok | ok | list users's notification threads |
@@ -163,6 +165,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteTime` | ok | ok | ok | delete a specific tracked time by id of a single issue for a given repository |
 | `DeleteUserActionSecret` | ok | ok | ok | deletes a secret for the authenticated user |
 | `DeleteUserActionVariable` | ok | ok | ok | deletes an action variable for the authenticated user |
+| `DeleteUserAvatar` | ok | ok | ok | deletes the avatar of the currently authenticated user. |
+| `DeleteUserRunner` | n/a (>= 12.0.0) | ok | ok | deletes a particular user-level Actions runner. |
 | `DiffPatchFile` | ok | ok | ok | apply a diff patch to a file in a repository |
 | `DismissPullReview` | ok | ok | ok | dismiss a review for a pull request |
 | `DispatchRepoWorkflow` | ok | ok | ok | triggers a workflow dispatch event |
@@ -186,6 +190,14 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `EditTeam` | ok | ok | ok | edits a team of an organization |
 | `Follow` | ok | ok | ok | set current user follow the target |
 | `GetActionsRun` | needs-config | needs-config | needs-config | returns the workflow run associated with the token used to |
+| `GetActivityPubActor` | ok | ok | ok | returns the instance's Actor (Application) document. |
+| `GetActivityPubActorOutbox` | needs-config | ok | needs-config | returns the instance actor's outbox, an |
+| `GetActivityPubPerson` | ok | needs-config | needs-config | returns the Person actor for the user with the given ID. |
+| `GetActivityPubPersonActivity` | needs-config | needs-config | needs-config | returns a specific activity recorded for the user. |
+| `GetActivityPubPersonActivityNote` | needs-config | needs-config | needs-config | returns the Note object of a specific |
+| `GetActivityPubPersonOutbox` | needs-config | needs-config | needs-config | lists the user's recorded activity (their outbox). |
+| `GetActivityPubRepository` | ok | needs-config | needs-config | returns the Repository actor for the repo with the given ID. |
+| `GetActivityPubRepositoryOutbox` | needs-config | needs-config | needs-config | returns a repository's outbox, an |
 | `GetAnnotatedTag` | ok | ok | ok | get the tag object of an annotated tag (not lightweight tags) of a repository |
 | `GetArchive` | ok | ok | ok | get an archive of a repository by git reference |
 | `GetArchiveReader` | ok | ok | ok | gets a `git archive` for a particular tree-ish git reference |
@@ -201,6 +213,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetFile` | ok | ok | ok | downloads a file of repository, ref can be branch/tag/commit. |
 | `GetFileReader` | ok | ok | ok | return reader for download a file of repository, ref can be branch/tag/commit. |
 | `GetGPGKey` | ok | ok | ok | get current user's GPG key by key id |
+| `GetGPGKeyVerificationToken` | ok | ok | ok | gets a token that the user must sign with a GPG |
 | `GetGitignoreTemplate` | ok | ok | ok | returns the name and content of a single gitignore |
 | `GetGlobalAPISettings` | ok | ok | ok | get global api settings witch are exposed by it |
 | `GetGlobalAttachmentSettings` | ok | ok | ok | get global repository settings witch are exposed by API |
@@ -225,7 +238,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetMyTrackedTimes` | ok | ok | ok | list tracked times of the current user |
 | `GetMyUserInfo` | ok | ok | ok | get user info of current user |
 | `GetMyWatchedRepos` | ok | ok | ok | list repositories watched by the authenticated user |
-| `GetNodeInfo` | needs-config | needs-config | needs-config | returns the nodeinfo of the Forgejo application. |
+| `GetNodeInfo` | ok | ok | ok | returns the nodeinfo of the Forgejo application. |
 | `GetNotification` | ok | ok | ok | get notification thread by ID |
 | `GetOauth2` | ok | ok | ok | a specific Oauth2 Application by ID. |
 | `GetOrg` | ok | ok | ok | get one organization by name |
@@ -261,7 +274,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetSSHSigningKey` | needs-config | needs-config | needs-config | returns the server's default SSH signing key, in OpenSSH |
 | `GetSigningKey` | ok | ok | ok | returns the server's default GPG signing key, armored. |
 | `GetSingleCommit` | ok | ok | ok | returns a single commit |
-| `GetStarredRepos` | ok | ok | ok | returns the repos that the given user has starred |
+| `GetStarredRepos` | ok | ok | known-bug | returns the repos that the given user has starred |
 | `GetTag` | ok | ok | ok | get the tag of a repository |
 | `GetTagProtection` | ok | ok | ok | gets a tag protection |
 | `GetTeam` | ok | ok | ok | gets a team by ID |
@@ -270,18 +283,22 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetUserActionRunnerRegistrationToken` | ok | ok | ok | gets a runner registration token for the authenticated user |
 | `GetUserActionVariable` | ok | ok | ok | gets a specific user action variable |
 | `GetUserByID` | ok | ok | ok | returns user by a given user ID |
+| `GetUserHeatmapData` | ok | ok | ok | gets a user's heatmap data. |
 | `GetUserInfo` | ok | ok | ok | get user info by user's name |
+| `GetUserRunner` | n/a (>= 12.0.0) | ok | ok | gets a particular runner that belongs to the authenticated user. |
+| `GetUserRunners` | n/a (>= 12.0.0) | ok | ok | lists the authenticated user's Actions runners. |
 | `GetUserSettings` | ok | ok | ok | returns user settings |
 | `GetWatchedRepos` | ok | ok | ok | list all the watched repos of user |
 | `IsCollaborator` | ok | ok | ok | check if a user is a collaborator of a repository |
 | `IsFollowing` | ok | ok | ok | if current user followed the target |
 | `IsPullRequestMerged` | ok | ok | ok | test if one PR is merged to one repository |
-| `IsRepoStarring` | ok | ok | ok | returns whether the authenticated user has starred the repo or not |
+| `IsRepoStarring` | ok | ok | known-bug | returns whether the authenticated user has starred the repo or not |
 | `IsUserFollowing` | ok | ok | ok | if the user followed the target |
 | `IssueSubscribe` | ok | ok | ok | subscribe current user to an issue |
 | `IssueUnSubscribe` | ok | ok | ok | unsubscribe current user from an issue |
 | `LinkPackage` | ok | ok | ok | links a package to a repository |
 | `ListAccessTokens` | ok | ok | ok | lists all the access tokens of user |
+| `ListBlockedUsers` | ok | ok | ok | lists the users blocked by the currently authenticated user. |
 | `ListBranchProtections` | ok | ok | ok | list branch protections for a repo |
 | `ListCollaborators` | ok | ok | ok | list a repository's collaborators |
 | `ListContents` | ok | ok | ok | gets a list of entries in a dir |
@@ -345,7 +362,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoMilestones` | ok | ok | ok | list all the milestones of one repository |
 | `ListRepoNotifications` | ok | ok | ok | list users's notification threads on a specific repo |
 | `ListRepoPullRequests` | ok | ok | ok | list PRs of one repository |
-| `ListRepoStargazers` | ok | ok | ok | list a repository's stargazers |
+| `ListRepoStargazers` | ok | ok | known-bug | list a repository's stargazers |
 | `ListRepoTags` | ok | ok | ok | list all the branches of one repository |
 | `ListRepoTopics` | ok | ok | ok | list all repository's topics |
 | `ListRepoTrackedTimes` | ok | ok | ok | list tracked times of a repository |
@@ -355,6 +372,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListTeamRepositories` | ok | ok | ok | lists all repositories of a team |
 | `ListUserActionJobs` | ok | ok | ok | searches for user action jobs |
 | `ListUserActionVariables` | ok | ok | ok | lists action variables for the authenticated user |
+| `ListUserActivityFeeds` | ok | ok | ok | lists a user's activity feeds. |
 | `ListUserOrgs` | ok | ok | ok | list all of some user's organizations |
 | `ListUserRepos` | ok | ok | ok | list all repositories of one user by user's name |
 | `MergePullRequest` | ok | ok | ok | merge a PR to repository by PR id |
@@ -366,6 +384,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ReadNotification` | ok | ok | ok | mark notification thread as read by ID |
 | `ReadNotifications` | ok | ok | ok | mark notification threads as read |
 | `ReadRepoNotifications` | ok | ok | ok | mark notification threads as read on a specific repo |
+| `RegisterUserRunner` | n/a (>= 12.0.0) | ok | ok | registers a new user-level Actions runner and returns |
 | `RejectRepoTransfer` | ok | ok | ok | rejects a repo transfer. |
 | `RemoveRepoTeam` | ok | ok | ok | delete a team from a repository |
 | `RemoveTeamMember` | ok | ok | ok | removes a member from a team |
@@ -379,6 +398,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `SearchOrgTeams` | ok | ok | ok | search for teams in a org. |
 | `SearchRepos` | ok | ok | ok | searches for repositories matching the given filters |
 | `SearchUsers` | ok | ok | ok | finds users by query |
+| `SendActivityPubActorInbox` | ok | negative-only | negative-only | delivers an Activity to the instance actor's inbox. |
+| `SendActivityPubPersonInbox` | needs-config | needs-config | needs-config | delivers an Activity to a user's inbox. |
+| `SendActivityPubRepositoryInbox` | needs-config | needs-config | needs-config | delivers an Activity to a repository's inbox. |
 | `ServerVersion` | ok | ok | ok | returns the version of the server |
 | `SetBasicAuth` | no-http | no-http | no-http | sets username and password |
 | `SetContext` | no-http | no-http | no-http | set default context witch is used for http requests |
@@ -389,14 +411,15 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `SetSudo` | no-http | no-http | no-http | sets username to impersonate. |
 | `SetUserAgent` | no-http | no-http | no-http | sets the user-agent to send with every request. |
 | `SignRequest` | no-http | no-http | no-http | signs a HTTP request |
-| `StarRepo` | ok | ok | ok | star specified repo as the authenticated user |
+| `StarRepo` | ok | ok | known-bug | star specified repo as the authenticated user |
 | `StartIssueStopWatch` | ok | ok | ok | starts a stopwatch for an existing issue for a given |
 | `StopIssueStopWatch` | ok | ok | ok | stops an existing stopwatch for an issue in a given |
 | `SubmitPullReview` | ok | ok | ok | submit a pending review to an pull request |
 | `TransferRepo` | ok | ok | ok | transfers the ownership of a repository |
 | `UnDismissPullReview` | ok | ok | ok | cancel to dismiss a review for a pull request |
-| `UnStarRepo` | ok | ok | ok | remove star to specified repo as the authenticated user |
+| `UnStarRepo` | ok | ok | known-bug | remove star to specified repo as the authenticated user |
 | `UnWatchRepo` | ok | ok | ok | stop to watch a repository |
+| `UnblockUser` | ok | ok | ok | removes a block placed on the given user by the authenticated user. |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |
 | `UnlinkPackage` | ok | ok | ok | unlinks a package from a repository |
 | `UpdateFile` | ok | ok | ok | update a file in a repository |
@@ -404,7 +427,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UpdateOrgActionVariable` | ok | ok | ok | updates an action variable for an organization |
 | `UpdateRepoActionVariable` | ok | ok | ok | updates an action variable for a repository |
 | `UpdateUserActionVariable` | ok | ok | ok | updates an action variable for the authenticated user |
+| `UpdateUserAvatar` | ok | ok | ok | updates the avatar of the currently authenticated user. |
 | `UpdateUserSettings` | ok | ok | ok | returns user settings |
+| `VerifyGPGKey` | negative-only | negative-only | negative-only | verifies and adds a GPG key to the current user's account, |
 | `WatchRepo` | ok | ok | ok | start to watch a repository |
 
 Cell values: `ok` (the suite called it and the server answered 2xx),

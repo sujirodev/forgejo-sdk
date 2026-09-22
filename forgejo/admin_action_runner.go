@@ -11,21 +11,6 @@ import (
 	"net/url"
 )
 
-// ActionRunner represents a Forgejo Actions runner, global or scoped to an
-// organization, user, or repository.
-type ActionRunner struct {
-	ID          int64    `json:"id"`
-	UUID        string   `json:"uuid"`
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	OwnerID     int64    `json:"owner_id"`
-	RepoID      int64    `json:"repo_id"`
-	Description string   `json:"description"`
-	Status      string   `json:"status"`
-	Labels      []string `json:"labels"`
-	Ephemeral   bool     `json:"ephemeral"`
-}
-
 // AdminListRunnersOptions options for listing admin runners
 type AdminListRunnersOptions struct {
 	ListOptions
@@ -56,26 +41,6 @@ func (c *Client) AdminListRunners(opt AdminListRunnersOptions) ([]*ActionRunner,
 	runners := make([]*ActionRunner, 0, opt.PageSize)
 	resp, err := c.getParsedResponse("GET", link.String(), jsonHeader, nil, &runners)
 	return runners, resp, err
-}
-
-// RegisterRunnerOption options for registering a new global runner
-type RegisterRunnerOption struct {
-	// Name of the runner to register. Does not have to be unique.
-	Name string `json:"name"`
-	// Description provides optional details about the runner.
-	Description string `json:"description,omitempty"`
-	// Ephemeral registers the runner as an ephemeral runner.
-	// See https://forgejo.org/docs/latest/admin/actions/security/#ephemeral-runner
-	Ephemeral bool `json:"ephemeral,omitempty"`
-}
-
-// RegisterRunnerResponse contains the details of the just-registered runner.
-// Unlike a registration token, Token here is an actual authentication token
-// the runner daemon can use directly.
-type RegisterRunnerResponse struct {
-	ID    int64  `json:"id"`
-	UUID  string `json:"uuid"`
-	Token string `json:"token"`
 }
 
 // AdminRegisterRunner registers a new global runner.

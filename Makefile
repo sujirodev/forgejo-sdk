@@ -108,7 +108,7 @@ test-unit: ## Run the client's own unit tests (no Forgejo instance needed).
 test: ## Run the integration test suite (requires a running Forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
-	    cd forgejo && $(GO) test -race -cover -coverprofile coverage.out; \
+	    cd forgejo && $(GO) test -race -timeout 20m -cover -coverprofile coverage.out; \
 	fi
 
 .PHONY: check-forgejo-version

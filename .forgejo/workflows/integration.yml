@@ -2,6 +2,14 @@ name: integration
 
 on:
   workflow_dispatch:
+  push:
+    branches: [develop]
+    # The post-release sync (release.yml, train_head/Fast-forward develop)
+    # pushes a single commit to develop that only touches CHANGELOG.md.
+    # Nothing to test there, and it would cost 3 integration legs per
+    # release.
+    paths-ignore:
+      - CHANGELOG.md
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -137,7 +145,22 @@ jobs:
           exit 1
 
       - run: make test
-      - run: make coverage-check
+
+      # The coverage floor (COVERAGE_MIN=70, Makefile) only fails the train
+      # PR (develop -> main). On a feature PR the number is still measured
+      # and printed, but as a warning: the debt is visible without
+      # blocking the PR, and gets collected all at once when the train
+      # leaves. On push (BASE_REF empty) it also only reports.
+      - name: Coverage
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          if [ "$BASE_REF" = "main" ]; then
+            make coverage-check
+          else
+            make coverage-check \
+              || echo "::warning::coverage below the floor; will fail the develop -> main PR"
+          fi
 
       # The per-version evidence: which routes this leg actually exercised,
       # and with what result. The route-matrix job below turns the three
@@ -267,3 +290,28 @@ jobs:
             ROUTES.md
             README.md
           if-no-files-found: error
+
+  # main only accepts a PR whose head is develop, in this same repository
+  # (release train plan, decision 2). Always runs and always reports a
+  # context on pull_request, so it can be required on any branch without
+  # the risk of a required check that never fires because its own `if:`
+  # never matched. Only inspects the event payload.
+  train-guard:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the PR comes from develop
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ "$BASE_REF" != "main" ]; then
+            echo "base is '${BASE_REF}', not main; nothing to guard"
+            exit 0
+          fi
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::error::PRs into main must come from this repository's develop branch (got '${HEAD_REPO}:${HEAD_REF}')."
+            exit 1
+          fi

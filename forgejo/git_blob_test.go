@@ -14,6 +14,7 @@ import (
 )
 
 func TestGetBlob(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true, Readme: "Default"})
 
@@ -38,6 +39,7 @@ func TestGetBlob(t *testing.T) {
 }
 
 func TestGetBlobs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetBlobs ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "GetBlobs", c)

@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 416 | 21 | 29 | 0 | 466 |
-| V15.x | 431 | 3 | 32 | 0 | 466 |
-| V16.x (latest) | 428 | 0 | 38 | 0 | 466 |
+| V11.x | 457 | 25 | 23 | 0 | 505 |
+| V15.x | 476 | 3 | 26 | 0 | 505 |
+| V16.x (latest) | 473 | 0 | 32 | 0 | 505 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -19,7 +19,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AddEmail` | ok | ok | ok | add one email to current user with options |
 | `AddIssueLabels` | ok | ok | ok | add one or more labels to one issue |
 | `AddIssueSubscription` | ok | ok | ok | Subscribe user to issue |
-| `AddRepoFlag` | needs-config | needs-config | needs-config | adds a flag to a repository |
+| `AddRepoFlag` | ok | ok | ok | adds a flag to a repository |
 | `AddRepoTeam` | ok | ok | ok | add a team to a repository |
 | `AddRepoTopic` | ok | ok | ok | adds a topic to a repo's topics list |
 | `AddTeamMember` | ok | ok | ok | adds a member to a team |
@@ -78,8 +78,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `CheckMyQuota` | ok | ok | ok | checks if the authenticated user is over quota. |
 | `CheckNotifications` | ok | ok | ok | list users's notification threads |
 | `CheckOrgMembership` | ok | ok | ok | Check if a user is a member of an organization |
+| `CheckOrgQuota` | ok | ok | ok | checks if the organization is over quota for the given subject. |
 | `CheckPublicOrgMembership` | ok | ok | ok | Check if a user is a member of an organization |
-| `CheckRepoFlag` | needs-config | needs-config | needs-config | checks whether a repository has a given flag |
+| `CheckRepoFlag` | ok | ok | ok | checks whether a repository has a given flag |
 | `CheckRepoTeam` | ok | ok | ok | check if team is assigned to repo by name and return it. |
 | `CheckRepoWatch` | ok | ok | ok | check if the current user is watching a repo |
 | `CheckServerVersionConstraint` | no-http | no-http | no-http | validates that the login's server satisfies a |
@@ -95,7 +96,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `CreateFork` | ok | ok | ok | create a fork of a repository |
 | `CreateGPGKey` | ok | ok | ok | create GPG key with options |
 | `CreateIssue` | ok | ok | ok | create a new issue for a given repository |
+| `CreateIssueAttachment` | ok | ok | ok | creates an attachment for the given issue with the given file |
+| `CreateIssueBlocking` | ok | ok | ok | blocks the issue given in meta by the issue given in index |
 | `CreateIssueComment` | ok | ok | ok | create comment on an issue. |
+| `CreateIssueCommentAttachment` | ok | ok | ok | creates an attachment for the given comment with the |
+| `CreateIssueDependency` | ok | ok | ok | makes the issue given in index depend on the issue given in meta |
 | `CreateLabel` | ok | ok | ok | create one label of repository |
 | `CreateMilestone` | ok | ok | ok | create one milestone with options |
 | `CreateMyHook` | ok | ok | ok | create one hook for the authenticated user, with options |
@@ -128,7 +133,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteAccessToken` | ok | ok | ok | delete token, identified by ID and if not available by name. |
 | `DeleteAccessTokenByID` | ok | ok | ok | deletes a token identified by its ID. |
 | `DeleteAccessTokenByName` | ok | ok | ok | deletes a token identified by its name. |
-| `DeleteAllRepoFlags` | needs-config | needs-config | needs-config | removes all flags from a repository |
+| `DeleteAllRepoFlags` | ok | ok | ok | removes all flags from a repository |
 | `DeleteBranchProtection` | ok | ok | ok | deletes a branch protection for a repo |
 | `DeleteCollaborator` | ok | ok | ok | remove a collaborator from a repository |
 | `DeleteDeployKey` | ok | ok | ok | delete deploy key with key id |
@@ -136,7 +141,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteFile` | ok | ok | ok | delete a file from repository |
 | `DeleteGPGKey` | ok | ok | ok | delete GPG key with key id |
 | `DeleteIssue` | ok | ok | ok | delete a issue from a repository |
+| `DeleteIssueAttachment` | ok | ok | ok | deletes the given issue attachment including the uploaded file |
 | `DeleteIssueComment` | ok | ok | ok | deletes an issue comment. |
+| `DeleteIssueCommentAttachment` | ok | ok | ok | deletes the given comment attachment including the uploaded file |
 | `DeleteIssueCommentReaction` | ok | ok | ok | remove a reaction from a comment of an issue |
 | `DeleteIssueLabel` | ok | ok | ok | delete one label of one issue by issue id and label id |
 | `DeleteIssueReaction` | ok | ok | ok | remove a reaction from an issue |
@@ -150,9 +157,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteOrg` | ok | ok | ok | deletes an organization |
 | `DeleteOrgActionSecret` | ok | ok | ok | deletes a secret in an organization |
 | `DeleteOrgActionVariable` | ok | ok | ok | deletes an action variable from an organization |
+| `DeleteOrgAvatar` | ok | ok | ok | deletes an organization's avatar. It will be replaced by a default one. |
 | `DeleteOrgHook` | ok | ok | ok | delete one hook from an organization, with hook id |
 | `DeleteOrgLabel` | ok | ok | ok | delete one label of an organization by id |
 | `DeleteOrgMembership` | ok | ok | ok | remove a member from an organization |
+| `DeleteOrgRunner` | n/a (>= 15.0.0) | ok | ok | deletes a particular runner that belongs to the organization |
 | `DeletePackage` | ok | ok | ok | deletes a specific package version |
 | `DeletePublicKey` | ok | ok | ok | delete public key with key id |
 | `DeletePullReview` | ok | ok | ok | delete a specific review from a pull request |
@@ -166,7 +175,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteRepoActionVariable` | ok | ok | ok | deletes an action variable from a repository |
 | `DeleteRepoAvatar` | ok | ok | ok | deletes a repository's avatar |
 | `DeleteRepoBranch` | ok | ok | ok | delete a branch in a repository |
-| `DeleteRepoFlag` | needs-config | needs-config | needs-config | removes a flag from a repository |
+| `DeleteRepoFlag` | ok | ok | ok | removes a flag from a repository |
 | `DeleteRepoGitHook` | ok | ok | ok | delete one Git hook from a repository |
 | `DeleteRepoHook` | ok | ok | ok | delete one hook from a repository, with hook id |
 | `DeleteRepoTopic` | ok | ok | ok | deletes a topic from repo's topics list |
@@ -185,7 +194,10 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DispatchRepoWorkflow` | ok | ok | ok | triggers a workflow dispatch event |
 | `EditBranchProtection` | ok | ok | ok | edits a branch protection for a repo |
 | `EditIssue` | ok | ok | ok | modify an existing issue for a given repository |
+| `EditIssueAttachment` | ok | ok | ok | updates the given issue attachment with the given options |
 | `EditIssueComment` | ok | ok | ok | edits an issue comment. |
+| `EditIssueCommentAttachment` | ok | ok | ok | updates the given comment attachment with the given options |
+| `EditIssueDeadline` | ok | ok | ok | sets or removes the deadline of an issue. Passing a nil |
 | `EditLabel` | ok | ok | ok | modify one label with options |
 | `EditMilestone` | ok | ok | ok | modify milestone with options |
 | `EditMilestoneByName` | ok | ok | ok | modify milestone with options |
@@ -237,7 +249,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetGlobalRepoSettings` | ok | ok | ok | get global repository settings witch are exposed by API |
 | `GetGlobalUISettings` | ok | ok | ok | get global ui settings witch are exposed by API |
 | `GetIssue` | ok | ok | ok | returns a single issue for a given repository |
+| `GetIssueAttachment` | ok | ok | ok | returns the requested issue attachment |
 | `GetIssueComment` | ok | ok | ok | get a comment for a given repo by id. |
+| `GetIssueCommentAttachment` | ok | ok | ok | returns the requested comment attachment |
 | `GetIssueCommentReactions` | ok | ok | ok | get a list of reactions from a comment of an issue |
 | `GetIssueConfig` | ok | ok | ok | returns the issue config for a repository |
 | `GetIssueLabels` | ok | ok | ok | get labels of one issue via issue id |
@@ -266,6 +280,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetOrgHook` | ok | ok | ok | get a hook of an organization |
 | `GetOrgLabel` | ok | ok | ok | get one label of an organization by id |
 | `GetOrgPermissions` | ok | ok | ok | returns user permissions for specific organization. |
+| `GetOrgQuota` | ok | ok | ok | returns quota information for an organization |
+| `GetOrgRunner` | n/a (>= 15.0.0) | ok | ok | gets a particular runner that belongs to the organization |
 | `GetPackage` | ok | ok | ok | gets the details of a specific package version |
 | `GetPublicKey` | ok | ok | ok | get current user's public key by key id |
 | `GetPullRequest` | ok | ok | ok | get information of one PR |
@@ -304,6 +320,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetTagProtection` | ok | ok | ok | gets a tag protection |
 | `GetTeam` | ok | ok | ok | gets a team by ID |
 | `GetTeamMember` | ok | ok | ok | gets a member of a team |
+| `GetTeamRepo` | ok | ok | ok | gets a particular repository of a team |
 | `GetTrees` | ok | ok | ok | downloads a file of repository, ref can be branch/tag/commit. |
 | `GetUserActionRunnerRegistrationToken` | ok | ok | ok | gets a runner registration token for the authenticated user |
 | `GetUserActionVariable` | ok | ok | ok | gets a specific user action variable |
@@ -337,7 +354,12 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListForks` | ok | ok | ok | list a repository's forks |
 | `ListGPGKeys` | ok | ok | ok | list all the GPG keys of the user |
 | `ListGitignoreTemplates` | ok | ok | ok | returns the names of all gitignore templates known |
+| `ListIssueAttachments` | ok | ok | ok | list an issue's attachments |
+| `ListIssueBlocks` | ok | ok | ok | lists the issues that are blocked by the given issue |
+| `ListIssueCommentAttachments` | ok | ok | ok | list a comment's attachments |
 | `ListIssueComments` | ok | ok | ok | list comments on an issue. |
+| `ListIssueDependencies` | ok | ok | ok | lists all issues that block the given issue |
+| `ListIssueTimeline` | ok | ok | ok | lists all comments and events on an issue |
 | `ListIssueTrackedTimes` | ok | ok | ok | list tracked times of a single issue for a given repository |
 | `ListIssues` | ok | ok | ok | returns all issues assigned the authenticated user |
 | `ListLabelTemplates` | ok | ok | ok | returns the names of all label templates known to the |
@@ -358,10 +380,16 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListOrgActionJobs` | ok | ok | ok | searches for organization action jobs |
 | `ListOrgActionSecret` | ok | ok | ok | list an organization's secrets |
 | `ListOrgActionVariables` | ok | ok | ok | lists an organization's action variables |
+| `ListOrgActivityFeeds` | ok | ok | ok | lists an organization's activity feeds |
+| `ListOrgBlockedUsers` | ok | ok | ok | lists the organization's blocked users |
 | `ListOrgHooks` | ok | ok | ok | list all the hooks of one organization |
 | `ListOrgLabels` | ok | ok | ok | list an organization's labels |
 | `ListOrgMembership` | ok | ok | ok | list an organization's members |
+| `ListOrgQuotaArtifacts` | ok | ok | ok | lists artifacts counting towards an organization's quota |
+| `ListOrgQuotaAttachments` | ok | ok | ok | lists attachments counting towards an organization's quota |
+| `ListOrgQuotaPackages` | ok | ok | ok | lists packages counting towards an organization's quota |
 | `ListOrgRepos` | ok | ok | ok | list all repositories of one organization by organization's name |
+| `ListOrgRunners` | n/a (>= 15.0.0) | ok | ok | gets the organization's runners |
 | `ListOrgTeams` | ok | ok | ok | lists all teams of an organization |
 | `ListOrgs` | ok | ok | ok | list all organizations |
 | `ListPackageFiles` | ok | ok | ok | lists the files within a package |
@@ -385,7 +413,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoActivityFeeds` | ok | ok | ok | lists a repository's activity feeds |
 | `ListRepoBranches` | ok | ok | ok | list all the branches of one repository |
 | `ListRepoCommits` | ok | ok | ok | return list of commits from a repo |
-| `ListRepoFlags` | needs-config | needs-config | needs-config | lists the flags of a repository |
+| `ListRepoFlags` | ok | ok | ok | lists the flags of a repository |
 | `ListRepoGitHooks` | ok | ok | ok | list all the Git hooks of one repository |
 | `ListRepoHooks` | ok | ok | ok | list all the hooks of one repository |
 | `ListRepoIssueComments` | ok | ok | ok | list comments for a given repo. |
@@ -401,6 +429,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoTrackedTimes` | ok | ok | ok | list tracked times of a repository |
 | `ListStatuses` | ok | ok | ok | returns all statuses for a given Commit by ref |
 | `ListTagProtections` | ok | ok | ok | list tag protections for a repo |
+| `ListTeamActivityFeeds` | ok | ok | ok | lists a team's activity feeds |
 | `ListTeamMembers` | ok | ok | ok | lists all members of a team |
 | `ListTeamRepositories` | ok | ok | ok | lists all repositories of a team |
 | `ListUserActionJobs` | ok | ok | ok | searches for user action jobs |
@@ -413,7 +442,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `MergePullRequest` | ok | ok | ok | merge a PR to repository by PR id |
 | `MigrateRepo` | ok | ok | ok | migrates a repository from other Git hosting sources for the authenticated user. |
 | `MirrorSync` | ok | ok | ok | adds a mirrored repository to the mirror sync queue. |
+| `MoveIssuePin` | ok | ok | ok | moves the pinned issue to the given position among the repository's pinned issues |
 | `NewPinAllowed` | ok | ok | ok | returns whether new issue and pull request pins are allowed for a repository |
+| `OrgBlockUser` | ok | ok | ok | blocks a user from the organization |
+| `OrgUnblockUser` | ok | ok | ok | unblocks a user from the organization |
+| `PinIssue` | ok | ok | ok | pins an issue |
 | `PostIssueCommentReaction` | ok | ok | ok | add a reaction to a comment of an issue |
 | `PostIssueReaction` | ok | ok | ok | add a reaction to an issue |
 | `PushMirrorSync` | ok | ok | ok | adds all push mirrors of a repository to the sync queue |
@@ -421,16 +454,20 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ReadNotification` | ok | ok | ok | mark notification thread as read by ID |
 | `ReadNotifications` | ok | ok | ok | mark notification threads as read |
 | `ReadRepoNotifications` | ok | ok | ok | mark notification threads as read on a specific repo |
+| `RegisterOrgRunner` | n/a (>= 15.0.0) | ok | ok | registers a new organization-level runner and returns its registration token |
 | `RegisterUserRunner` | n/a (>= 12.0.0) | ok | ok | registers a new user-level Actions runner and returns |
 | `RejectRepoTransfer` | ok | ok | ok | rejects a repo transfer. |
+| `RemoveIssueBlocking` | ok | ok | ok | unblocks the issue given in meta from the issue given in index |
+| `RemoveIssueDependency` | ok | ok | ok | removes the issue given in meta as a dependency of the issue given in index |
 | `RemoveNote` | ok | ok | ok | removes a note corresponding to a single commit from a repository |
 | `RemoveRepoTeam` | ok | ok | ok | delete a team from a repository |
 | `RemoveTeamMember` | ok | ok | ok | removes a member from a team |
 | `RemoveTeamRepository` | ok | ok | ok | removes a repository from a team |
+| `RenameOrg` | ok | ok | ok | renames an organization |
 | `RenderMarkdown` | ok | ok | ok | renders a markdown document as HTML. |
 | `RenderMarkdownRaw` | ok | ok | ok | renders a raw markdown document (plain text, not |
 | `RenderMarkup` | ok | ok | ok | renders a markup document (markdown, or another markup |
-| `ReplaceAllRepoFlags` | needs-config | needs-config | needs-config | replaces all the flags of a repository |
+| `ReplaceAllRepoFlags` | ok | ok | ok | replaces all the flags of a repository |
 | `ReplaceIssueLabels` | ok | ok | ok | replace old labels of issue with new labels |
 | `ResetIssueTime` | ok | ok | ok | reset tracked time of a single issue for a given repository |
 | `RunCronTasks` | ok | ok | ok | run a cron task |
@@ -466,9 +503,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UnblockUser` | ok | ok | ok | removes a block placed on the given user by the authenticated user. |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |
 | `UnlinkPackage` | ok | ok | ok | unlinks a package from a repository |
+| `UnpinIssue` | ok | ok | ok | unpins an issue |
 | `UpdateFile` | ok | ok | ok | update a file in a repository |
 | `UpdateOauth2` | ok | ok | ok | a specific Oauth2 Application by ID and return a completed Oauth2 object. |
 | `UpdateOrgActionVariable` | ok | ok | ok | updates an action variable for an organization |
+| `UpdateOrgAvatar` | ok | ok | ok | updates an organization's avatar |
 | `UpdatePullRequest` | ok | ok | ok | merges the pull request's baseBranch into its headBranch |
 | `UpdateRepoActionVariable` | ok | ok | ok | updates an action variable for a repository |
 | `UpdateRepoAvatar` | ok | ok | ok | updates a repository's avatar |

@@ -18,6 +18,7 @@ import (
 )
 
 func TestRepoTopics(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoTopics ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "RandomTopic", c)

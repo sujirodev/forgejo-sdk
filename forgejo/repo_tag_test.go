@@ -18,6 +18,7 @@ import (
 )
 
 func TestTags(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestTags ==")
 	c := newTestClient()
 

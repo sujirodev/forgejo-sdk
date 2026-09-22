@@ -183,9 +183,9 @@ type DispatchWorkflowOption struct {
 
 // DispatchWorkflowResponse response from dispatching a workflow
 type DispatchWorkflowResponse struct {
-	ID        int64           `json:"id"`
-	RunNumber int64           `json:"run_number"`
-	Jobs      []*ActionRunJob `json:"jobs"`
+	ID        int64    `json:"id"`
+	RunNumber int64    `json:"run_number"`
+	Jobs      []string `json:"jobs"` // job names, not full ActionRunJob records
 }
 
 // CreateVariableOption options for creating/updating a variable

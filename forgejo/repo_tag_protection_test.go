@@ -13,6 +13,7 @@ import (
 )
 
 func TestRepoTagProtection(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoTagProtection ==")
 	c := newTestClient()
 	repoName := "TagProtection"

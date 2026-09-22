@@ -13,6 +13,7 @@ import (
 )
 
 func TestGetMyQuota(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetMyQuota ==")
 	c := newTestClient()
 
@@ -25,6 +26,7 @@ func TestGetMyQuota(t *testing.T) {
 }
 
 func TestListMyQuotaArtifacts(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListMyQuotaArtifacts ==")
 	c := newTestClient()
 
@@ -42,6 +44,7 @@ func TestListMyQuotaArtifacts(t *testing.T) {
 }
 
 func TestListMyQuotaArtifactsWithPagination(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListMyQuotaArtifactsWithPagination ==")
 	c := newTestClient()
 
@@ -61,6 +64,7 @@ func TestListMyQuotaArtifactsWithPagination(t *testing.T) {
 }
 
 func TestListMyQuotaAttachments(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListMyQuotaAttachments ==")
 	c := newTestClient()
 
@@ -80,6 +84,7 @@ func TestListMyQuotaAttachments(t *testing.T) {
 }
 
 func TestListMyQuotaAttachmentsWithPagination(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListMyQuotaAttachmentsWithPagination ==")
 	c := newTestClient()
 
@@ -99,6 +104,7 @@ func TestListMyQuotaAttachmentsWithPagination(t *testing.T) {
 }
 
 func TestListMyQuotaPackages(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListMyQuotaPackages ==")
 	c := newTestClient()
 
@@ -117,6 +123,7 @@ func TestListMyQuotaPackages(t *testing.T) {
 }
 
 func TestListMyQuotaPackagesWithPagination(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListMyQuotaPackagesWithPagination ==")
 	c := newTestClient()
 
@@ -136,6 +143,7 @@ func TestListMyQuotaPackagesWithPagination(t *testing.T) {
 }
 
 func TestCheckMyQuota(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCheckMyQuota ==")
 	c := newTestClient()
 
@@ -149,6 +157,7 @@ func TestCheckMyQuota(t *testing.T) {
 }
 
 func TestQuotaInfoStructure(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestQuotaInfoStructure ==")
 	c := newTestClient()
 
@@ -166,6 +175,7 @@ func TestQuotaInfoStructure(t *testing.T) {
 }
 
 func TestQuotaGroupsAndRules(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestQuotaGroupsAndRules ==")
 	c := newTestClient()
 
@@ -193,6 +203,7 @@ func TestQuotaGroupsAndRules(t *testing.T) {
 }
 
 func TestQuotaAttachmentContainedIn(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestQuotaAttachmentContainedIn ==")
 	c := newTestClient()
 

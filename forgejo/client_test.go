@@ -18,6 +18,7 @@ import (
 
 // TODO: change urls to something suitable for Forgejo
 func TestParsedPaging(t *testing.T) {
+	t.Parallel()
 	resp := newResponse(&http.Response{
 		Header: http.Header{
 			"Link": []string{

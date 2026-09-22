@@ -12,6 +12,7 @@ import (
 )
 
 func TestAdminCreateRepo(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	owner := createTestUser(t, uniqueName(t, "adminrepo"), c)
 

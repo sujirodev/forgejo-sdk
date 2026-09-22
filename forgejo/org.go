@@ -165,3 +165,22 @@ func (c *Client) DeleteOrg(orgname string) (*Response, error) {
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/orgs/%s", orgname), jsonHeader, nil)
 	return resp, err
 }
+
+// RenameOrgOption options for renaming an organization
+type RenameOrgOption struct {
+	// NewName is the new username for this org. It cannot already be in use by any other user.
+	NewName string `json:"new_name"`
+}
+
+// RenameOrg renames an organization
+func (c *Client) RenameOrg(orgname string, opt RenameOrgOption) (*Response, error) {
+	if err := escapeValidatePathSegments(&orgname); err != nil {
+		return nil, err
+	}
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("POST", fmt.Sprintf("/orgs/%s/rename", orgname), jsonHeader, bytes.NewReader(body))
+	return resp, err
+}

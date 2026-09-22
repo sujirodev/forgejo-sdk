@@ -6,22 +6,43 @@ package forgejo
 
 import (
 	"log"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// TestUnit_CheckRepoFlag_UnexpectedStatus exercises the branch CheckRepoFlag
+// takes when the server answers with neither 204 (flag present) nor 404
+// (flag absent) -- unreachable from the integration test below, which only
+// ever sees those two.
+func TestUnit_CheckRepoFlag_UnexpectedStatus(t *testing.T) {
+	t.Parallel()
+	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	c := newUnitTestClient(t, srv)
+
+	has, _, err := c.CheckRepoFlag("o", "r", "flag")
+	require.Error(t, err)
+	assert.False(t, has)
+	assert.Contains(t, err.Error(), "unexpected Status: 500")
+}
+
+// TestRepoFlags exercises the full lifecycle of the six repository-flag
+// routes. It needs [repository] ENABLE_FLAGS = true on the test instance
+// (see TESTING.md, "Server configuration"); without it every one of these
+// calls 404s. Closes issue #62.
 func TestRepoFlags(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoFlags ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "RepoFlags", c)
 	require.NoError(t, err)
 
 	fl, _, err := c.ListRepoFlags(repo.Owner.UserName, repo.Name)
-	if err != nil {
-		t.Skipf("repo flags unavailable on this server (see issue #62): %v", err)
-	}
+	require.NoError(t, err)
 	assert.Empty(t, fl)
 
 	has, _, err := c.CheckRepoFlag(repo.Owner.UserName, repo.Name, "takedown")

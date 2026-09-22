@@ -17,6 +17,7 @@ import (
 // TestActionRunUnmarshal verifies that ActionRun correctly unmarshals all fields
 // from JSON, including index_in_repo (RunNumber) and is_ref_deleted (IsRefDeleted)
 func TestActionRunUnmarshal(t *testing.T) {
+	t.Parallel()
 	jsonData := `{
 		"id": 4827,
 		"workflow_id": "test.yml",
@@ -67,6 +68,7 @@ func TestActionRunUnmarshal(t *testing.T) {
 // no way to obtain, so the wire behavior (path, auth header, body decoding)
 // is what gets pinned here.
 func TestUnit_GetActionsRun(t *testing.T) {
+	t.Parallel()
 	var gotPath, gotAuth string
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.Path
@@ -96,6 +98,7 @@ func TestUnit_GetActionsRun(t *testing.T) {
 // valid actions-job token, the server rejects the request and the SDK
 // surfaces that as an error rather than a zero-value ActionRun.
 func TestUnit_GetActionsRun_Unauthenticated(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		_ = json.NewEncoder(w).Encode(map[string]string{"message": "unauthorized"})

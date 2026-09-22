@@ -11,6 +11,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # main only accepts a PR whose head is develop, in this same repository
+  # (release train plan, decision 2). Runs first, before lint/testing:
+  # it costs nothing (no checkout, pure payload inspection) and there is
+  # no reason to spend the runner's 2 job slots on a full lint + 3-leg
+  # test matrix for a PR that this check is about to reject anyway.
+  # Always runs and always reports a context on pull_request, so it can
+  # be required on any branch without the risk of a required check that
+  # never fires because its own `if:` never matched.
+  train-guard:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the PR comes from develop
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ "$BASE_REF" != "main" ]; then
+            echo "base is '${BASE_REF}', not main; nothing to guard"
+            exit 0
+          fi
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::error::PRs into main must come from this repository's develop branch (got '${HEAD_REPO}:${HEAD_REF}')."
+            exit 1
+          fi
+
   # Static checks need no Forgejo instance; they run alongside `testing`
   # (the self-hosted runner has capacity 2). golangci-lint's binary and
   # Go's own build/module caches are bind-mounted from the runner host
@@ -19,6 +47,13 @@ jobs:
   # proxy is unreachable from job containers on this host, so those paths
   # are disabled below rather than left silently failing every run.
   lint:
+    needs: [train-guard]
+    # train-guard only actually runs on pull_request; on push (develop) it
+    # is skipped, and by default a job that needs a skipped job is also
+    # skipped. This `if:` overrides that so push still runs lint, while a
+    # real train-guard failure (PR into main from the wrong branch) still
+    # skips it.
+    if: needs.train-guard.result == 'success' || needs.train-guard.result == 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -77,6 +112,8 @@ jobs:
   # for "stop burning runner capacity the moment any leg is red": the first
   # failing leg cancels the other two still in flight.
   testing:
+    needs: [train-guard]
+    if: needs.train-guard.result == 'success' || needs.train-guard.result == 'skipped'
     name: testing (${{ matrix.label }})
     strategy:
       fail-fast: true
@@ -136,8 +173,30 @@ jobs:
           echo "Forgejo did not become healthy in time"
           exit 1
 
+      # Observed 2026-09-22: all 3 legs timed out here, each stuck 8+
+      # minutes on an HTTP round trip to this leg's own Forgejo service
+      # container that never returned, past go test's default 10m ceiling
+      # -- a runner/infra hang, not a regression (the same commit's
+      # train-guard and lint jobs, and every unit test in this same job,
+      # had already passed cleanly). Retrigger before assuming a real
+      # failure; see the "ci: retrigger after a CI-infra hang" precedent.
       - run: make test
-      - run: make coverage-check
+
+      # The coverage floor (COVERAGE_MIN=70, Makefile) only fails the train
+      # PR (develop -> main). On a feature PR the number is still measured
+      # and printed, but as a warning: the debt is visible without
+      # blocking the PR, and gets collected all at once when the train
+      # leaves.
+      - name: Coverage
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          if [ "$BASE_REF" = "main" ]; then
+            make coverage-check
+          else
+            make coverage-check \
+              || echo "::warning::coverage below the floor; will fail the develop -> main PR"
+          fi
 
       # The per-version evidence: which routes this leg actually exercised,
       # and with what result. The route-matrix job below turns the three
@@ -183,6 +242,7 @@ jobs:
             && echo "DB_TYPE = sqlite3" >> /tmp/conf/app.ini
             && echo "[repository]" >> /tmp/conf/app.ini
             && echo "ROOT = /tmp/data/" >> /tmp/conf/app.ini
+            && echo "ENABLE_FLAGS = true" >> /tmp/conf/app.ini
             && echo "[server]" >> /tmp/conf/app.ini
             && echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
             && echo "[quota]" >> /tmp/conf/app.ini

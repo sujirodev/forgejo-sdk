@@ -22,9 +22,21 @@ We still track upstream (`git remote add upstream https://codeberg.org/mvdkleijn
 
 ## Use it
 
+```sh
+go get codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
+```
+
 ```go
 import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
 ```
+
+Reference docs: [pkg.go.dev](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
+
+Releases are tagged `forgejo/vX.Y.Z`, because the module lives in the
+`forgejo/` subdirectory; for the Go tooling the version is `vX.Y.Z`, without
+that prefix. Besides Codeberg's automatic source archives, every release
+carries two attachments: a CycloneDX SBOM of the module and its dependencies,
+and the [route contract](#route-coverage) pinned to that version.
 
 ## Version Requirements
  * go >= 1.25
@@ -45,9 +57,9 @@ request, so a stale table is a red build instead of a promise nobody checked.
 <!-- route-matrix:start -->
 | Forgejo | Routes ok | n/a (guard) | Declared exception | Total |
 |---|---|---|---|---|
-| 11.0.16 (LTS) | 416 | 21 | 29 | 466 |
-| 15.0.9 (LTS) | 431 | 3 | 32 | 466 |
-| 16.0.5 (latest stable) | 428 | 0 | 38 | 466 |
+| 11.0.16 (LTS) | 457 | 25 | 23 | 505 |
+| 15.0.9 (LTS) | 476 | 3 | 26 | 505 |
+| 16.0.5 (latest stable) | 473 | 0 | 32 | 505 |
 
 Generated from the integration suite on every pull request.
 Per-route detail: [`ROUTES.md`](ROUTES.md).

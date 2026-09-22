@@ -13,6 +13,7 @@ import (
 )
 
 func TestSyncFork(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestSyncFork ==")
 	c := newTestClient()
 

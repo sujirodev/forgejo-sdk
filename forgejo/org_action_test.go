@@ -37,6 +37,7 @@ func newActionTestOrg(t *testing.T, c *Client, prefix string) string {
 }
 
 func TestOrgActionSecrets(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgActionSecrets ==")
 	c := newTestClient()
 
@@ -199,6 +200,7 @@ func TestOrgActionSecrets(t *testing.T) {
 }
 
 func TestCreateSecretOption_Validate(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCreateSecretOption_Validate ==")
 	tests := []struct {
 		name    string
@@ -356,6 +358,7 @@ func TestCreateSecretOption_Validate(t *testing.T) {
 }
 
 func TestDeleteOrgActionSecret(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeleteOrgActionSecret ==")
 	c := newTestClient()
 
@@ -375,6 +378,7 @@ func TestDeleteOrgActionSecret(t *testing.T) {
 }
 
 func TestListOrgActionJobs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListOrgActionJobs ==")
 	c := newTestClient()
 
@@ -391,6 +395,7 @@ func TestListOrgActionJobs(t *testing.T) {
 }
 
 func TestOrgActionVariables(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgActionVariables ==")
 	c := newTestClient()
 
@@ -433,6 +438,7 @@ func TestOrgActionVariables(t *testing.T) {
 }
 
 func TestGetOrgActionRunnerRegistrationToken(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetOrgActionRunnerRegistrationToken ==")
 	c := newTestClient()
 
@@ -442,4 +448,58 @@ func TestGetOrgActionRunnerRegistrationToken(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.NotEmpty(t, token.Token)
+}
+
+func TestOrgRunnersCRUD(t *testing.T) {
+	log.Println("== TestOrgRunnersCRUD ==")
+	c := newTestClient()
+
+	orgName := "OrgRunnersTestOrg"
+	_, _, err := c.GetOrg(orgName)
+	if err == nil {
+		_, _ = c.DeleteOrg(orgName)
+	}
+	_, _, err = c.CreateOrg(CreateOrgOption{Name: orgName, Visibility: VisibleTypePublic})
+	require.NoError(t, err)
+	defer func() { _, _ = c.DeleteOrg(orgName) }()
+
+	// Confirmed absent on a live 13.0.0 instance and present by 15.0.9;
+	// below that the SDK's guard refuses the call, which is the documented
+	// behavior and worth asserting.
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.ListOrgRunners(orgName, ListOrgRunnersOption{})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
+	// Listing should always succeed, even with zero runners registered.
+	runners, resp, err := c.ListOrgRunners(orgName, ListOrgRunnersOption{})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.NotNil(t, runners)
+
+	registered, resp, err := c.RegisterOrgRunner(orgName, RegisterRunnerOption{
+		Name:        "sdk-test-runner",
+		Description: "runner registered by the SDK test suite",
+	})
+	if err != nil {
+		t.Skipf("could not register an org runner, skipping: %v", err)
+	}
+	require.NotNil(t, resp)
+	require.NotEmpty(t, registered.Token)
+	require.NotZero(t, registered.ID)
+	defer func() { _, _ = c.DeleteOrgRunner(orgName, registered.ID) }()
+
+	runner, resp, err := c.GetOrgRunner(orgName, registered.ID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, "sdk-test-runner", runner.Name)
+	assert.Equal(t, registered.UUID, runner.UUID)
+
+	resp, err = c.DeleteOrgRunner(orgName, registered.ID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	_, _, err = c.GetOrgRunner(orgName, registered.ID)
+	assert.Error(t, err)
 }

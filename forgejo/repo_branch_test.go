@@ -11,13 +11,13 @@ package forgejo
 import (
 	"log"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRepoBranches(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoBranches ==")
 	c := newTestClient()
 	repoName := "branches"
@@ -26,8 +26,12 @@ func TestRepoBranches(t *testing.T) {
 	if repo == nil {
 		return
 	}
-	time.Sleep(1 * time.Second)
-	bl, _, err := c.ListRepoBranches(repo.Owner.UserName, repo.Name, ListRepoBranchesOptions{})
+	var bl []*Branch
+	var err error
+	eventually(t, func() bool {
+		bl, _, err = c.ListRepoBranches(repo.Owner.UserName, repo.Name, ListRepoBranchesOptions{})
+		return err == nil && len(bl) >= 3
+	})
 	require.NoError(t, err)
 	assert.Len(t, bl, 3)
 
@@ -68,6 +72,7 @@ func TestRepoBranches(t *testing.T) {
 }
 
 func TestRepoBranchProtection(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoBranchProtection ==")
 	c := newTestClient()
 	repoName := "BranchProtection"
@@ -142,6 +147,7 @@ func TestRepoBranchProtection(t *testing.T) {
 }
 
 func TestUpdateRepoBranch(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUpdateRepoBranch ==")
 	c := newTestClient()
 	repoName := "UpdateBranch"

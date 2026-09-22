@@ -14,6 +14,7 @@ import (
 
 // TestOrgLabels test organization-wide label related func
 func TestOrgLabels(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestOrgLabels ==")
 	c := newTestClient()
 

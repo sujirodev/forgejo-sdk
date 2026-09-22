@@ -33,12 +33,7 @@ func (c *Client) ListReleaseAttachments(user, repo string, release int64) ([]*At
 	if err := escapeValidatePathSegments(&user, &repo); err != nil {
 		return nil, nil, err
 	}
-
-	attachments := make([]*Attachment, 0)
-	resp, err := c.getParsedResponse("GET",
-		fmt.Sprintf("/repos/%s/%s/releases/%d/assets", user, repo, release),
-		nil, nil, &attachments)
-	return attachments, resp, err
+	return c.listAttachments(fmt.Sprintf("/repos/%s/%s/releases/%d/assets", user, repo, release))
 }
 
 // GetReleaseAttachment returns the requested attachment
@@ -46,11 +41,7 @@ func (c *Client) GetReleaseAttachment(user, repo string, release, id int64) (*At
 	if err := escapeValidatePathSegments(&user, &repo); err != nil {
 		return nil, nil, err
 	}
-	a := new(Attachment)
-	resp, err := c.getParsedResponse("GET",
-		fmt.Sprintf("/repos/%s/%s/releases/%d/assets/%d", user, repo, release, id),
-		nil, nil, &a)
-	return a, resp, err
+	return c.getAttachment(fmt.Sprintf("/repos/%s/%s/releases/%d/assets/%d", user, repo, release, id))
 }
 
 // CreateReleaseAttachment creates an attachment for the given release
@@ -58,6 +49,50 @@ func (c *Client) CreateReleaseAttachment(user, repo string, release int64, file 
 	if err := escapeValidatePathSegments(&user, &repo); err != nil {
 		return nil, nil, err
 	}
+	return c.uploadAttachment(fmt.Sprintf("/repos/%s/%s/releases/%d/assets", user, repo, release), filename, file)
+}
+
+// EditAttachmentOptions options for editing attachments
+type EditAttachmentOptions struct {
+	Name string `json:"name"`
+}
+
+// EditReleaseAttachment updates the given attachment with the given options
+func (c *Client) EditReleaseAttachment(user, repo string, release, attachment int64, form EditAttachmentOptions) (*Attachment, *Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, nil, err
+	}
+	return c.editAttachment(fmt.Sprintf("/repos/%s/%s/releases/%d/assets/%d", user, repo, release, attachment), form)
+}
+
+// DeleteReleaseAttachment deletes the given attachment including the uploaded file
+func (c *Client) DeleteReleaseAttachment(user, repo string, release, id int64) (*Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, err
+	}
+	return c.deleteAttachment(fmt.Sprintf("/repos/%s/%s/releases/%d/assets/%d", user, repo, release, id))
+}
+
+// listAttachments lists the attachments at apiPath (an issue's, comment's or
+// release's /assets endpoint)
+func (c *Client) listAttachments(apiPath string) ([]*Attachment, *Response, error) {
+	attachments := make([]*Attachment, 0)
+	resp, err := c.getParsedResponse("GET", apiPath, nil, nil, &attachments)
+	return attachments, resp, err
+}
+
+// getAttachment fetches the single attachment at apiPath (an issue's,
+// comment's or release's /assets/{id} endpoint)
+func (c *Client) getAttachment(apiPath string) (*Attachment, *Response, error) {
+	a := new(Attachment)
+	resp, err := c.getParsedResponse("GET", apiPath, nil, nil, &a)
+	return a, resp, err
+}
+
+// uploadAttachment uploads file as a multipart/form-data attachment to apiPath
+// (an issue's, comment's or release's /assets endpoint) and decodes the
+// created Attachment from the response
+func (c *Client) uploadAttachment(apiPath, filename string, file io.Reader) (*Attachment, *Response, error) {
 	// Write file to body
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
@@ -75,36 +110,26 @@ func (c *Client) CreateReleaseAttachment(user, repo string, release int64, file 
 
 	// Send request
 	attachment := new(Attachment)
-	resp, err := c.getParsedResponse("POST",
-		fmt.Sprintf("/repos/%s/%s/releases/%d/assets", user, repo, release),
+	resp, err := c.getParsedResponse("POST", apiPath,
 		http.Header{"Content-Type": []string{writer.FormDataContentType()}}, body, &attachment)
 	return attachment, resp, err
 }
 
-// EditAttachmentOptions options for editing attachments
-type EditAttachmentOptions struct {
-	Name string `json:"name"`
-}
-
-// EditReleaseAttachment updates the given attachment with the given options
-func (c *Client) EditReleaseAttachment(user, repo string, release, attachment int64, form EditAttachmentOptions) (*Attachment, *Response, error) {
-	if err := escapeValidatePathSegments(&user, &repo); err != nil {
-		return nil, nil, err
-	}
+// editAttachment updates the attachment at apiPath (an issue's, comment's or
+// release's /assets/{id} endpoint) with the given options
+func (c *Client) editAttachment(apiPath string, form EditAttachmentOptions) (*Attachment, *Response, error) {
 	body, err := json.Marshal(&form)
 	if err != nil {
 		return nil, nil, err
 	}
 	attach := new(Attachment)
-	resp, err := c.getParsedResponse("PATCH", fmt.Sprintf("/repos/%s/%s/releases/%d/assets/%d", user, repo, release, attachment), jsonHeader, bytes.NewReader(body), attach)
+	resp, err := c.getParsedResponse("PATCH", apiPath, jsonHeader, bytes.NewReader(body), attach)
 	return attach, resp, err
 }
 
-// DeleteReleaseAttachment deletes the given attachment including the uploaded file
-func (c *Client) DeleteReleaseAttachment(user, repo string, release, id int64) (*Response, error) {
-	if err := escapeValidatePathSegments(&user, &repo); err != nil {
-		return nil, err
-	}
-	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/releases/%d/assets/%d", user, repo, release, id), nil, nil)
+// deleteAttachment deletes the attachment at apiPath (an issue's, comment's
+// or release's /assets/{id} endpoint) including the uploaded file
+func (c *Client) deleteAttachment(apiPath string) (*Response, error) {
+	_, resp, err := c.getResponse("DELETE", apiPath, nil, nil)
 	return resp, err
 }

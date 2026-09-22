@@ -18,6 +18,7 @@ import (
 )
 
 func TestRelease(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRelease ==")
 	c := newTestClient()
 

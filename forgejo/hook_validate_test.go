@@ -24,6 +24,7 @@ import (
 // Hashers are based on https://github.com/go-gitea/gitea/blob/0dfc2e55ea258d2b1a3cd86e2b6f27a481e495ff/services/webhook/deliver.go#L105-L116
 
 func TestVerifyWebhookSignature(t *testing.T) {
+	t.Parallel()
 	secret := "s3cr3t"
 	payload := []byte(`{"foo": "bar", "baz": true}`)
 
@@ -67,6 +68,7 @@ func TestVerifyWebhookSignature(t *testing.T) {
 }
 
 func TestVerifyWebhookSignatureHandler(t *testing.T) {
+	t.Parallel()
 	secret := "s3cr3t"
 	payload := []byte(`{"foo": "bar", "baz": true}`)
 

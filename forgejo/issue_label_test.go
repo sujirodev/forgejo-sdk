@@ -18,6 +18,7 @@ import (
 
 // TestLabels test label related func
 func TestLabels(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestLabels ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "LabelTestsRepo", c)

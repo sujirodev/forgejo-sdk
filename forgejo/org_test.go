@@ -17,6 +17,7 @@ import (
 )
 
 func TestListAllOrgs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListAllOrgs ==")
 	c := newTestClient()
 
@@ -45,7 +46,51 @@ func TestListAllOrgs(t *testing.T) {
 	assert.NoError(t, err, "failed to delete org")
 }
 
+func TestRenameOrg(t *testing.T) {
+	log.Println("== TestRenameOrg ==")
+	c := newTestClient()
+
+	oldName := "RenameOrgTestOld"
+	newName := "RenameOrgTestNew"
+	_, _, err := c.GetOrg(oldName)
+	if err == nil {
+		_, _ = c.DeleteOrg(oldName)
+	}
+	_, _, err = c.GetOrg(newName)
+	if err == nil {
+		_, _ = c.DeleteOrg(newName)
+	}
+
+	_, _, err = c.CreateOrg(CreateOrgOption{
+		Name:       oldName,
+		Visibility: VisibleTypePublic,
+	})
+	require.NoError(t, err)
+	defer func() {
+		_, _ = c.DeleteOrg(oldName)
+		_, _ = c.DeleteOrg(newName)
+	}()
+
+	resp, err := c.RenameOrg(oldName, RenameOrgOption{NewName: newName})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	renamed, _, err := c.GetOrg(newName)
+	require.NoError(t, err)
+	assert.Equal(t, newName, renamed.UserName)
+
+	// Confirmed against a live Forgejo instance: the server answers a
+	// redirect (307) for the old org name, not a 404, and the SDK's HTTP
+	// client follows it -- so this is expected to keep resolving, to the
+	// same org, not to error out (same behavior already found for
+	// AdminRenameUser).
+	stillResolves, _, err := c.GetOrg(oldName)
+	require.NoError(t, err)
+	assert.Equal(t, renamed.ID, stillResolves.ID)
+}
+
 func TestOrgs_ListMyListUserEdit(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	org := newTestOrg(t, c)
 

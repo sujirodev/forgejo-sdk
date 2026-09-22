@@ -13,6 +13,7 @@ import (
 )
 
 func TestListLicenseTemplates(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListLicenseTemplates ==")
 	c := newTestClient()
 
@@ -31,6 +32,7 @@ func TestListLicenseTemplates(t *testing.T) {
 }
 
 func TestGetLicenseTemplate(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetLicenseTemplate ==")
 	c := newTestClient()
 
@@ -42,6 +44,7 @@ func TestGetLicenseTemplate(t *testing.T) {
 }
 
 func TestGetLicenseTemplate_NotFound(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetLicenseTemplate_NotFound ==")
 	c := newTestClient()
 

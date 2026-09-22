@@ -13,6 +13,7 @@ import (
 )
 
 func TestRepoGitNotes(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoGitNotes ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()

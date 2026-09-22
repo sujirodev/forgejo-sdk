@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminQuotaRules(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminQuotaRules ==")
 	c := newTestClient()
 

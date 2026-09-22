@@ -13,6 +13,7 @@ import (
 )
 
 func TestRepoRefs(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true, DefaultBranch: "main"})
 
@@ -37,6 +38,7 @@ func TestRepoRefs(t *testing.T) {
 }
 
 func TestGetRepoAllGitRefs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoAllGitRefs ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "AllGitRefs", c)

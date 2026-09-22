@@ -17,18 +17,22 @@ import (
 )
 
 func TestRepoWatch(t *testing.T) {
+	t.Parallel()
 	log.Printf("== TestRepoWatch ==")
 	c := newTestClient()
 	rawVersion, _, err := c.ServerVersion()
 	require.NoError(t, err)
 	assert.NotEmpty(t, rawVersion)
 
+	owner := createTestUser(t, uniqueName(t, "wtowner"), c)
+	c.SetSudo(owner.UserName)
+	t.Cleanup(func() { c.SetSudo("") })
 	repo1, _ := createTestRepo(t, "TestRepoWatch_1", c)
 	repo2, _ := createTestRepo(t, "TestRepoWatch_2", c)
 	assert.NotEqual(t, repo1, repo2)
 
 	// GetWatchedRepos
-	wl, _, err := c.GetWatchedRepos("test01")
+	wl, _, err := c.GetWatchedRepos(owner.UserName)
 	require.NoError(t, err)
 	assert.NotNil(t, wl)
 	maxcount := len(wl)
@@ -54,4 +58,11 @@ func TestRepoWatch(t *testing.T) {
 	require.NoError(t, err)
 	isWatching, _, _ = c.CheckRepoWatch(repo1.Owner.UserName, repo1.Name)
 	assert.True(t, isWatching)
+
+	// ListRepoSubscribers
+	subs, _, err := c.ListRepoSubscribers(repo1.Owner.UserName, repo1.Name, ListRepoSubscribersOptions{})
+	require.NoError(t, err)
+	if assert.Len(t, subs, 1) {
+		assert.Equal(t, owner.UserName, subs[0].UserName)
+	}
 }

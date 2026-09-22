@@ -12,31 +12,42 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNotifications(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestNotifications ==")
 
-	// init user2
 	c := newTestClient()
 
-	user1, _, err := c.GetMyUserInfo()
-	require.NoError(t, err)
-	user2 := createTestUser(t, "notify2", c)
+	// Dedicated accounts. This test used to make the shared admin account
+	// (test01) the notified user, and its last block asserted that account
+	// held exactly 2 notifications. That 2 never came from anything this
+	// test did: run alone against a fresh instance the account holds 0, and
+	// the assertion only ever passed because of what the rest of the suite
+	// happened to leave in test01's inbox. Every account here is created by
+	// this test, so every count below is one this test caused.
+	//
+	// createTestUser needs the admin account, so all three are created
+	// before the first SetSudo.
+	user1 := createTestUser(t, uniqueName(t, "notifyowner"), c)
+	user2 := createTestUser(t, uniqueName(t, "notifywatch"), c)
+	reader := createTestUser(t, uniqueName(t, "notifyread"), c)
+	t.Cleanup(func() { c.SetSudo("") })
 
 	// create 2 repos
-	repoA, err := createTestRepo(t, "TestNotifications_A", c)
+	c.SetSudo(user1.UserName)
+	repoA, err := createTestRepo(t, uniqueName(t, "notifA"), c)
 	require.NoError(t, err)
 
 	c.sudo = user2.UserName
-	repoB, err := createTestRepo(t, "TestNotifications_B", c)
+	repoB, err := createTestRepo(t, uniqueName(t, "notifB"), c)
 	require.NoError(t, err)
 	_, err = c.WatchRepo(user1.UserName, repoA.Name)
-	c.sudo = ""
+	c.sudo = user1.UserName
 	require.NoError(t, err)
 
 	c.sudo = user2.UserName
@@ -46,16 +57,20 @@ func TestNotifications(t *testing.T) {
 	count, _, err := c.CheckNotifications()
 	assert.Equal(t, int64(0), count)
 	require.NoError(t, err)
-	c.sudo = ""
+	c.sudo = user1.UserName
 	_, _, err = c.CreateIssue(repoA.Owner.UserName, repoA.Name, CreateIssueOption{Title: "A Issue", Closed: false})
 	require.NoError(t, err)
 	issue, _, err := c.CreateIssue(repoB.Owner.UserName, repoB.Name, CreateIssueOption{Title: "B Issue", Closed: false})
 	require.NoError(t, err)
-	time.Sleep(time.Second * 5)
 
-	// CheckNotifications of user2
+	// CheckNotifications of user2. Forgejo delivers notifications
+	// asynchronously; poll instead of sleeping a fixed amount, which stops
+	// being enough under load.
 	c.sudo = user2.UserName
-	count, _, err = c.CheckNotifications()
+	eventually(t, func() bool {
+		count, _, err = c.CheckNotifications()
+		return err == nil && count == 2
+	})
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 
@@ -104,12 +119,15 @@ func TestNotifications(t *testing.T) {
 
 	// ReadThread
 	iState := StateClosed
-	c.sudo = ""
+	c.sudo = user1.UserName
 	_, _, err = c.EditIssue(repoB.Owner.UserName, repoB.Name, issue.Index, EditIssueOption{State: &iState})
 	require.NoError(t, err)
-	time.Sleep(time.Second * 5)
 
 	c.sudo = user2.UserName
+	eventually(t, func() bool {
+		count, _, err = c.CheckNotifications()
+		return err == nil && count == 1
+	})
 	nList, _, err = c.ListNotifications(ListNotificationOptions{})
 	require.NoError(t, err)
 	count, _, err = c.CheckNotifications()
@@ -122,7 +140,29 @@ func TestNotifications(t *testing.T) {
 		assert.Equal(t, notification.ID, nList[0].ID)
 	}
 
-	c.sudo = ""
+	// The remaining routes -- ReadNotifications with no filter, the Status
+	// filters, and ReadNotification's pinned/unread forms -- need an account
+	// holding exactly two notifications. Build one instead of borrowing
+	// whatever the shared admin account happened to accumulate: `reader`
+	// watches repoA, its inbox is drained, and then user1 opens exactly two
+	// issues there.
+	c.sudo = reader.UserName
+	_, err = c.WatchRepo(user1.UserName, repoA.Name)
+	require.NoError(t, err)
+	_, _, err = c.ReadNotifications(MarkNotificationOptions{})
+	require.NoError(t, err)
+
+	c.sudo = user1.UserName
+	_, _, err = c.CreateIssue(repoA.Owner.UserName, repoA.Name, CreateIssueOption{Title: "C Issue", Closed: false})
+	require.NoError(t, err)
+	_, _, err = c.CreateIssue(repoA.Owner.UserName, repoA.Name, CreateIssueOption{Title: "D Issue", Closed: false})
+	require.NoError(t, err)
+
+	c.sudo = reader.UserName
+	eventually(t, func() bool {
+		n, _, cErr := c.CheckNotifications()
+		return cErr == nil && n == 2
+	})
 	notifications, _, err = c.ReadNotifications(MarkNotificationOptions{})
 	require.NoError(t, err)
 	assert.Len(t, notifications, 2)

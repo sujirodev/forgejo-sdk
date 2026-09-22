@@ -121,13 +121,33 @@
       "since": ""
     },
     {
-      "route": "GetNodeInfo",
+      "route": "CancelScheduledAutoMerge",
       "versions": [
         "*"
       ],
-      "reason": "needs-config",
-      "detail": "404s with federation disabled (the harness's default); enabling [federation] to fix that was tried and reverted because it makes StarRepo 500 on Forgejo 16.0.5 in this same harness, which is worse",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "reason": "negative-only",
+      "detail": "the test never schedules an auto-merge first, so the documented \"nothing scheduled\" failure is the intended, asserted outcome",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/63",
+      "since": ""
+    },
+    {
+      "route": "SyncForkBranch",
+      "versions": [
+        "*"
+      ],
+      "reason": "negative-only",
+      "detail": "called right after SyncForkDefault already synced the same branch, so there's nothing left to sync and an error is the asserted outcome",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/63",
+      "since": ""
+    },
+    {
+      "route": "ConvertToNormalRepo",
+      "versions": [
+        "*"
+      ],
+      "reason": "negative-only",
+      "detail": "the harness has no way to produce an actual mirror repo to convert, so failing is the asserted outcome",
+      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/63",
       "since": ""
     },
     {

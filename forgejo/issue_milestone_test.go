@@ -18,6 +18,7 @@ import (
 )
 
 func TestMilestones(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestMilestones ==")
 	c := newTestClient()
 
@@ -86,6 +87,7 @@ func TestMilestones(t *testing.T) {
 }
 
 func TestMilestoneByName_EditDelete(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
@@ -105,4 +107,31 @@ func TestMilestoneByName_EditDelete(t *testing.T) {
 
 	_, _, err = c.GetMilestoneByName(repo.Owner.UserName, repo.Name, "v1.0")
 	require.Error(t, err)
+}
+
+// TestMilestoneByName_EditLegacyPath exercises EditMilestoneByName's
+// pre-1.13.0 branch, which resolves the name to an ID with
+// resolveMilestoneByName and edits it through EditMilestone -- against the
+// same real server, just with the client's cached version overridden to
+// look old (see TestGetPullRequestDiff_LegacyPath for why that's enough).
+func TestMilestoneByName_EditLegacyPath(t *testing.T) {
+	t.Parallel()
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+
+	_, _, err := c.CreateMilestone(repo.Owner.UserName, repo.Name, CreateMilestoneOption{Title: "v2.0"})
+	require.NoError(t, err)
+
+	legacy, err := newTestClientOpts(SetForgejoVersion("1.12.0"))
+	require.NoError(t, err)
+
+	newDescription := "renamed via the legacy path"
+	edited, _, err := legacy.EditMilestoneByName(repo.Owner.UserName, repo.Name, "v2.0", EditMilestoneOption{
+		Description: &newDescription,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, newDescription, edited.Description)
+
+	_, _, err = legacy.EditMilestoneByName(repo.Owner.UserName, repo.Name, "NoEvidenceOfExist", EditMilestoneOption{})
+	require.Error(t, err, "resolveMilestoneByName itself fails, before any edit is attempted")
 }

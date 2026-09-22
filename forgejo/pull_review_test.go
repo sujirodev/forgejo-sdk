@@ -17,6 +17,7 @@ import (
 )
 
 func TestPullReview(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestPullReview ==")
 	c := newTestClient()
 
@@ -189,20 +190,64 @@ func TestPullReview(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestPullReviewComments(t *testing.T) {
+	t.Parallel()
+	log.Println("== TestPullReviewComments ==")
+	c := newTestClient()
+
+	repoName := "ReviewComments"
+	repo, pull, submitter, reviewer, success := preparePullReviewTest(t, c, repoName)
+	if !success {
+		return
+	}
+
+	r, _, err := c.CreatePullReview(repo.Owner.UserName, repo.Name, pull.Index, CreatePullReviewOptions{
+		State: ReviewStateComment,
+		Body:  "let's discuss this",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, r)
+
+	rc, _, err := c.CreatePullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, CreatePullReviewCommentOptions{
+		Path:       "WOW-file",
+		Body:       "why this name?",
+		NewLineNum: 1,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, rc)
+	assert.Equal(t, "why this name?", rc.Body)
+
+	got, _, err := c.GetPullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, rc.ID)
+	require.NoError(t, err)
+	assert.Equal(t, rc.ID, got.ID)
+	assert.Equal(t, rc.Body, got.Body)
+
+	_, err = c.DeletePullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, rc.ID)
+	require.NoError(t, err)
+
+	_, _, err = c.GetPullReviewComment(repo.Owner.UserName, repo.Name, pull.Index, r.ID, rc.ID)
+	require.Error(t, err)
+
+	_, err = c.AdminDeleteUser(reviewer.UserName)
+	require.NoError(t, err)
+	_, err = c.AdminDeleteUser(submitter.UserName)
+	require.NoError(t, err)
+}
+
 func preparePullReviewTest(t *testing.T, c *Client, repoName string) (*Repository, *PullRequest, *User, *User, bool) {
 	repo, err := createTestRepo(t, repoName, c)
 	if !assert.NoError(t, err) { //nolint
 		return nil, nil, nil, nil, false
 	}
 
-	pullSubmitter := createTestUser(t, "pull_submitter", c)
+	pullSubmitter := createTestUser(t, uniqueName(t, "pullsub"), c)
 	write := AccessModeWrite
 	_, err = c.AddCollaborator(repo.Owner.UserName, repo.Name, pullSubmitter.UserName, AddCollaboratorOption{
 		Permission: &write,
 	})
 	require.NoError(t, err)
 
-	c.SetSudo("pull_submitter")
+	c.SetSudo(pullSubmitter.UserName)
 
 	newFile, _, err := c.CreateFile(repo.Owner.UserName, repo.Name, "WOW-file", CreateFileOptions{
 		Content: "QSBuZXcgRmlsZQoKYW5kIHNvbWUgbGluZXMK",
@@ -227,7 +272,7 @@ func preparePullReviewTest(t *testing.T, c *Client, repoName string) (*Repositor
 
 	c.SetSudo("")
 
-	reviewer := createTestUser(t, "pull_reviewer", c)
+	reviewer := createTestUser(t, uniqueName(t, "pullrev"), c)
 	admin := AccessModeAdmin
 	_, err = c.AddCollaborator(repo.Owner.UserName, repo.Name, pullSubmitter.UserName, AddCollaboratorOption{
 		Permission: &admin,

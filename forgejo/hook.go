@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -243,5 +244,19 @@ func (c *Client) DeleteRepoHook(user, repo string, id int64) (*Response, error) 
 		return nil, err
 	}
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/hooks/%d", user, repo, id), nil, nil)
+	return resp, err
+}
+
+// TestRepoHook tests a push webhook of a repository. ref is optional and
+// defaults to the repository's default branch.
+func (c *Client) TestRepoHook(user, repo string, id int64, ref string) (*Response, error) {
+	if err := escapeValidatePathSegments(&user, &repo); err != nil {
+		return nil, err
+	}
+	path := fmt.Sprintf("/repos/%s/%s/hooks/%d/tests", user, repo, id)
+	if len(ref) != 0 {
+		path += "?ref=" + url.QueryEscape(ref)
+	}
+	_, resp, err := c.getResponse("POST", path, nil, nil)
 	return resp, err
 }

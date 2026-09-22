@@ -12,7 +12,11 @@ import (
 )
 
 func TestIssueStopwatch_StartStop(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
+	owner := createTestUser(t, uniqueName(t, "swowner"), c)
+	c.SetSudo(owner.UserName)
+	t.Cleanup(func() { c.SetSudo("") })
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	issue := createTestIssue(t, c, repo.Name, "Stopwatch target", "", nil, nil, 0, nil, false, false)
 
@@ -40,7 +44,11 @@ func TestIssueStopwatch_StartStop(t *testing.T) {
 }
 
 func TestIssueStopwatch_Delete(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
+	owner := createTestUser(t, uniqueName(t, "swowner"), c)
+	c.SetSudo(owner.UserName)
+	t.Cleanup(func() { c.SetSudo("") })
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	issue := createTestIssue(t, c, repo.Name, "Stopwatch delete target", "", nil, nil, 0, nil, false, false)
 

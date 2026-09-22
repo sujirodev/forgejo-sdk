@@ -18,6 +18,7 @@ import (
 )
 
 func TestMyUser(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestMyUser ==")
 
 	var expectedAvatarURL, expectedHTMLURL string
@@ -43,6 +44,7 @@ func TestMyUser(t *testing.T) {
 }
 
 func TestUserApp(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserApp ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -67,17 +69,19 @@ func TestUserApp(t *testing.T) {
 }
 
 func TestUserSearch(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserSearch ==")
 	c := newTestClient()
 
-	createTestUser(t, "tu1", c)
-	createTestUser(t, "eatIt_2", c)
-	createTestUser(t, "thirdIs3", c)
-	createTestUser(t, "advancedUser", c)
-	createTestUser(t, "1n2n3n", c)
-	createTestUser(t, "otherIt", c)
+	// The keyword has to be unique to this test: users are never deleted, so
+	// a dictionary word like "it" or "other" matches whatever any other test
+	// happened to create first (order-dependent even before parallelism).
+	marker := uniqueName(t, "usrq")
+	createTestUser(t, marker+"-a", c)
+	createTestUser(t, marker+"-b", c)
+	createTestUser(t, uniqueName(t, "usrqx"), c)
 
-	ul, _, err := c.SearchUsers(SearchUsersOption{KeyWord: "other"})
+	ul, _, err := c.SearchUsers(SearchUsersOption{KeyWord: marker + "-a"})
 	require.NoError(t, err)
 	assert.Len(t, ul, 1)
 
@@ -85,22 +89,24 @@ func TestUserSearch(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, ul)
 
-	ul, _, err = c.SearchUsers(SearchUsersOption{KeyWord: "It"})
+	ul, _, err = c.SearchUsers(SearchUsersOption{KeyWord: marker})
 	require.NoError(t, err)
 	assert.Len(t, ul, 2)
 }
 
 func TestUserFollow(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserFollow ==")
 	c := newTestClient()
-	me, _, _ := c.GetMyUserInfo()
+	me := createTestUser(t, uniqueName(t, "flwowner"), c)
 
-	uA := "uFollow_A"
-	uB := "uFollow_B"
-	uC := "uFollow_C"
+	uA := uniqueName(t, "flwA")
+	uB := uniqueName(t, "flwB")
+	uC := uniqueName(t, "flwC")
 	createTestUser(t, uA, c)
 	createTestUser(t, uB, c)
 	createTestUser(t, uC, c)
+	t.Cleanup(func() { c.SetSudo("") })
 
 	// A follow ME
 	// B follow C & ME
@@ -126,7 +132,7 @@ func TestUserFollow(t *testing.T) {
 	require.NoError(t, err)
 
 	// ListMyFollowers of me
-	c.sudo = ""
+	c.sudo = me.UserName
 	f, _, err := c.ListMyFollowers(ListFollowersOptions{})
 	require.NoError(t, err)
 	assert.Len(t, f, 2)
@@ -164,6 +170,7 @@ func TestUserFollow(t *testing.T) {
 }
 
 func TestUserEmail(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserEmail ==")
 	c := newTestClient()
 	userN := "TestUserEmail"
@@ -208,6 +215,7 @@ func TestUserEmail(t *testing.T) {
 }
 
 func TestGetUserByID(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetUserByID ==")
 	c := newTestClient()
 
@@ -239,6 +247,13 @@ func createTestUser(t *testing.T, username string, client *Client) *User {
 		return user
 	}
 	user, _, err := client.AdminCreateUser(CreateUserOption{Username: username, Password: username + "!1234", Email: username + "@forgejo.org", MustChangePassword: OptionalBool(false), SendNotify: false})
+	if err != nil {
+		// Another parallel test may have created the same fixed-name user
+		// between the lookup above and this call.
+		if existing, _, gErr := client.GetUserInfo(username); gErr == nil && existing.ID != 0 {
+			return existing
+		}
+	}
 	require.NoError(t, err)
 	return user
 }

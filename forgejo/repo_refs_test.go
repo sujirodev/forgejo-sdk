@@ -5,6 +5,7 @@
 package forgejo
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestRepoRefs(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true, DefaultBranch: "main"})
 
@@ -33,4 +35,24 @@ func TestRepoRefs(t *testing.T) {
 
 	_, _, err = c.GetRepoRef(repo.Owner.UserName, repo.Name, "heads/does-not-exist")
 	require.Error(t, err)
+}
+
+func TestGetRepoAllGitRefs(t *testing.T) {
+	t.Parallel()
+	log.Println("== TestGetRepoAllGitRefs ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "AllGitRefs", c)
+	require.NoError(t, err)
+
+	refs, _, err := c.GetRepoAllGitRefs(repo.Owner.UserName, repo.Name)
+	require.NoError(t, err)
+	require.NotEmpty(t, refs)
+
+	found := false
+	for _, r := range refs {
+		if r.Ref == "refs/heads/main" {
+			found = true
+		}
+	}
+	assert.True(t, found)
 }

@@ -17,6 +17,7 @@ import (
 const tinyPNGBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 
 func TestUserAvatar(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserAvatar ==")
 	c := newTestClient()
 

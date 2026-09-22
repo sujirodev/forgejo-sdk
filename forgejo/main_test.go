@@ -155,6 +155,12 @@ SECRET_KEY     = 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcb
 DISABLE_GIT_HOOKS = false
 [migrations]
 ALLOW_LOCALNETWORKS = true
+[repository]
+ENABLE_FLAGS = true
+[quota]
+ENABLED = true
+[federation]
+ENABLED = true
 [database]
 DB_TYPE  = sqlite3
 [log]

@@ -13,6 +13,7 @@ import (
 )
 
 func TestListGitignoreTemplates(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListGitignoreTemplates ==")
 	c := newTestClient()
 
@@ -23,6 +24,7 @@ func TestListGitignoreTemplates(t *testing.T) {
 }
 
 func TestGetGitignoreTemplate(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetGitignoreTemplate ==")
 	c := newTestClient()
 
@@ -33,6 +35,7 @@ func TestGetGitignoreTemplate(t *testing.T) {
 }
 
 func TestGetGitignoreTemplate_NotFound(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetGitignoreTemplate_NotFound ==")
 	c := newTestClient()
 

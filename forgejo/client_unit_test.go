@@ -45,6 +45,7 @@ func newUnitTestClient(t *testing.T, srv *httptest.Server, opts ...ClientOption)
 }
 
 func TestUnit_DoRequest_TokenAuthHeader(t *testing.T) {
+	t.Parallel()
 	var gotAuth, gotUA string
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
@@ -61,6 +62,7 @@ func TestUnit_DoRequest_TokenAuthHeader(t *testing.T) {
 }
 
 func TestUnit_DoRequest_BasicAuthAndOTPHeader(t *testing.T) {
+	t.Parallel()
 	var gotUser, gotPass string
 	var gotOK bool
 	var gotOTP string
@@ -81,6 +83,7 @@ func TestUnit_DoRequest_BasicAuthAndOTPHeader(t *testing.T) {
 }
 
 func TestUnit_DoRequest_SudoHeader(t *testing.T) {
+	t.Parallel()
 	var gotSudo string
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotSudo = r.Header.Get("Sudo")
@@ -95,6 +98,7 @@ func TestUnit_DoRequest_SudoHeader(t *testing.T) {
 }
 
 func TestUnit_StatusCodeToErr_SuccessNoError(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"ok":true}`))
@@ -108,6 +112,7 @@ func TestUnit_StatusCodeToErr_SuccessNoError(t *testing.T) {
 }
 
 func TestUnit_StatusCodeToErr_JSONMessageBody(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		_ = json.NewEncoder(w).Encode(map[string]string{"message": "repository not found"})
@@ -121,6 +126,7 @@ func TestUnit_StatusCodeToErr_JSONMessageBody(t *testing.T) {
 }
 
 func TestUnit_StatusCodeToErr_NonJSONBody(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("boom, not json"))
@@ -135,6 +141,7 @@ func TestUnit_StatusCodeToErr_NonJSONBody(t *testing.T) {
 }
 
 func TestUnit_SetForgejoVersion_SkipsVersionCheck(t *testing.T) {
+	t.Parallel()
 	called := false
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		called = true
@@ -150,6 +157,7 @@ func TestUnit_SetForgejoVersion_SkipsVersionCheck(t *testing.T) {
 }
 
 func TestUnit_NewClient_RejectsServerOlderThanMinimum(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{"version": "1.10.0"})
 	})
@@ -161,6 +169,7 @@ func TestUnit_NewClient_RejectsServerOlderThanMinimum(t *testing.T) {
 }
 
 func TestUnit_NewClient_UnknownVersionStillReturnsClient(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]string{"version": "not-a-real-version"})
 	})
@@ -172,6 +181,7 @@ func TestUnit_NewClient_UnknownVersionStillReturnsClient(t *testing.T) {
 }
 
 func TestUnit_DoRequestWithContext_RespectsCancellation(t *testing.T) {
+	t.Parallel()
 	release := make(chan struct{})
 	t.Cleanup(func() { close(release) })
 

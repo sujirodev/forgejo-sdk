@@ -13,6 +13,7 @@ import (
 )
 
 func TestListUserActivityFeeds(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListUserActivityFeeds ==")
 	c := newTestClient()
 
@@ -29,6 +30,7 @@ func TestListUserActivityFeeds(t *testing.T) {
 }
 
 func TestGetUserHeatmapData(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetUserHeatmapData ==")
 	c := newTestClient()
 

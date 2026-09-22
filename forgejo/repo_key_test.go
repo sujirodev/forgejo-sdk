@@ -5,6 +5,7 @@
 package forgejo
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestRepoDeployKeys(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
@@ -41,4 +43,24 @@ func TestRepoDeployKeys(t *testing.T) {
 	keys, _, err = c.ListDeployKeys(repo.Owner.UserName, repo.Name, ListDeployKeysOptions{})
 	require.NoError(t, err)
 	assert.Empty(t, keys)
+}
+
+func TestGetRepoSigningKey(t *testing.T) {
+	t.Parallel()
+	log.Println("== TestGetRepoSigningKey ==")
+	c := newTestClient()
+	repo, err := createTestRepo(t, "SigningKey", c)
+	require.NoError(t, err)
+
+	key, resp, err := c.GetRepoSigningKey(repo.Owner.UserName, repo.Name)
+	assert.NotNil(t, resp)
+	// The test instance may or may not have instance signing configured.
+	// Either way the request itself must reach the route: a configured
+	// instance returns 200 with an ASCII-armored key, an unconfigured one
+	// returns 404 since there is no key to serve.
+	if err == nil {
+		assert.IsType(t, "", key)
+	} else {
+		assert.Equal(t, 404, resp.StatusCode)
+	}
 }

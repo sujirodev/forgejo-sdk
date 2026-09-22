@@ -83,6 +83,24 @@ func newTestOrg(t *testing.T, c *Client) *Organization {
 	return org
 }
 
+// listAllRepos pages through a repo listing call until a short page ends
+// it, since the server clamps the response to its own max page size no
+// matter how large a PageSize the caller asks for.
+func listAllRepos(list func(ListOptions) ([]*Repository, *Response, error)) ([]*Repository, error) {
+	const pageSize = 50
+	var all []*Repository
+	for page := 1; ; page++ {
+		repos, _, err := list(ListOptions{Page: page, PageSize: pageSize})
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, repos...)
+		if len(repos) < pageSize {
+			return all, nil
+		}
+	}
+}
+
 // asUser runs fn with c impersonating username via the sudo header (c must
 // be an admin client), then restores c's previous sudo value. This is the
 // established pattern in this suite (see createTestRepoForActions in
@@ -126,4 +144,31 @@ func testGPGPublicKey(t *testing.T) string {
 	data, err := os.ReadFile("testdata/gpg_test01.asc")
 	require.NoError(t, err)
 	return string(data)
+}
+
+// eventuallyTimeout bounds every eventually() poll. It is generous on
+// purpose: the point is not to time anything out quickly, it is to stop
+// waiting if the server never gets there, and let the assertion that
+// follows report what was actually seen.
+const eventuallyTimeout = 30 * time.Second
+
+// eventually retries fn until it reports success or eventuallyTimeout
+// passes. It replaces the suite's fixed time.Sleep calls, which wait on
+// Forgejo's asynchronous indexing/stat work: a fixed wait is either too
+// short (flaky under load) or too long (slow in the common case).
+//
+// It deliberately does not fail the test on timeout -- the caller's own
+// assertion runs next and says what was wrong, with the real values.
+func eventually(t *testing.T, fn func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(eventuallyTimeout)
+	for {
+		if fn() {
+			return
+		}
+		if time.Now().After(deadline) {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }

@@ -17,6 +17,7 @@ import (
 )
 
 func TestRepoFromTemplate(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoFromTemplate ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "TemplateRepo", c)

@@ -95,6 +95,39 @@ type CombinedStatus struct {
 	URL        string      `json:"url"`
 }
 
+// ListCommitStatusesOptions options for listing a commit's statuses by SHA
+type ListCommitStatusesOptions struct {
+	ListOptions
+	// Sort type, one of: oldest, recentupdate, leastupdate, leastindex, highestindex
+	Sort string
+	// State filters the statuses by state: pending, success, error, failure, warning
+	State StatusState
+}
+
+// QueryEncode turns options into querystring argument
+func (opt *ListCommitStatusesOptions) QueryEncode() string {
+	query := opt.getURLQuery()
+	if len(opt.Sort) > 0 {
+		query.Add("sort", opt.Sort)
+	}
+	if len(opt.State) > 0 {
+		query.Add("state", string(opt.State))
+	}
+	return query.Encode()
+}
+
+// ListCommitStatuses returns all statuses for a given commit sha, using the
+// legacy /statuses/{sha} route
+func (c *Client) ListCommitStatuses(owner, repo, sha string, opt ListCommitStatusesOptions) ([]*Status, *Response, error) {
+	if err := escapeValidatePathSegments(&owner, &repo, &sha); err != nil {
+		return nil, nil, err
+	}
+	opt.setDefaults()
+	statuses := make([]*Status, 0, opt.PageSize)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/statuses/%s?%s", owner, repo, sha, opt.QueryEncode()), jsonHeader, nil, &statuses)
+	return statuses, resp, err
+}
+
 // GetCombinedStatus returns the CombinedStatus for a given Commit
 func (c *Client) GetCombinedStatus(owner, repo, ref string) (*CombinedStatus, *Response, error) {
 	if err := escapeValidatePathSegments(&owner, &repo, &ref); err != nil {

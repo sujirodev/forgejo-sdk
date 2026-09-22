@@ -20,6 +20,7 @@ import (
 )
 
 func TestCreateRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCreateRepo ==")
 	c := newTestClient()
 	user, _, err := c.GetMyUserInfo()
@@ -40,6 +41,7 @@ func TestCreateRepo(t *testing.T) {
 }
 
 func TestRepoMigrateAndLanguages(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestMigrateRepo ==")
 	c := newTestClient()
 	user, _, uErr := c.GetMyUserInfo()
@@ -71,8 +73,11 @@ func TestRepoMigrateAndLanguages(t *testing.T) {
 	assert.NotEqual(t, zeroTime, repoG.MirrorUpdated)
 
 	log.Println("== TestRepoLanguages ==")
-	time.Sleep(time.Second * 2)
-	lang, _, err := c.GetRepoLanguages(repoM.Owner.UserName, repoM.Name)
+	var lang map[string]int64
+	eventually(t, func() bool {
+		lang, _, err = c.GetRepoLanguages(repoM.Owner.UserName, repoM.Name)
+		return err == nil && len(lang) >= 2
+	})
 	require.NoError(t, err)
 	assert.Len(t, lang, 2)
 	assert.Less(t, int64(217441), lang["Go"])
@@ -80,6 +85,7 @@ func TestRepoMigrateAndLanguages(t *testing.T) {
 }
 
 func TestSearchRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestSearchRepo ==")
 	c := newTestClient()
 
@@ -132,6 +138,7 @@ func TestSearchRepo(t *testing.T) {
 }
 
 func TestDeleteRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeleteRepo ==")
 	c := newTestClient()
 	repo, _ := createTestRepo(t, "TestDeleteRepo", c)
@@ -140,6 +147,7 @@ func TestDeleteRepo(t *testing.T) {
 }
 
 func TestGetArchive(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetArchive ==")
 	c := newTestClient()
 	repo, _ := createTestRepo(t, "ToDownload", c)
@@ -151,9 +159,10 @@ func TestGetArchive(t *testing.T) {
 }
 
 func TestGetArchiveReader(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetArchiveReader ==")
 	c := newTestClient()
-	repo, _ := createTestRepo(t, "ToDownload", c)
+	repo, _ := createTestRepo(t, "ToDownloadReader", c)
 	time.Sleep(time.Second / 2)
 	r, _, err := c.GetArchiveReader(repo.Owner.UserName, repo.Name, "main", ZipArchive)
 	require.NoError(t, err)
@@ -167,6 +176,7 @@ func TestGetArchiveReader(t *testing.T) {
 }
 
 func TestGetRepoByID(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoByID ==")
 	c := newTestClient()
 	testrepo, _ := createTestRepo(t, "TestGetRepoByID", c)
@@ -202,6 +212,13 @@ func createTestRepo(t *testing.T, name string, c *Client) (*Repository, error) {
 		IssueLabels: "Default",
 		Private:     false,
 	})
+	if err != nil {
+		// A parallel test using the same fixed name may have recreated it
+		// between the delete above and this call.
+		if existing, _, gErr := c.GetRepo(user.UserName, name); gErr == nil && existing != nil {
+			return existing, nil
+		}
+	}
 	require.NoError(t, err)
 	assert.NotNil(t, repo)
 
@@ -209,14 +226,25 @@ func createTestRepo(t *testing.T, name string, c *Client) (*Repository, error) {
 }
 
 func TestRepos_ListMyListUserListOrg(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
-	myRepos, _, err := c.ListMyRepos(ListReposOptions{})
+	// By the time this test runs, the account may already own more repos
+	// than fit in a single page: the server caps the response to its own
+	// max page size (confirmed via curl: a requested limit=1000 is silently
+	// clamped), regardless of what the SDK asks for, so a single call can't
+	// be trusted to return everything. Page through until a short page ends
+	// the listing.
+	myRepos, err := listAllRepos(func(opt ListOptions) ([]*Repository, *Response, error) {
+		return c.ListMyRepos(ListReposOptions{ListOptions: opt})
+	})
 	require.NoError(t, err)
 	assert.True(t, containsRepoName(myRepos, repo.Name))
 
-	userRepos, _, err := c.ListUserRepos(repo.Owner.UserName, ListReposOptions{})
+	userRepos, err := listAllRepos(func(opt ListOptions) ([]*Repository, *Response, error) {
+		return c.ListUserRepos(repo.Owner.UserName, ListReposOptions{ListOptions: opt})
+	})
 	require.NoError(t, err)
 	assert.True(t, containsRepoName(userRepos, repo.Name))
 
@@ -234,6 +262,7 @@ func TestRepos_ListMyListUserListOrg(t *testing.T) {
 // docs/PLANO-COBERTURA-TESTES.md section 4 / scripts/check-test-instance-settings.sh):
 // otherwise Forgejo refuses a clone address that resolves to itself.
 func TestMirrorSync(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	source := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 

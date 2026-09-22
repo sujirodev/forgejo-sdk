@@ -14,6 +14,7 @@ import (
 )
 
 func TestRenderMarkdown(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRenderMarkdown ==")
 	c := newTestClient()
 
@@ -27,6 +28,7 @@ func TestRenderMarkdown(t *testing.T) {
 }
 
 func TestRenderMarkdownRaw(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRenderMarkdownRaw ==")
 	c := newTestClient()
 
@@ -36,6 +38,7 @@ func TestRenderMarkdownRaw(t *testing.T) {
 }
 
 func TestRenderMarkup(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRenderMarkup ==")
 	c := newTestClient()
 

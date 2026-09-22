@@ -9,16 +9,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
+// TestGetNodeInfo needs [federation] ENABLED = true on the test instance
+// (see TESTING.md, "Server configuration"); without it GetNodeInfo 404s.
 func TestGetNodeInfo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetNodeInfo ==")
 	c := newTestClient()
 
 	info, _, err := c.GetNodeInfo(t.Context())
-	if err != nil {
-		t.Skipf("nodeinfo unavailable (federation likely disabled on this server): %v", err)
-	}
+	require.NoError(t, err)
 	assert.NotEmpty(t, info.Version)
 	assert.Equal(t, "forgejo", info.Software.Name)
 	assert.NotEmpty(t, info.Software.Version)

@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 341 | 6 | 10 | 0 | 357 |
-| V15.x | 347 | 0 | 10 | 0 | 357 |
-| V16.x (latest) | 347 | 0 | 10 | 0 | 357 |
+| V11.x | 351 | 6 | 13 | 0 | 370 |
+| V15.x | 357 | 0 | 13 | 0 | 370 |
+| V16.x (latest) | 357 | 0 | 13 | 0 | 370 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -152,6 +152,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `EditTagProtection` | ok | ok | ok | edits a tag protection for a repo |
 | `EditTeam` | ok | ok | ok | edits a team of an organization |
 | `Follow` | ok | ok | ok | set current user follow the target |
+| `GetActionsRun` | needs-config | needs-config | needs-config | returns the workflow run associated with the token used to |
 | `GetAnnotatedTag` | ok | ok | ok | get the tag object of an annotated tag (not lightweight tags) of a repository |
 | `GetArchive` | ok | ok | ok | get an archive of a repository by git reference |
 | `GetArchiveReader` | ok | ok | ok | gets a `git archive` for a particular tree-ish git reference |
@@ -168,6 +169,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetFileReader` | ok | ok | ok | return reader for download a file of repository, ref can be branch/tag/commit. |
 | `GetGPGKey` | ok | ok | ok | get current user's GPG key by key id |
 | `GetGPGKeyVerificationToken` | ok | ok | ok | gets a token that the user must sign with a GPG |
+| `GetGitignoreTemplate` | ok | ok | ok | returns the name and content of a single gitignore |
 | `GetGlobalAPISettings` | ok | ok | ok | get global api settings witch are exposed by it |
 | `GetGlobalAttachmentSettings` | ok | ok | ok | get global repository settings witch are exposed by API |
 | `GetGlobalRepoSettings` | ok | ok | ok | get global repository settings witch are exposed by API |
@@ -179,7 +181,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetIssueReactions` | ok | ok | ok | get a list reactions of an issue |
 | `GetIssueSubscribers` | ok | ok | ok | get list of users who subscribed on an issue |
 | `GetIssueTemplates` | ok | ok | ok | lists all issue templates of the repository |
+| `GetLabelTemplate` | ok | ok | ok | returns all the labels defined by a single label |
 | `GetLatestRelease` | ok | ok | ok | get the latest release of a repository |
+| `GetLicenseTemplate` | ok | ok | ok | returns the full text and metadata of a single license |
 | `GetMilestone` | ok | ok | ok | get one milestone by repo name and milestone id |
 | `GetMilestoneByName` | ok | ok | ok | get one milestone by repo and milestone name |
 | `GetMyHook` | ok | ok | ok | get a hook of the authenticated user |
@@ -189,6 +193,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetMyTrackedTimes` | ok | ok | ok | list tracked times of the current user |
 | `GetMyUserInfo` | ok | ok | ok | get user info of current user |
 | `GetMyWatchedRepos` | ok | ok | ok | list repositories watched by the authenticated user |
+| `GetNodeInfo` | needs-config | needs-config | needs-config | returns the nodeinfo of the Forgejo application. |
 | `GetNotification` | ok | ok | ok | get notification thread by ID |
 | `GetOauth2` | ok | ok | ok | a specific Oauth2 Application by ID. |
 | `GetOrg` | ok | ok | ok | get one organization by name |
@@ -221,6 +226,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetRepoRefs` | ok | ok | ok | get list of ref's information of one repository |
 | `GetRepoTeams` | ok | ok | ok | return teams from a repository |
 | `GetReviewers` | ok | ok | ok | return all users that can be requested to review in this repo |
+| `GetSSHSigningKey` | needs-config | needs-config | needs-config | returns the server's default SSH signing key, in OpenSSH |
+| `GetSigningKey` | ok | ok | ok | returns the server's default GPG signing key, armored. |
 | `GetSingleCommit` | ok | ok | ok | returns a single commit |
 | `GetStarredRepos` | ok | ok | ok | returns the repos that the given user has starred |
 | `GetTag` | ok | ok | ok | get the tag of a repository |
@@ -257,9 +264,12 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListFollowing` | ok | ok | ok | list all the users the user followed |
 | `ListForks` | ok | ok | ok | list a repository's forks |
 | `ListGPGKeys` | ok | ok | ok | list all the GPG keys of the user |
+| `ListGitignoreTemplates` | ok | ok | ok | returns the names of all gitignore templates known |
 | `ListIssueComments` | ok | ok | ok | list comments on an issue. |
 | `ListIssueTrackedTimes` | ok | ok | ok | list tracked times of a single issue for a given repository |
 | `ListIssues` | ok | ok | ok | returns all issues assigned the authenticated user |
+| `ListLabelTemplates` | ok | ok | ok | returns the names of all label templates known to the |
+| `ListLicenseTemplates` | ok | ok | ok | returns every license template known to the server. |
 | `ListMyFollowers` | ok | ok | ok | list all the followers of current user |
 | `ListMyFollowing` | ok | ok | ok | list all the users current user followed |
 | `ListMyGPGKeys` | ok | ok | ok | list all the GPG keys of current user |
@@ -334,6 +344,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `RemoveRepoTeam` | ok | ok | ok | delete a team from a repository |
 | `RemoveTeamMember` | ok | ok | ok | removes a member from a team |
 | `RemoveTeamRepository` | ok | ok | ok | removes a repository from a team |
+| `RenderMarkdown` | ok | ok | ok | renders a markdown document as HTML. |
+| `RenderMarkdownRaw` | ok | ok | ok | renders a raw markdown document (plain text, not |
+| `RenderMarkup` | ok | ok | ok | renders a markup document (markdown, or another markup |
 | `ReplaceIssueLabels` | ok | ok | ok | replace old labels of issue with new labels |
 | `ResetIssueTime` | ok | ok | ok | reset tracked time of a single issue for a given repository |
 | `RunCronTasks` | ok | ok | ok | run a cron task |

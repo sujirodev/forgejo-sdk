@@ -25,7 +25,7 @@ func TestListUserActivityFeeds(t *testing.T) {
 	feeds, resp, err := c.ListUserActivityFeeds(me.UserName, ListActivityFeedsOptions{})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.NotNil(t, feeds) //nolint:staticcheck // feeds may legitimately be empty
+	assert.NotNil(t, feeds)
 }
 
 func TestGetUserHeatmapData(t *testing.T) {

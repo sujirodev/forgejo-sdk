@@ -24,7 +24,8 @@ if [ -n "${PR_JSON_FILE:-}" ]; then
   PR_TITLE=$(jq -r '.title // ""' "$PR_JSON_FILE")
   PR_BODY=$(jq -r '.body // ""' "$PR_JSON_FILE")
   PR_LABELS_JSON=$(jq -c '.labels // []' "$PR_JSON_FILE")
-  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON
+  PR_AUTHOR=$(jq -r '.user.login // ""' "$PR_JSON_FILE")
+  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON PR_AUTHOR
 fi
 
 # Prints one label name per line from PR_LABELS_JSON. A jq failure (e.g.
@@ -99,10 +100,17 @@ next_tag() {
   echo "forgejo/v${major}.${minor}.${patch}"
 }
 
-# Prints "* PR_TITLE (#PR_NUMBER)" for reuse in both the release body and the
-# CHANGELOG.md entry.
+# Prints "* PR_TITLE (#PR_NUMBER)", with a "(thanks @author)" suffix when the
+# PR wasn't opened by the repo owner, for reuse in both the release body and
+# the CHANGELOG.md entry. GITHUB_REPOSITORY_OWNER is set by the runner; it
+# also covers Renovate, which opens PRs under the owner's own token.
 render_entry() {
-  echo "  * ${PR_TITLE:-} (#${PR_NUMBER:-})"
+  local suffix=""
+  local owner="${GITHUB_REPOSITORY_OWNER:-MatheusAlves96}"
+  if [ -n "${PR_AUTHOR:-}" ] && [ "${PR_AUTHOR}" != "$owner" ]; then
+    suffix=" (thanks @${PR_AUTHOR})"
+  fi
+  echo "  * ${PR_TITLE:-} (#${PR_NUMBER:-})${suffix}"
 }
 
 # Prepends a new "## [tag](releases/tag/tag) - date" section, with a single

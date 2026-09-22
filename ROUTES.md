@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 331 | 2 | 8 | 0 | 341 |
-| V15.x | 333 | 0 | 8 | 0 | 341 |
-| V16.x (latest) | 333 | 0 | 8 | 0 | 341 |
+| V11.x | 333 | 2 | 8 | 0 | 343 |
+| V15.x | 335 | 0 | 8 | 0 | 343 |
+| V16.x (latest) | 335 | 0 | 8 | 0 | 343 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -236,6 +236,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `IsUserFollowing` | ok | ok | ok | if the user followed the target |
 | `IssueSubscribe` | ok | ok | ok | subscribe current user to an issue |
 | `IssueUnSubscribe` | ok | ok | ok | unsubscribe current user from an issue |
+| `LinkPackage` | ok | ok | ok | links a package to a repository |
 | `ListAccessTokens` | ok | ok | ok | lists all the access tokens of user |
 | `ListBranchProtections` | ok | ok | ok | list branch protections for a repo |
 | `ListCollaborators` | ok | ok | ok | list a repository's collaborators |
@@ -347,6 +348,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UnStarRepo` | ok | ok | ok | remove star to specified repo as the authenticated user |
 | `UnWatchRepo` | ok | ok | ok | stop to watch a repository |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |
+| `UnlinkPackage` | ok | ok | ok | unlinks a package from a repository |
 | `UpdateFile` | ok | ok | ok | update a file in a repository |
 | `UpdateOauth2` | ok | ok | ok | a specific Oauth2 Application by ID and return a completed Oauth2 object. |
 | `UpdateOrgActionVariable` | ok | ok | ok | updates an action variable for an organization |

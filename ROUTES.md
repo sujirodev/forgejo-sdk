@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 436 | 25 | 23 | 0 | 484 |
-| V15.x | 455 | 3 | 26 | 0 | 484 |
-| V16.x (latest) | 452 | 0 | 32 | 0 | 484 |
+| V11.x | 457 | 25 | 23 | 0 | 505 |
+| V15.x | 476 | 3 | 26 | 0 | 505 |
+| V16.x (latest) | 473 | 0 | 32 | 0 | 505 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -96,7 +96,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `CreateFork` | ok | ok | ok | create a fork of a repository |
 | `CreateGPGKey` | ok | ok | ok | create GPG key with options |
 | `CreateIssue` | ok | ok | ok | create a new issue for a given repository |
+| `CreateIssueAttachment` | ok | ok | ok | creates an attachment for the given issue with the given file |
+| `CreateIssueBlocking` | ok | ok | ok | blocks the issue given in meta by the issue given in index |
 | `CreateIssueComment` | ok | ok | ok | create comment on an issue. |
+| `CreateIssueCommentAttachment` | ok | ok | ok | creates an attachment for the given comment with the |
+| `CreateIssueDependency` | ok | ok | ok | makes the issue given in index depend on the issue given in meta |
 | `CreateLabel` | ok | ok | ok | create one label of repository |
 | `CreateMilestone` | ok | ok | ok | create one milestone with options |
 | `CreateMyHook` | ok | ok | ok | create one hook for the authenticated user, with options |
@@ -137,7 +141,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteFile` | ok | ok | ok | delete a file from repository |
 | `DeleteGPGKey` | ok | ok | ok | delete GPG key with key id |
 | `DeleteIssue` | ok | ok | ok | delete a issue from a repository |
+| `DeleteIssueAttachment` | ok | ok | ok | deletes the given issue attachment including the uploaded file |
 | `DeleteIssueComment` | ok | ok | ok | deletes an issue comment. |
+| `DeleteIssueCommentAttachment` | ok | ok | ok | deletes the given comment attachment including the uploaded file |
 | `DeleteIssueCommentReaction` | ok | ok | ok | remove a reaction from a comment of an issue |
 | `DeleteIssueLabel` | ok | ok | ok | delete one label of one issue by issue id and label id |
 | `DeleteIssueReaction` | ok | ok | ok | remove a reaction from an issue |
@@ -188,7 +194,10 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DispatchRepoWorkflow` | ok | ok | ok | triggers a workflow dispatch event |
 | `EditBranchProtection` | ok | ok | ok | edits a branch protection for a repo |
 | `EditIssue` | ok | ok | ok | modify an existing issue for a given repository |
+| `EditIssueAttachment` | ok | ok | ok | updates the given issue attachment with the given options |
 | `EditIssueComment` | ok | ok | ok | edits an issue comment. |
+| `EditIssueCommentAttachment` | ok | ok | ok | updates the given comment attachment with the given options |
+| `EditIssueDeadline` | ok | ok | ok | sets or removes the deadline of an issue. Passing a nil |
 | `EditLabel` | ok | ok | ok | modify one label with options |
 | `EditMilestone` | ok | ok | ok | modify milestone with options |
 | `EditMilestoneByName` | ok | ok | ok | modify milestone with options |
@@ -240,7 +249,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetGlobalRepoSettings` | ok | ok | ok | get global repository settings witch are exposed by API |
 | `GetGlobalUISettings` | ok | ok | ok | get global ui settings witch are exposed by API |
 | `GetIssue` | ok | ok | ok | returns a single issue for a given repository |
+| `GetIssueAttachment` | ok | ok | ok | returns the requested issue attachment |
 | `GetIssueComment` | ok | ok | ok | get a comment for a given repo by id. |
+| `GetIssueCommentAttachment` | ok | ok | ok | returns the requested comment attachment |
 | `GetIssueCommentReactions` | ok | ok | ok | get a list of reactions from a comment of an issue |
 | `GetIssueConfig` | ok | ok | ok | returns the issue config for a repository |
 | `GetIssueLabels` | ok | ok | ok | get labels of one issue via issue id |
@@ -343,7 +354,12 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListForks` | ok | ok | ok | list a repository's forks |
 | `ListGPGKeys` | ok | ok | ok | list all the GPG keys of the user |
 | `ListGitignoreTemplates` | ok | ok | ok | returns the names of all gitignore templates known |
+| `ListIssueAttachments` | ok | ok | ok | list an issue's attachments |
+| `ListIssueBlocks` | ok | ok | ok | lists the issues that are blocked by the given issue |
+| `ListIssueCommentAttachments` | ok | ok | ok | list a comment's attachments |
 | `ListIssueComments` | ok | ok | ok | list comments on an issue. |
+| `ListIssueDependencies` | ok | ok | ok | lists all issues that block the given issue |
+| `ListIssueTimeline` | ok | ok | ok | lists all comments and events on an issue |
 | `ListIssueTrackedTimes` | ok | ok | ok | list tracked times of a single issue for a given repository |
 | `ListIssues` | ok | ok | ok | returns all issues assigned the authenticated user |
 | `ListLabelTemplates` | ok | ok | ok | returns the names of all label templates known to the |
@@ -426,9 +442,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `MergePullRequest` | ok | ok | ok | merge a PR to repository by PR id |
 | `MigrateRepo` | ok | ok | ok | migrates a repository from other Git hosting sources for the authenticated user. |
 | `MirrorSync` | ok | ok | ok | adds a mirrored repository to the mirror sync queue. |
+| `MoveIssuePin` | ok | ok | ok | moves the pinned issue to the given position among the repository's pinned issues |
 | `NewPinAllowed` | ok | ok | ok | returns whether new issue and pull request pins are allowed for a repository |
 | `OrgBlockUser` | ok | ok | ok | blocks a user from the organization |
 | `OrgUnblockUser` | ok | ok | ok | unblocks a user from the organization |
+| `PinIssue` | ok | ok | ok | pins an issue |
 | `PostIssueCommentReaction` | ok | ok | ok | add a reaction to a comment of an issue |
 | `PostIssueReaction` | ok | ok | ok | add a reaction to an issue |
 | `PushMirrorSync` | ok | ok | ok | adds all push mirrors of a repository to the sync queue |
@@ -439,6 +457,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `RegisterOrgRunner` | n/a (>= 15.0.0) | ok | ok | registers a new organization-level runner and returns its registration token |
 | `RegisterUserRunner` | n/a (>= 12.0.0) | ok | ok | registers a new user-level Actions runner and returns |
 | `RejectRepoTransfer` | ok | ok | ok | rejects a repo transfer. |
+| `RemoveIssueBlocking` | ok | ok | ok | unblocks the issue given in meta from the issue given in index |
+| `RemoveIssueDependency` | ok | ok | ok | removes the issue given in meta as a dependency of the issue given in index |
 | `RemoveNote` | ok | ok | ok | removes a note corresponding to a single commit from a repository |
 | `RemoveRepoTeam` | ok | ok | ok | delete a team from a repository |
 | `RemoveTeamMember` | ok | ok | ok | removes a member from a team |
@@ -483,6 +503,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UnblockUser` | ok | ok | ok | removes a block placed on the given user by the authenticated user. |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |
 | `UnlinkPackage` | ok | ok | ok | unlinks a package from a repository |
+| `UnpinIssue` | ok | ok | ok | unpins an issue |
 | `UpdateFile` | ok | ok | ok | update a file in a repository |
 | `UpdateOauth2` | ok | ok | ok | a specific Oauth2 Application by ID and return a completed Oauth2 object. |
 | `UpdateOrgActionVariable` | ok | ok | ok | updates an action variable for an organization |

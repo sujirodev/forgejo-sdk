@@ -58,6 +58,33 @@ func TestOrgMembership(t *testing.T) {
 	assert.Len(t, u, 1)
 	assert.Equal(t, user.UserName, u[0].UserName)
 
+	// Removing the only owner is refused, which is the one thing this test
+	// used to prove about DeleteOrgMembership. Prove the success path too:
+	// add a second member through a team and remove that one.
+	//
+	// Creating the user needs admin rights, so drop the sudo the org work
+	// runs under and put it back afterwards.
+	c.SetSudo("")
+	member := createTestUser(t, "org_mem_removable", c)
+	c.SetSudo(user.UserName)
+
+	teams, _, err := c.ListOrgTeams(newOrg.UserName, ListTeamsOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, teams)
+	_, err = c.AddTeamMember(teams[0].ID, member.UserName)
+	require.NoError(t, err)
+
+	inOrg, _, err := c.CheckOrgMembership(newOrg.UserName, member.UserName)
+	require.NoError(t, err)
+	assert.True(t, inOrg)
+
+	_, err = c.DeleteOrgMembership(newOrg.UserName, member.UserName)
+	require.NoError(t, err)
+
+	inOrg, _, err = c.CheckOrgMembership(newOrg.UserName, member.UserName)
+	require.NoError(t, err)
+	assert.False(t, inOrg)
+
 	_, err = c.DeleteOrgMembership(newOrg.UserName, user.UserName)
 	require.Error(t, err)
 

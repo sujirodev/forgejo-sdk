@@ -151,6 +151,16 @@ func TestUserFollow(t *testing.T) {
 	assert.False(t, isFollow)
 	isFollow, _ = c.IsUserFollowing(uB, uC)
 	assert.True(t, isFollow)
+
+	// Both answers, not just "no": IsFollowing maps 404 to false and 204 to
+	// true, and a version that never contacted the server would satisfy the
+	// negative assertion above on its own.
+	_, err = c.Follow(uA)
+	require.NoError(t, err)
+	isFollow, _ = c.IsFollowing(uA)
+	assert.True(t, isFollow)
+	_, err = c.Unfollow(uA)
+	require.NoError(t, err)
 }
 
 func TestUserEmail(t *testing.T) {

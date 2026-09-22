@@ -45,10 +45,13 @@ jobs:
 
       # Every file that pins the Forgejo test-instance version must agree.
       - run: make check-forgejo-version
+      - run: make check-test-instance-settings
       - run: make vet
       - run: make ci-lint
       - run: make build
       - run: make test-unit
+      # Every exported *Client method (route) needs a test.
+      - run: make check-route-coverage
 
   # Runs the integration suite against every Forgejo line the README
   # promises support for: both currently-supported LTS releases (Forgejo
@@ -98,6 +101,9 @@ jobs:
       FORGEJO_SDK_TEST_URL: "http://forgejo:3000"
       FORGEJO_SDK_TEST_USERNAME: "test01"
       FORGEJO_SDK_TEST_PASSWORD: "test01"
+      # Names this leg in the route report TestMain writes, which is what
+      # gives ROUTES.md one column per Forgejo version.
+      FORGEJO_SDK_TEST_LABEL: ${{ matrix.label }}
     steps:
       # The self-hosted runner reuses /workspace/<owner>/<repo> between jobs.
       # When a job starts and that directory has no .git (it happens),
@@ -131,6 +137,17 @@ jobs:
           exit 1
 
       - run: make test
+      - run: make coverage-check
+
+      # The per-version evidence: which routes this leg actually exercised,
+      # and with what result. The route-matrix job below turns the three
+      # legs' reports into ROUTES.md.
+      - name: Upload the route report
+        uses: forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: route-report-${{ matrix.label }}
+          path: forgejo/route-report.json
+          if-no-files-found: error
 
     services:
       # Disposable, single-run instance: it only ever serves this one job,
@@ -161,6 +178,7 @@ jobs:
             && echo "INSTALL_LOCK = true" >> /tmp/conf/app.ini
             && echo "SECRET_KEY = ${SECRET_KEY}" >> /tmp/conf/app.ini
             && echo "PASSWORD_COMPLEXITY = off" >> /tmp/conf/app.ini
+            && echo "DISABLE_GIT_HOOKS = false" >> /tmp/conf/app.ini
             && echo "[database]" >> /tmp/conf/app.ini
             && echo "DB_TYPE = sqlite3" >> /tmp/conf/app.ini
             && echo "[repository]" >> /tmp/conf/app.ini
@@ -169,6 +187,81 @@ jobs:
             && echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
             && echo "[quota]" >> /tmp/conf/app.ini
             && echo "ENABLED = true" >> /tmp/conf/app.ini
+            && echo "[migrations]" >> /tmp/conf/app.ini
+            && echo "ALLOW_LOCALNETWORKS = true" >> /tmp/conf/app.ini
             && forgejo migrate -c /tmp/conf/app.ini
             && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
             && forgejo web -c /tmp/conf/app.ini
+
+  # Checks the route contract against what the legs actually did: ROUTES.md
+  # (one line per route, one column per version) and the counters in
+  # README.md have to match what the generator produces from the three
+  # reports. Cheap job -- it only downloads three small JSON files and runs a
+  # generator -- and with `needs:` it does not compete with the legs for
+  # runner capacity.
+  #
+  # This job fails the build when:
+  #   - a route has no evidence on some version and no declared reason in
+  #     route-exceptions.json;
+  #   - a route was called there and never answered 2xx (a masked
+  #     regression: only a reason that explicitly covers failing evidence
+  #     may stand in for it);
+  #   - a request could not be attributed to any *Client method (a client
+  #     built outside newTestClientOpts);
+  #   - a route has no doc comment, so its description would be empty;
+  #   - an exception uses a reason outside the closed set, omits the issue
+  #     link its reason requires, or has been "todo" for over 90 days;
+  #   - ROUTES.md or the README block differ from the generated output.
+  #
+  # Still to do by hand, once this has run green on a pull request: add
+  # "route-matrix" to the branch protection of `main` alongside the three
+  # `testing` legs. That is an administrative repo setting, not something
+  # this file can do.
+  route-matrix:
+    needs: [testing]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GOPROXY: "https://proxy.golang.org,direct"
+      GO111MODULE: "on"
+    steps:
+      # Same reason as the other jobs: the runner's workspace is shared and
+      # keeps the previous job's files unless it is emptied first.
+      - name: Clean the shared workspace
+        run: find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: forgejo/go.mod
+          check-latest: true
+          cache: false
+
+      - uses: forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
+        with:
+          pattern: route-report-*
+          path: route-reports
+
+      - name: Check the route contract
+        run: |
+          reports=$(find route-reports -name route-report.json -printf '%p ')
+          test -n "$reports" || { echo "no route reports downloaded"; exit 1; }
+          make check-routes ROUTE_REPORTS="$reports"
+
+      # On failure this is what says how the committed files differ from the
+      # evidence: regenerating locally needs all three versions, which a
+      # contributor will not usually have to hand.
+      - name: Upload the contract the evidence produces
+        if: always()
+        run: |
+          reports=$(find route-reports -name route-report.json -printf '%p ')
+          make route-matrix ROUTE_REPORTS="$reports" || true
+
+      - uses: forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        if: always()
+        with:
+          name: route-contract
+          path: |
+            ROUTES.md
+            README.md
+          if-no-files-found: error

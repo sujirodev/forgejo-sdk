@@ -23,13 +23,15 @@ func TestRepoStaring(t *testing.T) {
 	// init user2
 	c := newTestClient()
 
-	user1, _, err := c.GetMyUserInfo()
-	require.NoError(t, err)
+	user1 := createTestUser(t, uniqueName(t, "starowner"), c)
+	userA := createTestUser(t, uniqueName(t, "stargazerA"), c)
+	userB := createTestUser(t, uniqueName(t, "stargazerB"), c)
 
-	userA := createTestUser(t, "stargazer_a", c)
-	userB := createTestUser(t, "stargazer_b", c)
+	// Only now switch identity: createTestUser needs the admin account.
+	c.SetSudo(user1.UserName)
+	t.Cleanup(func() { c.SetSudo("") })
 
-	repo, _ := createTestRepo(t, "toStar", c)
+	repo, _ := createTestRepo(t, uniqueName(t, "toStar"), c)
 	if repo == nil {
 		t.Skip()
 	}
@@ -74,7 +76,10 @@ func TestRepoStaring(t *testing.T) {
 	_, err = c.UnStarRepo(repo.Owner.UserName, repo.Name)
 	require.NoError(t, err)
 
-	c.SetSudo("")
+	// Back to the repo's owner, who is also the first stargazer: the
+	// assertions below are about *their* starred list. This used to be
+	// SetSudo("") because the owner was the shared admin account.
+	c.SetSudo(user1.UserName)
 
 	users, _, err = c.ListRepoStargazers(repo.Owner.UserName, repo.Name, ListStargazersOptions{})
 	require.NoError(t, err)

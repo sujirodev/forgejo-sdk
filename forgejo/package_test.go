@@ -22,10 +22,16 @@ import (
 )
 
 // create an org with a single package for testing purposes
-func createTestPackage(_ *testing.T, c *Client) error {
-	_, _ = c.DeletePackage("PackageOrg", "generic", "MyPackage", "v1")
-	_, _ = c.DeleteOrg("PackageOrg")
-	_, _, _ = c.CreateOrg(CreateOrgOption{Name: "PackageOrg"})
+func createTestPackage(t *testing.T, c *Client) (string, error) {
+	org := uniqueName(t, "pkgorg")
+	_, _, err := c.CreateOrg(CreateOrgOption{Name: org})
+	if err != nil {
+		return org, err
+	}
+	t.Cleanup(func() {
+		_, _ = c.DeletePackage(org, "generic", "MyPackage", "v1")
+		_, _ = c.DeleteOrg(org)
+	})
 
 	client := &http.Client{
 		Timeout: time.Second * 10,
@@ -33,31 +39,31 @@ func createTestPackage(_ *testing.T, c *Client) error {
 
 	reader := bytes.NewReader([]byte("Hello world!"))
 
-	url := fmt.Sprintf("%s/api/packages/PackageOrg/generic/MyPackage/v1/file1.txt", os.Getenv("FORGEJO_SDK_TEST_URL"))
+	url := fmt.Sprintf("%s/api/packages/%s/generic/MyPackage/v1/file1.txt", os.Getenv("FORGEJO_SDK_TEST_URL"), org)
 	req, err := http.NewRequest(http.MethodPut, url, reader)
 	if err != nil {
 		log.Println(err)
-		return err
+		return org, err
 	}
 
 	req.SetBasicAuth(os.Getenv("FORGEJO_SDK_TEST_USERNAME"), os.Getenv("FORGEJO_SDK_TEST_PASSWORD"))
 	response, err := client.Do(req)
 	if err != nil {
-		return err
+		return org, err
 	}
 	defer response.Body.Close()
 
-	return nil
+	return org, nil
 }
 
 func TestListPackages(t *testing.T) {
 	log.Println("== TestListPackages ==")
 	c := newTestClient()
-	err := createTestPackage(t, c)
+	org, err := createTestPackage(t, c)
 	require.NoError(t, err)
 
 	t.Run("Test without type", func(t *testing.T) {
-		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+		packagesList, _, err := c.ListPackages(org, ListPackagesOptions{
 			ListOptions: ListOptions{
 				Page:     1,
 				PageSize: 1000,
@@ -67,7 +73,7 @@ func TestListPackages(t *testing.T) {
 		assert.Len(t, packagesList, 1)
 	})
 	t.Run("Test with found", func(t *testing.T) {
-		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+		packagesList, _, err := c.ListPackages(org, ListPackagesOptions{
 			ListOptions: ListOptions{
 				Page:     1,
 				PageSize: 1000,
@@ -78,7 +84,7 @@ func TestListPackages(t *testing.T) {
 		assert.Len(t, packagesList, 1)
 	})
 	t.Run("Test with not found", func(t *testing.T) {
-		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+		packagesList, _, err := c.ListPackages(org, ListPackagesOptions{
 			ListOptions: ListOptions{
 				Page:     1,
 				PageSize: 1000,
@@ -89,7 +95,7 @@ func TestListPackages(t *testing.T) {
 		assert.Empty(t, packagesList)
 	})
 	t.Run("Test with name query found", func(t *testing.T) {
-		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+		packagesList, _, err := c.ListPackages(org, ListPackagesOptions{
 			ListOptions: ListOptions{
 				Page:     1,
 				PageSize: 1000,
@@ -101,7 +107,7 @@ func TestListPackages(t *testing.T) {
 		assert.Len(t, packagesList, 1)
 	})
 	t.Run("Test with name query not found", func(t *testing.T) {
-		packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+		packagesList, _, err := c.ListPackages(org, ListPackagesOptions{
 			ListOptions: ListOptions{
 				Page:     1,
 				PageSize: 1000,
@@ -117,10 +123,10 @@ func TestListPackages(t *testing.T) {
 func TestGetPackage(t *testing.T) {
 	log.Println("== TestGetPackage ==")
 	c := newTestClient()
-	err := createTestPackage(t, c)
+	org, err := createTestPackage(t, c)
 	require.NoError(t, err)
 
-	pkg, _, err := c.GetPackage("PackageOrg", "generic", "MyPackage", "v1")
+	pkg, _, err := c.GetPackage(org, "generic", "MyPackage", "v1")
 	require.NoError(t, err)
 	assert.NotNil(t, pkg)
 	assert.Equal(t, "MyPackage", pkg.Name)
@@ -131,14 +137,14 @@ func TestGetPackage(t *testing.T) {
 func TestDeletePackage(t *testing.T) {
 	log.Println("== TestDeletePackage ==")
 	c := newTestClient()
-	err := createTestPackage(t, c)
+	org, err := createTestPackage(t, c)
 	require.NoError(t, err)
 
-	_, err = c.DeletePackage("PackageOrg", "generic", "MyPackage", "v1")
+	_, err = c.DeletePackage(org, "generic", "MyPackage", "v1")
 	require.NoError(t, err)
 
 	// no packages should be listed following deletion
-	packagesList, _, err := c.ListPackages("PackageOrg", ListPackagesOptions{
+	packagesList, _, err := c.ListPackages(org, ListPackagesOptions{
 		ListOptions: ListOptions{
 			Page:     1,
 			PageSize: 1000,
@@ -151,10 +157,10 @@ func TestDeletePackage(t *testing.T) {
 func TestListPackageFiles(t *testing.T) {
 	log.Println("== TestListPackageFiles ==")
 	c := newTestClient()
-	err := createTestPackage(t, c)
+	org, err := createTestPackage(t, c)
 	require.NoError(t, err)
 
-	packageFiles, _, err := c.ListPackageFiles("PackageOrg", "generic", "MyPackage", "v1")
+	packageFiles, _, err := c.ListPackageFiles(org, "generic", "MyPackage", "v1")
 	require.NoError(t, err)
 	assert.Len(t, packageFiles, 1)
 	assert.Equal(t, "file1.txt", packageFiles[0].Name)
@@ -163,17 +169,17 @@ func TestListPackageFiles(t *testing.T) {
 func TestLinkPackage(t *testing.T) {
 	log.Println("== TestLinkPackage ==")
 	c := newTestClient()
-	err := createTestPackage(t, c)
+	org, err := createTestPackage(t, c)
 	require.NoError(t, err)
 
-	_, _ = c.DeleteRepo("PackageOrg", "PackageRepo")
-	_, _, err = c.CreateOrgRepo("PackageOrg", CreateRepoOption{Name: "PackageRepo", AutoInit: true})
+	_, _ = c.DeleteRepo(org, "PackageRepo")
+	_, _, err = c.CreateOrgRepo(org, CreateRepoOption{Name: "PackageRepo", AutoInit: true})
 	require.NoError(t, err)
 
-	_, err = c.LinkPackage("PackageOrg", "generic", "MyPackage", "PackageRepo")
+	_, err = c.LinkPackage(org, "generic", "MyPackage", "PackageRepo")
 	require.NoError(t, err)
 
-	pkg, _, err := c.GetPackage("PackageOrg", "generic", "MyPackage", "v1")
+	pkg, _, err := c.GetPackage(org, "generic", "MyPackage", "v1")
 	require.NoError(t, err)
 	require.NotNil(t, pkg.Repository)
 	assert.Equal(t, "PackageRepo", pkg.Repository.Name)
@@ -182,20 +188,20 @@ func TestLinkPackage(t *testing.T) {
 func TestUnlinkPackage(t *testing.T) {
 	log.Println("== TestUnlinkPackage ==")
 	c := newTestClient()
-	err := createTestPackage(t, c)
+	org, err := createTestPackage(t, c)
 	require.NoError(t, err)
 
-	_, _ = c.DeleteRepo("PackageOrg", "PackageRepo")
-	_, _, err = c.CreateOrgRepo("PackageOrg", CreateRepoOption{Name: "PackageRepo", AutoInit: true})
+	_, _ = c.DeleteRepo(org, "PackageRepo")
+	_, _, err = c.CreateOrgRepo(org, CreateRepoOption{Name: "PackageRepo", AutoInit: true})
 	require.NoError(t, err)
 
-	_, err = c.LinkPackage("PackageOrg", "generic", "MyPackage", "PackageRepo")
+	_, err = c.LinkPackage(org, "generic", "MyPackage", "PackageRepo")
 	require.NoError(t, err)
 
-	_, err = c.UnlinkPackage("PackageOrg", "generic", "MyPackage")
+	_, err = c.UnlinkPackage(org, "generic", "MyPackage")
 	require.NoError(t, err)
 
-	pkg, _, err := c.GetPackage("PackageOrg", "generic", "MyPackage", "v1")
+	pkg, _, err := c.GetPackage(org, "generic", "MyPackage", "v1")
 	require.NoError(t, err)
 	assert.Nil(t, pkg.Repository)
 }

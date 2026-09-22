@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,10 +25,12 @@ func TestRepoTrees(t *testing.T) {
 	if repo == nil {
 		return
 	}
-	time.Sleep(1 * time.Second)
-
 	// test without recursive option set
-	tl, _, err := c.GetTrees(repo.Owner.UserName, repo.Name, "main", GetTreesOptions{Recursive: false})
+	var tl *GitTreeResponse
+	eventually(t, func() bool {
+		tl, _, err = c.GetTrees(repo.Owner.UserName, repo.Name, "main", GetTreesOptions{Recursive: false})
+		return err == nil && tl != nil && len(tl.Entries) >= 4
+	})
 	require.NoError(t, err)
 	assert.Len(t, tl.Entries, 4)
 

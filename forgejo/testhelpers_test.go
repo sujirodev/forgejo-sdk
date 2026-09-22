@@ -145,3 +145,30 @@ func testGPGPublicKey(t *testing.T) string {
 	require.NoError(t, err)
 	return string(data)
 }
+
+// eventuallyTimeout bounds every eventually() poll. It is generous on
+// purpose: the point is not to time anything out quickly, it is to stop
+// waiting if the server never gets there, and let the assertion that
+// follows report what was actually seen.
+const eventuallyTimeout = 30 * time.Second
+
+// eventually retries fn until it reports success or eventuallyTimeout
+// passes. It replaces the suite's fixed time.Sleep calls, which wait on
+// Forgejo's asynchronous indexing/stat work: a fixed wait is either too
+// short (flaky under load) or too long (slow in the common case).
+//
+// It deliberately does not fail the test on timeout -- the caller's own
+// assertion runs next and says what was wrong, with the real values.
+func eventually(t *testing.T, fn func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(eventuallyTimeout)
+	for {
+		if fn() {
+			return
+		}
+		if time.Now().After(deadline) {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}

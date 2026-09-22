@@ -19,6 +19,9 @@ import (
 func TestUserSettings(t *testing.T) {
 	log.Println("== TestUserSettings ==")
 	c := newTestClient()
+	owner := createTestUser(t, uniqueName(t, "setowner"), c)
+	c.SetSudo(owner.UserName)
+	t.Cleanup(func() { c.SetSudo("") })
 
 	userConf, _, err := c.GetUserSettings()
 	require.NoError(t, err)

@@ -77,9 +77,10 @@ func TestAdminQuotaGroups(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, got.Rules, 1)
 
-	// membership
-	me, _, err := c.GetMyUserInfo()
-	require.NoError(t, err)
+	// membership: a dedicated user, never the shared admin account -- a
+	// "size:all" limit on test01 makes every concurrent CreateRepo fail
+	// with "quota exceeded".
+	me := createTestUser(t, uniqueName(t, "quotamember"), c)
 
 	resp, err = c.AdminAddUserToQuotaGroup(groupName, me.UserName)
 	require.NoError(t, err)

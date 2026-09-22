@@ -71,8 +71,11 @@ func TestRepoMigrateAndLanguages(t *testing.T) {
 	assert.NotEqual(t, zeroTime, repoG.MirrorUpdated)
 
 	log.Println("== TestRepoLanguages ==")
-	time.Sleep(time.Second * 2)
-	lang, _, err := c.GetRepoLanguages(repoM.Owner.UserName, repoM.Name)
+	var lang map[string]int64
+	eventually(t, func() bool {
+		lang, _, err = c.GetRepoLanguages(repoM.Owner.UserName, repoM.Name)
+		return err == nil && len(lang) >= 2
+	})
 	require.NoError(t, err)
 	assert.Len(t, lang, 2)
 	assert.Less(t, int64(217441), lang["Go"])
@@ -153,7 +156,7 @@ func TestGetArchive(t *testing.T) {
 func TestGetArchiveReader(t *testing.T) {
 	log.Println("== TestGetArchiveReader ==")
 	c := newTestClient()
-	repo, _ := createTestRepo(t, "ToDownload", c)
+	repo, _ := createTestRepo(t, "ToDownloadReader", c)
 	time.Sleep(time.Second / 2)
 	r, _, err := c.GetArchiveReader(repo.Owner.UserName, repo.Name, "main", ZipArchive)
 	require.NoError(t, err)
@@ -202,6 +205,13 @@ func createTestRepo(t *testing.T, name string, c *Client) (*Repository, error) {
 		IssueLabels: "Default",
 		Private:     false,
 	})
+	if err != nil {
+		// A parallel test using the same fixed name may have recreated it
+		// between the delete above and this call.
+		if existing, _, gErr := c.GetRepo(user.UserName, name); gErr == nil && existing != nil {
+			return existing, nil
+		}
+	}
 	require.NoError(t, err)
 	assert.NotNil(t, repo)
 

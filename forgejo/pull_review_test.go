@@ -238,14 +238,14 @@ func preparePullReviewTest(t *testing.T, c *Client, repoName string) (*Repositor
 		return nil, nil, nil, nil, false
 	}
 
-	pullSubmitter := createTestUser(t, "pull_submitter", c)
+	pullSubmitter := createTestUser(t, uniqueName(t, "pullsub"), c)
 	write := AccessModeWrite
 	_, err = c.AddCollaborator(repo.Owner.UserName, repo.Name, pullSubmitter.UserName, AddCollaboratorOption{
 		Permission: &write,
 	})
 	require.NoError(t, err)
 
-	c.SetSudo("pull_submitter")
+	c.SetSudo(pullSubmitter.UserName)
 
 	newFile, _, err := c.CreateFile(repo.Owner.UserName, repo.Name, "WOW-file", CreateFileOptions{
 		Content: "QSBuZXcgRmlsZQoKYW5kIHNvbWUgbGluZXMK",
@@ -270,7 +270,7 @@ func preparePullReviewTest(t *testing.T, c *Client, repoName string) (*Repositor
 
 	c.SetSudo("")
 
-	reviewer := createTestUser(t, "pull_reviewer", c)
+	reviewer := createTestUser(t, uniqueName(t, "pullrev"), c)
 	admin := AccessModeAdmin
 	_, err = c.AddCollaborator(repo.Owner.UserName, repo.Name, pullSubmitter.UserName, AddCollaboratorOption{
 		Permission: &admin,

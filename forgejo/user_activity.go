@@ -7,50 +7,7 @@ package forgejo
 import (
 	"fmt"
 	"net/url"
-	"time"
 )
-
-// Activity represents a single entry in a user's activity feed: an action
-// the user performed, or that happened on something visible to them (such
-// as a repository they follow).
-type Activity struct {
-	ID        int64       `json:"id"`
-	UserID    int64       `json:"user_id"`
-	OpType    string      `json:"op_type"`
-	ActUserID int64       `json:"act_user_id"`
-	ActUser   *User       `json:"act_user"`
-	RepoID    int64       `json:"repo_id"`
-	Repo      *Repository `json:"repo"`
-	CommentID int64       `json:"comment_id"`
-	Comment   *Comment    `json:"comment"`
-	IsPrivate bool        `json:"is_private"`
-	Content   string      `json:"content"`
-	Created   time.Time   `json:"created"`
-	RefName   string      `json:"ref_name"`
-}
-
-// ListActivityFeedsOptions options for listing a user's activity feeds
-type ListActivityFeedsOptions struct {
-	ListOptions
-	// OnlyPerformedBy restricts the feed to actions performed by the user
-	// themselves.
-	OnlyPerformedBy bool
-	// Date restricts the feed to activities on this date, formatted as
-	// YYYY-MM-DD.
-	Date string
-}
-
-// QueryEncode encodes options to query parameters
-func (opt *ListActivityFeedsOptions) QueryEncode() string {
-	query := opt.getURLQuery()
-	if opt.OnlyPerformedBy {
-		query.Add("only-performed-by", "true")
-	}
-	if opt.Date != "" {
-		query.Add("date", opt.Date)
-	}
-	return query.Encode()
-}
 
 // ListUserActivityFeeds lists a user's activity feeds.
 func (c *Client) ListUserActivityFeeds(username string, opt ListActivityFeedsOptions) ([]*Activity, *Response, error) {

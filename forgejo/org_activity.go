@@ -63,6 +63,9 @@ type Activity struct {
 // ListActivityFeedsOptions holds optional parameters for listing activity feeds
 type ListActivityFeedsOptions struct {
 	ListOptions
+	// OnlyPerformedBy restricts the feed to actions performed by the user
+	// themselves.
+	OnlyPerformedBy bool
 	// Date restricts the feed to activities on this date (YYYY-MM-DD). Optional.
 	Date string
 }
@@ -70,6 +73,9 @@ type ListActivityFeedsOptions struct {
 // QueryEncode encodes options to query parameters
 func (opt *ListActivityFeedsOptions) QueryEncode() string {
 	query := opt.getURLQuery()
+	if opt.OnlyPerformedBy {
+		query.Add("only-performed-by", "true")
+	}
 	if opt.Date != "" {
 		query.Add("date", opt.Date)
 	}

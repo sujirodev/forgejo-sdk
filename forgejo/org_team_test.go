@@ -229,7 +229,7 @@ func TestGetTeamRepo(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	team, err := createTestOrgTeams(t, c, orgName, "repo-team", AccessModeRead, nil)
+	team, err := createTestOrgTeams(t, c, orgName, "repo-team", AccessModeRead, map[string]string{RepoUnitCode.String(): string(AccessModeRead)})
 	require.NoError(t, err)
 
 	resp, err := c.AddTeamRepository(team.ID, orgName, repo.Name)

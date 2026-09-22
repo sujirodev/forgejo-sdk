@@ -457,6 +457,15 @@ func TestOrgRunnersCRUD(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _, _ = c.DeleteOrg(orgName) }()
 
+	// Confirmed absent on a live 13.0.0 instance and present by 15.0.9;
+	// below that the SDK's guard refuses the call, which is the documented
+	// behavior and worth asserting.
+	if !serverAtLeast(t, c, "15.0.0") {
+		_, _, err := c.ListOrgRunners(orgName, ListOrgRunnersOption{})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
+	}
+
 	// Listing should always succeed, even with zero runners registered.
 	runners, resp, err := c.ListOrgRunners(orgName, ListOrgRunnersOption{})
 	require.NoError(t, err)

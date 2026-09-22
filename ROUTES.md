@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 351 | 6 | 13 | 0 | 370 |
-| V15.x | 357 | 0 | 13 | 0 | 370 |
-| V16.x (latest) | 357 | 0 | 13 | 0 | 370 |
+| V11.x | 365 | 10 | 13 | 0 | 388 |
+| V15.x | 375 | 0 | 13 | 0 | 388 |
+| V16.x (latest) | 375 | 0 | 13 | 0 | 388 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -38,6 +38,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `CheckMyQuota` | ok | ok | ok | checks if the authenticated user is over quota. |
 | `CheckNotifications` | ok | ok | ok | list users's notification threads |
 | `CheckOrgMembership` | ok | ok | ok | Check if a user is a member of an organization |
+| `CheckOrgQuota` | ok | ok | ok | checks if the organization is over quota for the given subject. |
 | `CheckPublicOrgMembership` | ok | ok | ok | Check if a user is a member of an organization |
 | `CheckRepoTeam` | ok | ok | ok | check if team is assigned to repo by name and return it. |
 | `CheckRepoWatch` | ok | ok | ok | check if the current user is watching a repo |
@@ -105,9 +106,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteOrg` | ok | ok | ok | deletes an organization |
 | `DeleteOrgActionSecret` | ok | ok | ok | deletes a secret in an organization |
 | `DeleteOrgActionVariable` | ok | ok | ok | deletes an action variable from an organization |
+| `DeleteOrgAvatar` | ok | ok | ok | deletes an organization's avatar. It will be replaced by a default one. |
 | `DeleteOrgHook` | ok | ok | ok | delete one hook from an organization, with hook id |
 | `DeleteOrgLabel` | ok | ok | ok | delete one label of an organization by id |
 | `DeleteOrgMembership` | ok | ok | ok | remove a member from an organization |
+| `DeleteOrgRunner` | n/a (>= 15.0.0) | ok | ok | deletes a particular runner that belongs to the organization |
 | `DeletePackage` | ok | ok | ok | deletes a specific package version |
 | `DeletePublicKey` | ok | ok | ok | delete public key with key id |
 | `DeletePullReview` | ok | ok | ok | delete a specific review from a pull request |
@@ -202,6 +205,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetOrgHook` | ok | ok | ok | get a hook of an organization |
 | `GetOrgLabel` | ok | ok | ok | get one label of an organization by id |
 | `GetOrgPermissions` | ok | ok | ok | returns user permissions for specific organization. |
+| `GetOrgQuota` | ok | ok | ok | returns quota information for an organization |
+| `GetOrgRunner` | n/a (>= 15.0.0) | ok | ok | gets a particular runner that belongs to the organization |
 | `GetPackage` | ok | ok | ok | gets the details of a specific package version |
 | `GetPublicKey` | ok | ok | ok | get current user's public key by key id |
 | `GetPullRequest` | ok | ok | ok | get information of one PR |
@@ -234,6 +239,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetTagProtection` | ok | ok | ok | gets a tag protection |
 | `GetTeam` | ok | ok | ok | gets a team by ID |
 | `GetTeamMember` | ok | ok | ok | gets a member of a team |
+| `GetTeamRepo` | ok | ok | ok | gets a particular repository of a team |
 | `GetTrees` | ok | ok | ok | downloads a file of repository, ref can be branch/tag/commit. |
 | `GetUserActionRunnerRegistrationToken` | ok | ok | ok | gets a runner registration token for the authenticated user |
 | `GetUserActionVariable` | ok | ok | ok | gets a specific user action variable |
@@ -286,10 +292,16 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListOrgActionJobs` | ok | ok | ok | searches for organization action jobs |
 | `ListOrgActionSecret` | ok | ok | ok | list an organization's secrets |
 | `ListOrgActionVariables` | ok | ok | ok | lists an organization's action variables |
+| `ListOrgActivityFeeds` | ok | ok | ok | lists an organization's activity feeds |
+| `ListOrgBlockedUsers` | ok | ok | ok | lists the organization's blocked users |
 | `ListOrgHooks` | ok | ok | ok | list all the hooks of one organization |
 | `ListOrgLabels` | ok | ok | ok | list an organization's labels |
 | `ListOrgMembership` | ok | ok | ok | list an organization's members |
+| `ListOrgQuotaArtifacts` | ok | ok | ok | lists artifacts counting towards an organization's quota |
+| `ListOrgQuotaAttachments` | ok | ok | ok | lists attachments counting towards an organization's quota |
+| `ListOrgQuotaPackages` | ok | ok | ok | lists packages counting towards an organization's quota |
 | `ListOrgRepos` | ok | ok | ok | list all repositories of one organization by organization's name |
+| `ListOrgRunners` | n/a (>= 15.0.0) | ok | ok | gets the organization's runners |
 | `ListOrgTeams` | ok | ok | ok | lists all teams of an organization |
 | `ListOrgs` | ok | ok | ok | list all organizations |
 | `ListPackageFiles` | ok | ok | ok | lists the files within a package |
@@ -323,6 +335,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoTrackedTimes` | ok | ok | ok | list tracked times of a repository |
 | `ListStatuses` | ok | ok | ok | returns all statuses for a given Commit by ref |
 | `ListTagProtections` | ok | ok | ok | list tag protections for a repo |
+| `ListTeamActivityFeeds` | ok | ok | ok | lists a team's activity feeds |
 | `ListTeamMembers` | ok | ok | ok | lists all members of a team |
 | `ListTeamRepositories` | ok | ok | ok | lists all repositories of a team |
 | `ListUserActionJobs` | ok | ok | ok | searches for user action jobs |
@@ -333,17 +346,21 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `MergePullRequest` | ok | ok | ok | merge a PR to repository by PR id |
 | `MigrateRepo` | ok | ok | ok | migrates a repository from other Git hosting sources for the authenticated user. |
 | `MirrorSync` | ok | ok | ok | adds a mirrored repository to the mirror sync queue. |
+| `OrgBlockUser` | ok | ok | ok | blocks a user from the organization |
+| `OrgUnblockUser` | ok | ok | ok | unblocks a user from the organization |
 | `PostIssueCommentReaction` | ok | ok | ok | add a reaction to a comment of an issue |
 | `PostIssueReaction` | ok | ok | ok | add a reaction to an issue |
 | `PushMirrors` | ok | ok | ok | add a push mirror to the repository |
 | `ReadNotification` | ok | ok | ok | mark notification thread as read by ID |
 | `ReadNotifications` | ok | ok | ok | mark notification threads as read |
 | `ReadRepoNotifications` | ok | ok | ok | mark notification threads as read on a specific repo |
+| `RegisterOrgRunner` | n/a (>= 15.0.0) | ok | ok | registers a new organization-level runner and returns its registration token |
 | `RegisterUserRunner` | n/a (>= 12.0.0) | ok | ok | registers a new user-level Actions runner and returns |
 | `RejectRepoTransfer` | ok | ok | ok | rejects a repo transfer. |
 | `RemoveRepoTeam` | ok | ok | ok | delete a team from a repository |
 | `RemoveTeamMember` | ok | ok | ok | removes a member from a team |
 | `RemoveTeamRepository` | ok | ok | ok | removes a repository from a team |
+| `RenameOrg` | ok | ok | ok | renames an organization |
 | `RenderMarkdown` | ok | ok | ok | renders a markdown document as HTML. |
 | `RenderMarkdownRaw` | ok | ok | ok | renders a raw markdown document (plain text, not |
 | `RenderMarkup` | ok | ok | ok | renders a markup document (markdown, or another markup |
@@ -377,6 +394,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UpdateFile` | ok | ok | ok | update a file in a repository |
 | `UpdateOauth2` | ok | ok | ok | a specific Oauth2 Application by ID and return a completed Oauth2 object. |
 | `UpdateOrgActionVariable` | ok | ok | ok | updates an action variable for an organization |
+| `UpdateOrgAvatar` | ok | ok | ok | updates an organization's avatar |
 | `UpdateRepoActionVariable` | ok | ok | ok | updates an action variable for a repository |
 | `UpdateUserActionVariable` | ok | ok | ok | updates an action variable for the authenticated user |
 | `UpdateUserAvatar` | ok | ok | ok | updates the avatar of the currently authenticated user. |

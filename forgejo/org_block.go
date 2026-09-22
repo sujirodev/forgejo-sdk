@@ -7,14 +7,7 @@ package forgejo
 import (
 	"context"
 	"fmt"
-	"time"
 )
-
-// BlockedUser represents a user blocked by an organization
-type BlockedUser struct {
-	BlockID int64     `json:"block_id"`
-	Created time.Time `json:"created_at"`
-}
 
 // OrgBlockUser blocks a user from the organization
 func (c *Client) OrgBlockUser(ctx context.Context, org, username string) (Response, error) {

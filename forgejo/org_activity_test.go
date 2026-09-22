@@ -38,7 +38,7 @@ func TestListTeamActivityFeeds(t *testing.T) {
 	defer cleanup()
 	require.NotNil(t, repo)
 
-	team, err := createTestOrgTeams(t, c, orgName, "activity-team", AccessModeRead, nil)
+	team, err := createTestOrgTeams(t, c, orgName, "activity-team", AccessModeRead, map[string]string{RepoUnitCode.String(): string(AccessModeRead)})
 	require.NoError(t, err)
 
 	activities, resp, err := c.ListTeamActivityFeeds(t.Context(), team.ID, ListActivityFeedsOptions{})

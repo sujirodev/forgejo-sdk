@@ -284,6 +284,12 @@ func (opt *ListOrgRunnersOption) QueryEncode() string {
 
 // ListOrgRunners gets the organization's runners
 func (c *Client) ListOrgRunners(org string, opt ListOrgRunnersOption) ([]*ActionRunner, *Response, error) {
+	// Confirmed absent on a live 13.0.0 instance (404) and present by
+	// 15.0.9; 14.x was not verified (no such image tag exists to test
+	// against), so this guard may be more conservative than the true floor.
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&org); err != nil {
 		return nil, nil, err
 	}
@@ -295,6 +301,9 @@ func (c *Client) ListOrgRunners(org string, opt ListOrgRunnersOption) ([]*Action
 
 // RegisterOrgRunner registers a new organization-level runner and returns its registration token
 func (c *Client) RegisterOrgRunner(org string, opt RegisterRunnerOption) (*RegisterRunnerResponse, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&org); err != nil {
 		return nil, nil, err
 	}
@@ -309,6 +318,9 @@ func (c *Client) RegisterOrgRunner(org string, opt RegisterRunnerOption) (*Regis
 
 // GetOrgRunner gets a particular runner that belongs to the organization
 func (c *Client) GetOrgRunner(org string, runnerID int64) (*ActionRunner, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&org); err != nil {
 		return nil, nil, err
 	}
@@ -319,6 +331,9 @@ func (c *Client) GetOrgRunner(org string, runnerID int64) (*ActionRunner, *Respo
 
 // DeleteOrgRunner deletes a particular runner that belongs to the organization
 func (c *Client) DeleteOrgRunner(org string, runnerID int64) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version15_0_0); err != nil {
+		return nil, err
+	}
 	if err := escapeValidatePathSegments(&org); err != nil {
 		return nil, err
 	}

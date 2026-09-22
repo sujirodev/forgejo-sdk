@@ -13,6 +13,7 @@ import (
 )
 
 func TestUserActionSecrets(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserActionSecrets ==")
 	c := newTestClient()
 
@@ -35,6 +36,7 @@ func TestUserActionSecrets(t *testing.T) {
 }
 
 func TestListUserActionJobs(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListUserActionJobs ==")
 	c := newTestClient()
 
@@ -45,6 +47,7 @@ func TestListUserActionJobs(t *testing.T) {
 }
 
 func TestUserActionVariables(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserActionVariables ==")
 	c := newTestClient()
 
@@ -87,6 +90,7 @@ func TestUserActionVariables(t *testing.T) {
 }
 
 func TestGetUserActionRunnerRegistrationToken(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetUserActionRunnerRegistrationToken ==")
 	c := newTestClient()
 
@@ -98,6 +102,7 @@ func TestGetUserActionRunnerRegistrationToken(t *testing.T) {
 }
 
 func TestUserRunners(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUserRunners ==")
 	c := newTestClient()
 

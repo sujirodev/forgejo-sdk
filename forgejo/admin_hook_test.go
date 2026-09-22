@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminHooks(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminHooks ==")
 	c := newTestClient()
 

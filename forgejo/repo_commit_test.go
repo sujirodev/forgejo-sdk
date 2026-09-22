@@ -19,6 +19,7 @@ import (
 )
 
 func TestListRepoCommits(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListRepoCommits ==")
 	c := newTestClient()
 
@@ -54,6 +55,7 @@ func TestListRepoCommits(t *testing.T) {
 }
 
 func TestGetCommitDiffOrPatch(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetCommitDiffOrPatch ==")
 	c := newTestClient()
 
@@ -86,6 +88,7 @@ func TestGetCommitDiffOrPatch(t *testing.T) {
 }
 
 func TestGetCommitPullRequest(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetCommitPullRequest ==")
 	c := newTestClient()
 
@@ -139,6 +142,7 @@ func TestGetCommitPullRequest(t *testing.T) {
 }
 
 func TestGetSingleCommit(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 

@@ -13,6 +13,7 @@ import (
 )
 
 func TestAdminUserEmails(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminUserEmails ==")
 	c := newTestClient()
 
@@ -66,6 +67,7 @@ func TestAdminUserEmails(t *testing.T) {
 }
 
 func TestAdminUserQuota(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminUserQuota ==")
 	c := newTestClient()
 
@@ -103,6 +105,7 @@ func TestAdminUserQuota(t *testing.T) {
 }
 
 func TestAdminRenameUser(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminRenameUser ==")
 	c := newTestClient()
 
@@ -128,6 +131,7 @@ func TestAdminRenameUser(t *testing.T) {
 }
 
 func TestAdminUserAccessTokens(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestAdminUserAccessTokens ==")
 	c := newTestClient()
 

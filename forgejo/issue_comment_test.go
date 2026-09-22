@@ -18,6 +18,7 @@ import (
 
 // TestIssueComment creat a issue and test comment creation/edit/deletion on it
 func TestIssueComment(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestIssueComment ==")
 
 	c := newTestClient()

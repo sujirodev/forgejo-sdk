@@ -31,6 +31,7 @@ func createTestOrgTeams(t *testing.T, c *Client, org, name string, accessMode Ac
 }
 
 func TestDeprecationErrorOnUnitsUse(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestDeprecationErrorOnUnitsUse ==")
 
 	c := newTestClient()
@@ -48,6 +49,7 @@ func TestDeprecationErrorOnUnitsUse(t *testing.T) {
 }
 
 func TestTeamSearch(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestTeamSearch ==")
 	c := newTestClient()
 
@@ -78,6 +80,7 @@ func TestTeamSearch(t *testing.T) {
 }
 
 func TestCreateTeamWithUnitsMap(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestCreateTeamWithUnitsMap ==")
 	c := newTestClient()
 
@@ -119,6 +122,7 @@ func TestCreateTeamWithUnitsMap(t *testing.T) {
 }
 
 func TestEditTeamWithUnitsMap(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestEditTeamWithUnitsMap ==")
 	c := newTestClient()
 
@@ -173,6 +177,7 @@ func TestEditTeamWithUnitsMap(t *testing.T) {
 }
 
 func TestUnitsMapSerialization(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUnitsMapSerialization ==")
 
 	// Test CreateTeamOption serialization
@@ -243,6 +248,7 @@ func TestGetTeamRepo(t *testing.T) {
 }
 
 func TestUnitsMapBackwardCompatibility(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestUnitsMapBackwardCompatibility ==")
 
 	// Test that teams without UnitsMap still work
@@ -275,6 +281,7 @@ func TestUnitsMapBackwardCompatibility(t *testing.T) {
 }
 
 func TestOrgTeams_ListsMembersAndRepos(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	org := newTestOrg(t, c)
 

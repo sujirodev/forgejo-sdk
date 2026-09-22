@@ -17,6 +17,7 @@ import (
 )
 
 func TestRepoTransfer(t *testing.T) {
+	t.Parallel()
 	log.Printf("== TestRepoTransfer ==")
 	c := newTestClient()
 

@@ -20,6 +20,7 @@ import (
 )
 
 func TestGetPullRequestDiff_LegacyPath(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetPullRequestDiff_LegacyPath ==")
 	c := newTestClient()
 
@@ -69,6 +70,7 @@ func TestGetPullRequestDiff_LegacyPath(t *testing.T) {
 // GetRepoRefs itself can resolve -- confirmed with plain curl to need the
 // "heads/" qualifier a bare branch name doesn't have.
 func TestFixPullHeadSha_Resolves(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestFixPullHeadSha_Resolves ==")
 	c := newTestClient()
 

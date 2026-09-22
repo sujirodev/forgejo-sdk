@@ -13,6 +13,7 @@ import (
 )
 
 func TestListLabelTemplates(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestListLabelTemplates ==")
 	c := newTestClient()
 
@@ -22,6 +23,7 @@ func TestListLabelTemplates(t *testing.T) {
 }
 
 func TestGetLabelTemplate(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetLabelTemplate ==")
 	c := newTestClient()
 
@@ -37,6 +39,7 @@ func TestGetLabelTemplate(t *testing.T) {
 }
 
 func TestGetLabelTemplate_NotFound(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetLabelTemplate_NotFound ==")
 	c := newTestClient()
 

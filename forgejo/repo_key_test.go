@@ -13,6 +13,7 @@ import (
 )
 
 func TestRepoDeployKeys(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
@@ -45,6 +46,7 @@ func TestRepoDeployKeys(t *testing.T) {
 }
 
 func TestGetRepoSigningKey(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetRepoSigningKey ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "SigningKey", c)

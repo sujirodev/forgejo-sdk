@@ -16,6 +16,7 @@ import (
 // docs/PLANO-COBERTURA-TESTES.md section 4 / scripts/check-test-instance-settings.sh):
 // otherwise Forgejo refuses a remote address that resolves to itself.
 func TestPushMirrors(t *testing.T) {
+	t.Parallel()
 	c := newTestClient()
 	source := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 	target := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
@@ -38,6 +39,7 @@ func TestPushMirrors(t *testing.T) {
 // "Permission denied" instead of a network error, so this points at a
 // real repo too.
 func TestPushMirrorsLifecycle(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestPushMirrorsLifecycle ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "PushMirrorsLifecycle", c)
@@ -79,6 +81,7 @@ func TestPushMirrorsLifecycle(t *testing.T) {
 }
 
 func TestConvertToNormalRepo(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestConvertToNormalRepo ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "ConvertMirror", c)

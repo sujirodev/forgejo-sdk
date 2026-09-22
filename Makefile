@@ -8,6 +8,14 @@ FORGEJO_SDK_TEST_USERNAME ?= test01
 FORGEJO_SDK_TEST_PASSWORD ?= test01
 FORGEJO_SDK_TEST_EMAIL ?= test01@forgejo.org
 
+# Every top-level integration test calls t.Parallel(). Pin the degree here
+# instead of letting it default to GOMAXPROCS: the CI runner has 4 CPUs and
+# shares them with the Forgejo service container, so leaving it implicit
+# makes the suite's behavior depend on whatever the runner exposes that day.
+# Measured: 4 and 8 are within noise of each other -- the bottleneck is the
+# Forgejo instance, not Go. See docs/PLANO-PARALELIZACAO-TESTES.md.
+TEST_PARALLEL ?= 4
+
 PACKAGE := codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
 
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
@@ -108,7 +116,7 @@ test-unit: ## Run the client's own unit tests (no Forgejo instance needed).
 test: ## Run the integration test suite (requires a running Forgejo instance).
 	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
-	    cd forgejo && $(GO) test -race -timeout 20m -cover -coverprofile coverage.out; \
+	    cd forgejo && $(GO) test -race -timeout 20m -parallel $(TEST_PARALLEL) -cover -coverprofile coverage.out; \
 	fi
 
 .PHONY: check-forgejo-version

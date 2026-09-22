@@ -18,6 +18,7 @@ import (
 // (flag absent) -- unreachable from the integration test below, which only
 // ever sees those two.
 func TestUnit_CheckRepoFlag_UnexpectedStatus(t *testing.T) {
+	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
@@ -34,6 +35,7 @@ func TestUnit_CheckRepoFlag_UnexpectedStatus(t *testing.T) {
 // (see TESTING.md, "Server configuration"); without it every one of these
 // calls 404s. Closes issue #62.
 func TestRepoFlags(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestRepoFlags ==")
 	c := newTestClient()
 	repo, err := createTestRepo(t, "RepoFlags", c)

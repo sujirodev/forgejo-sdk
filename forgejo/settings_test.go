@@ -17,6 +17,7 @@ import (
 )
 
 func TestGetGlobalSettings(t *testing.T) {
+	t.Parallel()
 	log.Println("== TestGetGlobalSettings ==")
 	c := newTestClient()
 

@@ -25,6 +25,7 @@ import (
 )
 
 func TestUnit_ClientMethod_SetHTTPClient(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 
@@ -34,6 +35,7 @@ func TestUnit_ClientMethod_SetHTTPClient(t *testing.T) {
 }
 
 func TestUnit_ClientMethod_SetOTP(t *testing.T) {
+	t.Parallel()
 	var gotOTP string
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotOTP = r.Header.Get("X-FORGEJO-OTP")
@@ -48,6 +50,7 @@ func TestUnit_ClientMethod_SetOTP(t *testing.T) {
 }
 
 func TestUnit_ClientMethod_SetContext(t *testing.T) {
+	t.Parallel()
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"))
 	require.NoError(t, err)
 
@@ -58,6 +61,7 @@ func TestUnit_ClientMethod_SetContext(t *testing.T) {
 }
 
 func TestUnit_ClientMethod_SetUserAgent(t *testing.T) {
+	t.Parallel()
 	var gotUA string
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
@@ -88,6 +92,7 @@ func writeUnencryptedEd25519Key(t *testing.T) string {
 }
 
 func TestUnit_SignRequest(t *testing.T) {
+	t.Parallel()
 	keyPath := writeUnencryptedEd25519Key(t)
 
 	c, err := NewClient("http://example.invalid", SetForgejoVersion("16.0.5"), UseSSHPubkey("", keyPath, ""))
@@ -103,6 +108,7 @@ func TestUnit_SignRequest(t *testing.T) {
 }
 
 func TestUnit_ParseLinkHeader(t *testing.T) {
+	t.Parallel()
 	link := `<https://example.com/api/v1/repos/search?page=1>; rel="first", ` +
 		`<https://example.com/api/v1/repos/search?page=2>; rel="prev", ` +
 		`<https://example.com/api/v1/repos/search?page=4>; rel="next", ` +

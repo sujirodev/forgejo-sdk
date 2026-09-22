@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # Helper for .forgejo/workflows/release.yml: decides the semver bump for a
-# merged PR and computes/renders the resulting release metadata. Kept as a
-# standalone script (rather than inline YAML) so it can be run and tested
-# locally without pushing a workflow change.
+# release train and computes/renders the resulting release metadata. Kept
+# as a standalone script (rather than inline YAML) so it can be run and
+# tested locally without pushing a workflow change.
+#
+# A "train" is the set of PRs merged into develop since the last stable
+# tag, all reachable (via --first-parent) from the tip of develop that the
+# develop -> main merge commit incorporated. See docs/PLANO-RELEASE-TRAIN.md
+# for the full design and why the range must end at develop's tip, not at
+# main's HEAD.
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 {bump-level|next-tag <level>|changelog-group|render-entry|changelog-insert <file> <tag> <group> <entry> <repo-full-name>}" >&2
+  echo "usage: $0 {bump-level|next-tag <level>|changelog-group|render-entry|latest-tag|train-head <merge-sha>|range-prs <range>|aggregate-bump <dir>|render-body <dir>|changelog-insert <file> <tag> <body> <repo-full-name>}" >&2
   exit 1
 }
 
@@ -19,14 +25,21 @@ command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
 # $GITHUB_ENV as an expression, so a PR body that merely quotes "${{ ... }}"
 # (like #22's did) aborts the job before any step runs when passed as an
 # environment variable.
-if [ -n "${PR_JSON_FILE:-}" ]; then
-  PR_NUMBER=$(jq -r '.number' "$PR_JSON_FILE")
-  PR_TITLE=$(jq -r '.title // ""' "$PR_JSON_FILE")
-  PR_BODY=$(jq -r '.body // ""' "$PR_JSON_FILE")
-  PR_LABELS_JSON=$(jq -c '.labels // []' "$PR_JSON_FILE")
-  PR_AUTHOR=$(jq -r '.user.login // ""' "$PR_JSON_FILE")
+#
+# Loads a single PullRequest JSON file into PR_*. Called once at startup for
+# single-PR subcommands (PR_JSON_FILE), and once per file by the aggregating
+# subcommands (aggregate-bump, render-body) so bump_level/
+# changelog_group_for_labels/render_entry can run per PR.
+load_pr() {
+  local f="$1"
+  PR_NUMBER=$(jq -r '.number' "$f")
+  PR_TITLE=$(jq -r '.title // ""' "$f")
+  PR_BODY=$(jq -r '.body // ""' "$f")
+  PR_LABELS_JSON=$(jq -c '.labels // []' "$f")
+  PR_AUTHOR=$(jq -r '.user.login // ""' "$f")
   export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON PR_AUTHOR
-fi
+}
+[ -n "${PR_JSON_FILE:-}" ] && load_pr "$PR_JSON_FILE"
 
 # Prints one label name per line from PR_LABELS_JSON. A jq failure (e.g.
 # malformed JSON) must abort the script rather than be swallowed into an
@@ -50,7 +63,9 @@ changelog_group_for_labels() {
 }
 
 # Prints major/minor/patch. Reads PR_LABELS_JSON (Forgejo Label[] JSON),
-# PR_TITLE and PR_BODY from the environment.
+# PR_TITLE and PR_BODY from the environment. Note: a skip-changelog label
+# (checked by render_body, not here) does not affect the bump -- it only
+# hides the entry from the changelog text, not the version it implies.
 bump_level() {
   local labels
   labels=$(pr_label_names)
@@ -84,7 +99,7 @@ bump_level() {
 next_tag() {
   local level="$1"
   local latest
-  latest=$(git tag --list 'forgejo/v*' | grep -Ev -- '-' | sort -V | tail -1)
+  latest=$(latest_tag)
   if [ -z "$latest" ]; then
     echo "no existing forgejo/vX.Y.Z tag found" >&2
     exit 1
@@ -100,10 +115,65 @@ next_tag() {
   echo "forgejo/v${major}.${minor}.${patch}"
 }
 
-# Prints "* PR_TITLE (#PR_NUMBER)", with a "(thanks @author)" suffix when the
-# PR wasn't opened by the repo owner, for reuse in both the release body and
-# the CHANGELOG.md entry. GITHUB_REPOSITORY_OWNER is set by the runner; it
-# also covers Renovate, which opens PRs under the owner's own token.
+# Latest stable tag (pre-releases like -alpha are excluded), the same base
+# next_tag uses to decide the next number and the start of a train's range.
+latest_tag() {
+  git tag --list 'forgejo/v*' | grep -Ev -- '-' | sort -V | tail -1
+}
+
+# The tip of develop that the train's merge commit into main incorporated.
+# Takes the SHA of that merge commit (a PR's merge_commit_sha) and prints
+# its second parent. Fails if the commit is not a merge: that means the
+# train was merged by squash or rebase, and the list of PRs it carried is
+# not recoverable from it -- merge commit is the only merge style the
+# release train plan allows for a train (decision 4).
+train_head() {
+  local merge_sha="$1" parents
+  parents=$(git rev-list --parents -n1 "$merge_sha" | wc -w)
+  if [ "$parents" -lt 3 ]; then
+    echo "${merge_sha} is not a merge commit; a train must be merged with a merge commit (release train plan, decision 4)" >&2
+    exit 1
+  fi
+  git rev-parse "${merge_sha}^2"
+}
+
+# Numbers of the PRs that entered the given range, in the order they
+# entered. Must be called with the range ending at develop's tip (the
+# second parent of the train's merge commit), never at main: walking
+# --first-parent from main only ever sees the train's own merge commit.
+# Assumes every PR was merged with a merge commit (decision 4): rebase
+# leaves no "(#N)" behind, so a rebased PR would silently not appear here.
+range_prs() {
+  local range="$1"
+  git log --first-parent --reverse --format=%s "$range" \
+    | sed -n 's/.*(#\([0-9]\{1,\}\)).*/\1/p' \
+    | awk 'NF && !seen[$0]++'
+}
+
+# Highest bump among the PRs in dir (one PR JSON file per PR, as fetched by
+# release.yml's "Collect the PRs in this train" step). major short-circuits:
+# release.yml already fails an automatic MAJOR release (ADR 0005), so there
+# is no point evaluating the rest, and the offending PR is named on stderr
+# because the workflow's own error otherwise only knows the train PR number.
+aggregate_bump() {
+  local dir="$1" level=patch f l
+  shopt -s nullglob
+  for f in "$dir"/*.json; do
+    load_pr "$f"
+    l=$(bump_level)
+    case "$l" in
+      major) echo "PR #${PR_NUMBER} signals a breaking change: ${PR_TITLE}" >&2; echo major; return ;;
+      minor) level=minor ;;
+    esac
+  done
+  echo "$level"
+}
+
+# Renders "* PR_TITLE (#PR_NUMBER)", with a "(thanks @author)" suffix when
+# the PR wasn't opened by the repo owner, for reuse in both the release
+# body and the CHANGELOG.md entry. GITHUB_REPOSITORY_OWNER is set by the
+# runner; it also covers Renovate, which opens PRs under the owner's own
+# token.
 render_entry() {
   local suffix=""
   local owner="${GITHUB_REPOSITORY_OWNER:-MatheusAlves96}"
@@ -113,12 +183,46 @@ render_entry() {
   echo "  * ${PR_TITLE:-} (#${PR_NUMBER:-})${suffix}"
 }
 
-# Prepends a new "## [tag](releases/tag/tag) - date" section, with a single
-# group and entry, to the top of the changelog (right after the "# Changelog"
-# heading). Writes the result back to the same file. No-op when the file
-# already has a section for that tag.
+# Changelog body for every PR in dir: groups in .changelog.yml order, each
+# with the PRs that fell into it. A PR with a skip label (skip-changelog,
+# backport/*, has/backport -- same regex as .changelog.yml's skip-labels)
+# is left out of the text, but its bump level was already counted by
+# aggregate_bump: the label speaks to the changelog, not to semver.
+#
+# Multi-group sections are blank-line-separated between groups (as in the
+# upstream v2.2.0 section); within a group, entries are newline-separated
+# with no blank line (as in the current v3.x sections).
+#
+# Empty output (every PR in the train skipped, or dir has no files) is a
+# caller error: release.yml's "Update CHANGELOG.md" step must treat it as
+# a hard failure rather than publish a release with no notes.
+render_body() {
+  local dir="$1" f group labels first=1
+  declare -A entries
+  shopt -s nullglob
+  for f in "$dir"/*.json; do
+    load_pr "$f"
+    labels=$(pr_label_names)
+    grep -qE '^(skip-changelog|backport/.+|has/backport)$' <<<"$labels" && continue
+    group=$(changelog_group_for_labels "$labels")
+    entries[$group]+="$(render_entry)"$'\n'
+  done
+  for group in BREAKING FEATURES BUGFIXES ENHANCEMENTS SECURITY TESTING \
+               TRANSLATION BUILD DOCS MISC; do
+    [ -n "${entries[$group]:-}" ] || continue
+    [ "$first" = 1 ] || echo
+    first=0
+    echo "* ${group}"
+    printf '%s' "${entries[$group]}"
+  done
+}
+
+# Prepends a new "## [tag](releases/tag/tag) - date" section, with the given
+# body, to the top of the changelog (right after the "# Changelog" heading).
+# Writes the result back to the same file. No-op when the file already has
+# a section for that tag.
 changelog_insert() {
-  local file="$1" tag="$2" group="$3" entry="$4" repo="$5"
+  local file="$1" tag="$2" body="$3" repo="$4"
   local date url tmp
   # Idempotent: a re-run of a release job that already committed this
   # section (but failed later, e.g. publishing the release) must not insert
@@ -135,8 +239,7 @@ changelog_insert() {
     echo
     echo "## [${tag#forgejo/}](${url}) - ${date}"
     echo
-    echo "* ${group}"
-    echo "$entry"
+    printf '%s\n' "$body"
     echo
     tail -n +2 "$file"
   } >"$tmp"
@@ -148,6 +251,11 @@ case "${1:-}" in
   next-tag) next_tag "${2:?level required}" ;;
   changelog-group) changelog_group_for_labels "$(pr_label_names)" ;;
   render-entry) render_entry ;;
-  changelog-insert) changelog_insert "${2:?}" "${3:?}" "${4:?}" "${5:?}" "${6:?}" ;;
+  latest-tag) latest_tag ;;
+  train-head) train_head "${2:?merge commit SHA required}" ;;
+  range-prs) range_prs "${2:?range required}" ;;
+  aggregate-bump) aggregate_bump "${2:?directory required}" ;;
+  render-body) render_body "${2:?directory required}" ;;
+  changelog-insert) changelog_insert "${2:?}" "${3:?}" "${4:?}" "${5:?}" ;;
   *) usage ;;
 esac

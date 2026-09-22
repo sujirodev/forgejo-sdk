@@ -150,3 +150,21 @@ func (c *Client) ListPackageFiles(owner, packageType, name, version string) ([]*
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/packages/%s/%s/%s/%s/files", owner, packageType, name, version), nil, nil, &packageFiles)
 	return packageFiles, resp, err
 }
+
+// LinkPackage links a package to a repository
+func (c *Client) LinkPackage(owner, packageType, name, repoName string) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &packageType, &name, &repoName); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("POST", fmt.Sprintf("/packages/%s/%s/%s/-/link/%s", owner, packageType, name, repoName), nil, nil)
+	return resp, err
+}
+
+// UnlinkPackage unlinks a package from a repository
+func (c *Client) UnlinkPackage(owner, packageType, name string) (*Response, error) {
+	if err := escapeValidatePathSegments(&owner, &packageType, &name); err != nil {
+		return nil, err
+	}
+	_, resp, err := c.getResponse("POST", fmt.Sprintf("/packages/%s/%s/%s/-/unlink", owner, packageType, name), nil, nil)
+	return resp, err
+}

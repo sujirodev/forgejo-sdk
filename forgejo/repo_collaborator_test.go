@@ -98,3 +98,21 @@ func TestRepoCollaborator(t *testing.T) {
 	assert.Equal(t, 404, resp.StatusCode)
 	assert.Nil(t, permissonNotExists)
 }
+
+func TestIsCollaborator(t *testing.T) {
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+	collaborator := createTestUser(t, uniqueName(t, "collab"), c)
+
+	is, _, err := c.IsCollaborator(repo.Owner.UserName, repo.Name, collaborator.UserName)
+	require.NoError(t, err)
+	assert.False(t, is)
+
+	mode := AccessModeRead
+	_, err = c.AddCollaborator(repo.Owner.UserName, repo.Name, collaborator.UserName, AddCollaboratorOption{Permission: &mode})
+	require.NoError(t, err)
+
+	is, _, err = c.IsCollaborator(repo.Owner.UserName, repo.Name, collaborator.UserName)
+	require.NoError(t, err)
+	assert.True(t, is)
+}

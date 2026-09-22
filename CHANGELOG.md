@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.2.3](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.3) - 2026-09-22
+
+* MISC
+  * SDK: cobrir as 37 rotas de admin faltando (Forgejo 16.0.5) (#46)
+
+
 ## [v3.2.2](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.2) - 2026-09-22
 
 * MISC

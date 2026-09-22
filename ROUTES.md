@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 436 | 25 | 23 | 0 | 484 |
-| V15.x | 455 | 3 | 26 | 0 | 484 |
-| V16.x (latest) | 452 | 0 | 32 | 0 | 484 |
+| V11.x | 457 | 25 | 23 | 0 | 505 |
+| V15.x | 476 | 3 | 26 | 0 | 505 |
+| V16.x (latest) | 473 | 0 | 32 | 0 | 505 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|

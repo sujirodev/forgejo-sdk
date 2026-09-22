@@ -22,9 +22,21 @@ We still track upstream (`git remote add upstream https://codeberg.org/mvdkleijn
 
 ## Use it
 
+```sh
+go get codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
+```
+
 ```go
 import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
 ```
+
+Reference docs: [pkg.go.dev](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
+
+Releases are tagged `forgejo/vX.Y.Z`, because the module lives in the
+`forgejo/` subdirectory; for the Go tooling the version is `vX.Y.Z`, without
+that prefix. Besides Codeberg's automatic source archives, every release
+carries two attachments: a CycloneDX SBOM of the module and its dependencies,
+and the [route contract](#route-coverage) pinned to that version.
 
 ## Version Requirements
  * go >= 1.25

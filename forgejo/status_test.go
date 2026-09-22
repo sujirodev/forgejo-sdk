@@ -107,7 +107,7 @@ func TestListCommitStatuses(t *testing.T) {
 	}
 }
 
-func createStatus(t *testing.T, c *Client, userName, repoName, sha, url, desc, context string, state StatusState) { //nolint
+func createStatus(t *testing.T, c *Client, userName, repoName, sha, url, desc, context string, state StatusState) {
 	stats, resp, err := c.CreateStatus(userName, repoName, sha, CreateStatusOption{
 		State:       state,
 		TargetURL:   url,

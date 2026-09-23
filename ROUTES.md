@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 457 | 25 | 23 | 0 | 505 |
-| V15.x | 476 | 3 | 26 | 0 | 505 |
-| V16.x (latest) | 473 | 0 | 32 | 0 | 505 |
+| V11.x | 459 | 30 | 17 | 0 | 506 |
+| V15.x | 485 | 3 | 18 | 0 | 506 |
+| V16.x (latest) | 483 | 0 | 23 | 0 | 506 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -217,13 +217,13 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `Follow` | ok | ok | ok | set current user follow the target |
 | `GetActionsRun` | needs-config | needs-config | needs-config | returns the workflow run associated with the token used to |
 | `GetActivityPubActor` | ok | ok | ok | returns the instance's Actor (Application) document. |
-| `GetActivityPubActorOutbox` | needs-config | ok | needs-config | returns the instance actor's outbox, an |
-| `GetActivityPubPerson` | ok | needs-config | needs-config | returns the Person actor for the user with the given ID. |
-| `GetActivityPubPersonActivity` | needs-config | needs-config | needs-config | returns a specific activity recorded for the user. |
-| `GetActivityPubPersonActivityNote` | needs-config | needs-config | needs-config | returns the Note object of a specific |
-| `GetActivityPubPersonOutbox` | needs-config | needs-config | needs-config | lists the user's recorded activity (their outbox). |
-| `GetActivityPubRepository` | ok | needs-config | needs-config | returns the Repository actor for the repo with the given ID. |
-| `GetActivityPubRepositoryOutbox` | needs-config | needs-config | needs-config | returns a repository's outbox, an |
+| `GetActivityPubActorOutbox` | n/a (>= 14.0.0) | ok | ok | returns the instance actor's outbox, an |
+| `GetActivityPubPerson` | ok | ok | ok | returns the Person actor for the user with the given ID. |
+| `GetActivityPubPersonActivity` | n/a (>= 13.0.0) | ok | ok | returns a specific activity recorded for the user. |
+| `GetActivityPubPersonActivityNote` | n/a (>= 13.0.0) | ok | ok | returns the Note object of a specific |
+| `GetActivityPubPersonOutbox` | n/a (>= 13.0.0) | ok | ok | lists the user's recorded activity (their outbox). |
+| `GetActivityPubRepository` | ok | ok | ok | returns the Repository actor for the repo with the given ID. |
+| `GetActivityPubRepositoryOutbox` | n/a (>= 14.0.0) | ok | ok | returns a repository's outbox, an |
 | `GetAnnotatedTag` | ok | ok | ok | get the tag object of an annotated tag (not lightweight tags) of a repository |
 | `GetArchive` | ok | ok | ok | get an archive of a repository by git reference |
 | `GetArchiveReader` | ok | ok | ok | gets a `git archive` for a particular tree-ish git reference |
@@ -475,10 +475,11 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `SearchRepos` | ok | ok | ok | searches for repositories matching the given filters |
 | `SearchTopics` | ok | ok | ok | searches for topics by keyword |
 | `SearchUsers` | ok | ok | ok | finds users by query |
-| `SendActivityPubActorInbox` | ok | negative-only | negative-only | delivers an Activity to the instance actor's inbox. |
-| `SendActivityPubPersonInbox` | needs-config | needs-config | needs-config | delivers an Activity to a user's inbox. |
-| `SendActivityPubRepositoryInbox` | needs-config | needs-config | needs-config | delivers an Activity to a repository's inbox. |
+| `SendActivityPubActorInbox` | ok | ok | ok | delivers an Activity to the instance actor's inbox. |
+| `SendActivityPubPersonInbox` | ok | ok | ok | delivers an Activity to a user's inbox. |
+| `SendActivityPubRepositoryInbox` | ok | ok | ok | delivers an Activity to a repository's inbox. |
 | `ServerVersion` | ok | ok | ok | returns the version of the server |
+| `SetActivityPubSigner` | no-http | no-http | no-http | sets (or, with nil, clears) the signer used for the |
 | `SetBasicAuth` | no-http | no-http | no-http | sets username and password |
 | `SetContext` | no-http | no-http | no-http | set default context witch is used for http requests |
 | `SetHTTPClient` | no-http | no-http | no-http | replaces default http.Client with user given one. |

@@ -251,6 +251,7 @@ jobs:
             && echo "ALLOW_LOCALNETWORKS = true" >> /tmp/conf/app.ini
             && echo "[federation]" >> /tmp/conf/app.ini
             && echo "ENABLED = true" >> /tmp/conf/app.ini
+            && echo "INSECURE_ALLOW_INVALID_HOSTS = true" >> /tmp/conf/app.ini
             && forgejo migrate -c /tmp/conf/app.ini
             && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
             && forgejo web -c /tmp/conf/app.ini

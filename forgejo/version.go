@@ -94,6 +94,8 @@ var (
 	version1_22_0 = version.Must(version.NewVersion("1.22.0"))
 	version8_0_3  = version.Must(version.NewVersion("8.0.3"))
 	version12_0_0 = version.Must(version.NewVersion("12.0.0"))
+	version13_0_0 = version.Must(version.NewVersion("13.0.0"))
+	version14_0_0 = version.Must(version.NewVersion("14.0.0"))
 	version15_0_0 = version.Must(version.NewVersion("15.0.0"))
 	version16_0_0 = version.Must(version.NewVersion("16.0.0"))
 )

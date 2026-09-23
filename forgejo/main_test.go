@@ -161,6 +161,7 @@ ENABLE_FLAGS = true
 ENABLED = true
 [federation]
 ENABLED = true
+INSECURE_ALLOW_INVALID_HOSTS = true
 [database]
 DB_TYPE  = sqlite3
 [log]

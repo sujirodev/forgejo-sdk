@@ -43,6 +43,7 @@ type Client struct {
 	userAgent      string
 	debug          bool
 	httpsigner     *HTTPSign
+	apSigner       *ActivityPubSigner
 	client         *http.Client
 	ctx            context.Context
 	mutex          sync.RWMutex
@@ -369,6 +370,7 @@ func (c *Client) doRequest(method, path string, header http.Header, body io.Read
 	}
 
 	client := c.client // client ref can change from this point on so safe it
+	apSigner := c.apSigner
 	c.mutex.RUnlock()
 
 	for k, v := range header {
@@ -378,6 +380,12 @@ func (c *Client) doRequest(method, path string, header http.Header, body io.Read
 	if c.httpsigner != nil {
 		err = c.SignRequest(req)
 		if err != nil {
+			return nil, err
+		}
+	}
+
+	if apSigner != nil && isActivityPubPath(path) {
+		if err := c.signActivityPubRequest(apSigner, req); err != nil {
 			return nil, err
 		}
 	}
@@ -428,6 +436,7 @@ func (c *Client) doRequestWithContext(ctx context.Context, method, path string, 
 	}
 
 	client := c.client
+	apSigner := c.apSigner
 	c.mutex.RUnlock()
 
 	for k, v := range header {
@@ -437,6 +446,12 @@ func (c *Client) doRequestWithContext(ctx context.Context, method, path string, 
 	if c.httpsigner != nil {
 		err = c.SignRequest(req)
 		if err != nil {
+			return Response{}, err
+		}
+	}
+
+	if apSigner != nil && isActivityPubPath(path) {
+		if err := c.signActivityPubRequest(apSigner, req); err != nil {
 			return Response{}, err
 		}
 	}

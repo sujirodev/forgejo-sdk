@@ -46,13 +46,27 @@ check 'Makefile (docker): federation ENABLED' Makefile 'FORGEJO__federation__ENA
 check 'integration.yml: federation ENABLED' .forgejo/workflows/integration.yml '\[federation\]'
 check 'main_test.go: federation ENABLED' forgejo/main_test.go '\[federation\]'
 
+# The ActivityPub actor sub-routes authenticate their caller with an HTTP
+# Signature whose key ID Forgejo resolves by fetching it over HTTP. From
+# Forgejo 16.0.0 that fetch refuses private and loopback addresses unless
+# INSECURE_ALLOW_INVALID_HOSTS is set -- and a test instance's peer is always
+# on one. Without it the suite cannot present a resolvable key and the nine
+# actor routes fall back to "needs-config" (issue #58). Test instances only:
+# it disables an SSRF guard.
+check 'Makefile (native): INSECURE_ALLOW_INVALID_HOSTS' Makefile 'INSECURE_ALLOW_INVALID_HOSTS = true'
+check 'Makefile (docker): INSECURE_ALLOW_INVALID_HOSTS' Makefile 'FORGEJO__federation__INSECURE_ALLOW_INVALID_HOSTS=true'
+check 'integration.yml: INSECURE_ALLOW_INVALID_HOSTS' .forgejo/workflows/integration.yml 'INSECURE_ALLOW_INVALID_HOSTS = true'
+check 'main_test.go: INSECURE_ALLOW_INVALID_HOSTS' forgejo/main_test.go 'INSECURE_ALLOW_INVALID_HOSTS = true'
+
 if [ "$fail" -ne 0 ]; then
   echo "error: test-instance settings drift between files" >&2
   echo "  DISABLE_GIT_HOOKS = false is needed by the git-hook routes' tests," >&2
   echo "  ALLOW_LOCALNETWORKS = true is needed by the mirror routes' tests," >&2
   echo "  ENABLE_FLAGS = true is needed by the repo-flags routes' tests," >&2
   echo "  [quota]/[federation] ENABLED = true are needed by the quota and" >&2
-  echo "  ActivityPub routes' tests." >&2
+  echo "  ActivityPub routes' tests, and [federation]" >&2
+  echo "  INSECURE_ALLOW_INVALID_HOSTS = true lets Forgejo 16+ fetch the" >&2
+  echo "  suite's signing key from a peer on a private address." >&2
   exit 1
 fi
 echo "ok: test-instance settings are set consistently across all four places"

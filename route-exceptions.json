@@ -11,6 +11,16 @@
       "since": ""
     },
     {
+      "route": "SetActivityPubSigner",
+      "versions": [
+        "*"
+      ],
+      "reason": "no-http",
+      "detail": "sets the key the client's ActivityPub requests are signed with",
+      "issue": "",
+      "since": ""
+    },
+    {
       "route": "SetBasicAuth",
       "versions": [
         "*"
@@ -78,16 +88,6 @@
       "reason": "no-http",
       "detail": "signs a request that another method then sends",
       "issue": "",
-      "since": ""
-    },
-    {
-      "route": "ActivityPubFollow",
-      "versions": [
-        "*"
-      ],
-      "reason": "negative-only",
-      "detail": "needs a reachable remote ActivityPub actor to succeed; the harness only stands up a single instance, so the test targets an unreachable domain on purpose",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/57",
       "since": ""
     },
     {
@@ -218,107 +218,6 @@
       "reason": "known-bug",
       "detail": "unreached once TestRepoStaring skips on StarRepo's 500 (issue #59)",
       "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
-      "since": ""
-    },
-    {
-      "route": "SendActivityPubActorInbox",
-      "versions": [
-        "lts-15",
-        "latest-stable"
-      ],
-      "reason": "negative-only",
-      "detail": "delivers an unsigned Follow activity on purpose, to check the route rejects it rather than 404s; Forgejo answers 400 on 15.0.9/16.0.5 (204 on 11.0.16, which stays on real evidence) -- a 2xx was never the expected outcome here",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubRepository",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "the server answers \"request signature verification failed\" to a plain token-authenticated request; this sub-resource actor route needs real ActivityPub HTTP Signature auth, which the SDK does not implement yet",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "SendActivityPubRepositoryInbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubRepositoryOutbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "inconsistent across versions (404 on 11.0.16, ok on 15.0.9, signature-required on 16.0.5); no reliable evidence without HTTP Signature auth",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPerson",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "SendActivityPubPersonInbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPersonOutbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPersonActivity",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "blocked by GetActivityPubPerson failing earlier in the same request chain with the same missing HTTP Signature auth",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPersonActivityNote",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "blocked by GetActivityPubPerson failing earlier in the same request chain with the same missing HTTP Signature auth",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubActorOutbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "inconsistent across versions (404 on 11.0.16, ok on 15.0.9, signature-required on 16.0.5); no reliable evidence without HTTP Signature auth",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/58",
       "since": ""
     }
   ]

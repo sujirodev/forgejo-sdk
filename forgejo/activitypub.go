@@ -22,6 +22,11 @@ import (
 type ActivityPubObject map[string]interface{}
 
 // GetActivityPubActor returns the instance's Actor (Application) document.
+//
+// This is the one federation route Forgejo serves unsigned on every version,
+// so that a peer can bootstrap. Every other route in this file speaks to the
+// caller as a remote federated server and needs an HTTP Signature: see
+// UseActivityPubSignature.
 func (c *Client) GetActivityPubActor() (*ActivityPubObject, *Response, error) {
 	obj := new(ActivityPubObject)
 	resp, err := c.getParsedResponse("GET", "/activitypub/actor", nil, nil, obj)
@@ -42,6 +47,12 @@ func (c *Client) SendActivityPubActorInbox(activity ActivityPubObject) (*Respons
 // ActivityStreams OrderedCollection. The instance actor's outbox is always
 // empty.
 func (c *Client) GetActivityPubActorOutbox() (*ActivityPubObject, *Response, error) {
+	// The route was added in Forgejo 14.0.0: routers/api/v1/api.go registers
+	// /activitypub/actor/outbox from v14.0.1 on, and not in v12.0.1 or
+	// v13.0.1. A live 11.0.16 instance answers 404.
+	if err := c.checkServerVersionGreaterThanOrEqual(version14_0_0); err != nil {
+		return nil, nil, err
+	}
 	obj := new(ActivityPubObject)
 	resp, err := c.getParsedResponse("GET", "/activitypub/actor/outbox", nil, nil, obj)
 	return obj, resp, err
@@ -67,6 +78,10 @@ func (c *Client) SendActivityPubRepositoryInbox(repoID int64, activity ActivityP
 // GetActivityPubRepositoryOutbox returns a repository's outbox, an
 // ActivityStreams OrderedCollection.
 func (c *Client) GetActivityPubRepositoryOutbox(repoID int64) (*ActivityPubObject, *Response, error) {
+	// Added in Forgejo 14.0.0, alongside /activitypub/actor/outbox.
+	if err := c.checkServerVersionGreaterThanOrEqual(version14_0_0); err != nil {
+		return nil, nil, err
+	}
 	obj := new(ActivityPubObject)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/activitypub/repository-id/%d/outbox", repoID), nil, nil, obj)
 	return obj, resp, err
@@ -82,6 +97,12 @@ func (c *Client) GetActivityPubPerson(userID int64) (*ActivityPubObject, *Respon
 // GetActivityPubPersonActivityNote returns the Note object of a specific
 // activity recorded for the user.
 func (c *Client) GetActivityPubPersonActivityNote(userID, activityID int64) (*ActivityPubObject, *Response, error) {
+	// The route was added in Forgejo 13.0.0: routers/api/v1/api.go registers
+	// /activitypub/user-id/{id}/activities/{id} from v13.0.1 on, and not in
+	// v12.0.1. A live 11.0.16 instance answers 404.
+	if err := c.checkServerVersionGreaterThanOrEqual(version13_0_0); err != nil {
+		return nil, nil, err
+	}
 	obj := new(ActivityPubObject)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/activitypub/user-id/%d/activities/%d", userID, activityID), nil, nil, obj)
 	return obj, resp, err
@@ -89,6 +110,10 @@ func (c *Client) GetActivityPubPersonActivityNote(userID, activityID int64) (*Ac
 
 // GetActivityPubPersonActivity returns a specific activity recorded for the user.
 func (c *Client) GetActivityPubPersonActivity(userID, activityID int64) (*ActivityPubObject, *Response, error) {
+	// Added in Forgejo 13.0.0, alongside the Note route above.
+	if err := c.checkServerVersionGreaterThanOrEqual(version13_0_0); err != nil {
+		return nil, nil, err
+	}
 	obj := new(ActivityPubObject)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/activitypub/user-id/%d/activities/%d/activity", userID, activityID), nil, nil, obj)
 	return obj, resp, err
@@ -106,6 +131,10 @@ func (c *Client) SendActivityPubPersonInbox(userID int64, activity ActivityPubOb
 
 // GetActivityPubPersonOutbox lists the user's recorded activity (their outbox).
 func (c *Client) GetActivityPubPersonOutbox(userID int64) (*ActivityPubObject, *Response, error) {
+	// Added in Forgejo 13.0.0, alongside the activities routes above.
+	if err := c.checkServerVersionGreaterThanOrEqual(version13_0_0); err != nil {
+		return nil, nil, err
+	}
 	obj := new(ActivityPubObject)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/activitypub/user-id/%d/outbox", userID), nil, nil, obj)
 	return obj, resp, err

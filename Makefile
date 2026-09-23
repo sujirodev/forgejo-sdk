@@ -209,6 +209,7 @@ endif
 	echo "ALLOW_LOCALNETWORKS = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[federation]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ENABLED = true" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "INSECURE_ALLOW_INVALID_HOSTS = true" >> ${WORK_DIR}/test/conf/app.ini; \
 	${WORK_DIR}/test/forgejo-main migrate -c ${WORK_DIR}/test/conf/app.ini; \
 	${WORK_DIR}/test/forgejo-main admin user create \
 		--username=${FORGEJO_SDK_TEST_USERNAME} \
@@ -247,6 +248,7 @@ endif
 		-e FORGEJO__quota__ENABLED=true \
 		-e FORGEJO__migrations__ALLOW_LOCALNETWORKS=true \
 		-e FORGEJO__federation__ENABLED=true \
+		-e FORGEJO__federation__INSECURE_ALLOW_INVALID_HOSTS=true \
 		codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} > /dev/null 2>&1 || true
 	@echo "Waiting for Forgejo to start..."
 	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do \

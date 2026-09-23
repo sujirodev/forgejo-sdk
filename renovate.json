@@ -40,6 +40,12 @@
       "automerge": false
     },
     {
+      "description": "github.com/davidmz/go-pageant has had no release since 2021 and `abandonments:recommended` flags it on the dependency dashboard (issue #14). Keeping it is deliberate: it is the Windows half of GetAgent (forgejo/agent_windows.go), the only way this SDK talks to PuTTY's Pageant, and it is feature-complete for a protocol that has not changed. The maintained-looking alternatives are not an improvement -- trzsz/pageant (v0.1.1, 2024-07) and abakum/pageant (v0.0.1, 2024-07) are both past the same abandonment threshold, both pre-1.0, and swapping would trade a stable dependency for a new supply chain for no functional gain. Revisit if Pageant's IPC protocol changes or a v1 successor appears.",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["github.com/davidmz/go-pageant"],
+      "abandonmentThreshold": null
+    },
+    {
       "description": "Require dashboard approval for Go major version updates",
       "matchManagers": ["gomod"],
       "matchUpdateTypes": ["major"],
@@ -55,6 +61,13 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "forgejo/upload-artifact and forgejo/download-artifact are Forgejo Actions hosted on code.forgejo.org -- the same host the Forgejo runner resolves them from -- and have no github.com counterpart. The github-actions manager routes every `uses:` to the github-tags datasource, which is why the dependency dashboard (issue #14) reported `Failed to look up github-tags package forgejo/upload-artifact: no-result`. Point just these two at forgejo-tags on that host; digests keep working, because the github-actions manager resolves them from the datasource's sourceUrl. The rules above still apply: major bumps wait for dashboard approval. Must stay after the two github-actions rules above so neither resets the datasource.",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["forgejo/upload-artifact", "forgejo/download-artifact"],
+      "overrideDatasource": "forgejo-tags",
+      "registryUrls": ["https://code.forgejo.org"]
     },
     {
       "description": "Forgejo test instance: always track the newest release tag (https://codeberg.org/forgejo/forgejo/tags; the docker datasource exposes the same tags plus the image digest). One PR touching every reference (workflow service image, Makefile, README, main_test.go), majors included, no separate minor/patch PR, no dashboard approval; CI on the PR decides. Must stay after the github-actions major rule above, and before the two lts-* matrix rules below (their narrower groupName has to win for those two dependencies; this rule's groupName still applies to the matrix's latest-stable entry, which neither of them matches).",

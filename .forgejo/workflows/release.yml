@@ -412,29 +412,32 @@ jobs:
         continue-on-error: true
         env:
           TAG: ${{ steps.version.outputs.tag }}
-          NOTE: ${{ steps.changelog.outputs.entry }}
           MODULE: ${{ steps.proxy.outputs.module }}
           VERSION: ${{ steps.proxy.outputs.version }}
           GOSUM: ${{ steps.proxy.outputs.gosum }}
           RELEASE_ID: ${{ steps.release.outputs.id }}
         run: |
           api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          # The changelog is read from the file the "Update CHANGELOG.md" step
+          # wrote (not from a step output: it has none holding the text), or
+          # this PATCH replaces the list of changes with the install section.
+          note=$(cat "${{ steps.changelog.outputs.body_file }}")
           fence='```'
           install=$(cat <<EOF
-          ${NOTE}
+          ${note}
 
           ---
 
-          ### Instalação
+          ### Installation
 
           ${fence}sh
           go get ${MODULE}@${VERSION}
           ${fence}
 
-          A tag é \`${TAG}\`, porque o módulo vive no subdiretório \`forgejo/\`.
-          Para o Go a versão é \`${VERSION}\`, sem o prefixo.
+          The tag is \`${TAG}\` because the module lives in the \`forgejo/\` subdirectory.
+          For the Go toolchain the version is \`${VERSION}\`, without the prefix.
 
-          Documentação: https://pkg.go.dev/${MODULE}@${VERSION}
+          Documentation: https://pkg.go.dev/${MODULE}@${VERSION}
 
           ### go.sum
 
@@ -442,10 +445,10 @@ jobs:
           ${GOSUM}
           ${fence}
 
-          ### Anexos
+          ### Attachments
 
-          - \`forgejo-sdk-${VERSION}.cdx.json\` — SBOM CycloneDX 1.6 do módulo e das suas dependências.
-          - \`ROUTES-${VERSION}.md\` — contrato de rotas: quais rotas esta versão cobre, por versão do Forgejo.
+          - \`forgejo-sdk-${VERSION}.cdx.json\`: CycloneDX 1.6 SBOM of the module and its dependencies.
+          - \`ROUTES-${VERSION}.md\`: route contract, which routes this version covers for each Forgejo version.
           EOF
           )
           body=$(jq -n --arg note "$install" '{body:$note}')

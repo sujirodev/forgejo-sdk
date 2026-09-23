@@ -496,8 +496,15 @@ func statusCodeToErr(resp *Response) (body []byte, err error) {
 		return data, fmt.Errorf("unknown API Error: %d\nRequest: '%s' with '%s' method and '%s' body", resp.StatusCode, path, method, string(data))
 	}
 
+	// A 5XX answered to a caller who is not an instance admin has its
+	// internal detail stripped, so "message" comes back present but empty.
+	// Returning that as-is yields a non-nil error whose Error() is the empty
+	// string, which tells the caller nothing -- not even the status code. Let
+	// an empty message fall through to the status fallback below.
 	if msg, ok := errMap["message"]; ok {
-		return data, fmt.Errorf("%v", msg)
+		if text := fmt.Sprintf("%v", msg); text != "" {
+			return data, errors.New(text)
+		}
 	}
 
 	// If no error message, at least give status and data

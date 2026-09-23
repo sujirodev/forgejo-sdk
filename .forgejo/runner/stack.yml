@@ -1,7 +1,7 @@
 version: "3.8"
 
 # Self-hosted Forgejo runner registered against codeberg.org for
-# MatheusAlves96/forgejo-sdk (workflow uses runs-on: ubuntu-latest).
+# sujirodev/forgejo-sdk (workflow uses runs-on: ubuntu-latest).
 #
 # This is the reviewed source of truth for the Portainer Swarm stack
 # `codeberg-runner` (env id 3). It is deployed MANUALLY (Stacks ->

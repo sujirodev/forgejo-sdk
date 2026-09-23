@@ -128,7 +128,7 @@ func TestUnit_RouteRecorder_UnattributedRequests(t *testing.T) {
 
 func TestUnit_RouteRecorder_ClientMethodName(t *testing.T) {
 	t.Parallel()
-	const pkg = "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
+	const pkg = "codeberg.org/sujirodev/forgejo-sdk/forgejo/v3"
 
 	for _, tc := range []struct {
 		fn   string

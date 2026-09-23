@@ -125,6 +125,28 @@ func TestUnit_StatusCodeToErr_JSONMessageBody(t *testing.T) {
 	assert.Contains(t, err.Error(), "repository not found")
 }
 
+func TestUnit_StatusCodeToErr_EmptyJSONMessage(t *testing.T) {
+	t.Parallel()
+	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"message": "",
+			"url":     "http://localhost:3000/api/swagger",
+		})
+	})
+
+	c := newUnitTestClient(t, srv)
+
+	// Forgejo strips the internal detail of a 5XX for callers who are not
+	// instance admins and answers {"message":""}. Taking that message as the
+	// error would give the caller a non-nil error that says nothing, so the
+	// status fallback has to win.
+	_, _, err := c.getResponse("GET", "/masked", nil, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "500 Internal Server Error")
+	assert.Contains(t, err.Error(), "/api/swagger")
+}
+
 func TestUnit_StatusCodeToErr_NonJSONBody(t *testing.T) {
 	t.Parallel()
 	srv := newUnitTestServer(t, func(w http.ResponseWriter, r *http.Request) {

@@ -5,5 +5,5 @@
 # approval requirement for pull requests from forks/non-collaborators:
 # https://forgejo.org/docs/latest/user/actions/security-pull-request/
 
-/.forgejo/ @MatheusAlves96
-/CODEOWNERS @MatheusAlves96
+/.forgejo/ @sujirodev
+/CODEOWNERS @sujirodev

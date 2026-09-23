@@ -16,7 +16,7 @@ FORGEJO_SDK_TEST_EMAIL ?= test01@forgejo.org
 # Forgejo instance, not Go. See docs/PLANO-PARALELIZACAO-TESTES.md.
 TEST_PARALLEL ?= 4
 
-PACKAGE := codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
+PACKAGE := codeberg.org/sujirodev/forgejo-sdk/forgejo/v3
 
 GOFUMPT_PACKAGE ?= mvdan.cc/gofumpt@v0.7.0
 GOLANGCI_LINT_VERSION ?= v2.9.0

@@ -10,4 +10,4 @@
 // The version corresponds to the highest supported version
 // of the forgejo API, but backwards-compatibility is mostly
 // given.
-package forgejo // import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
+package forgejo // import "codeberg.org/sujirodev/forgejo-sdk/forgejo/v3"

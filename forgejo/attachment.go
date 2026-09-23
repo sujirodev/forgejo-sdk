@@ -6,7 +6,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package forgejo // import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
+package forgejo // import "codeberg.org/sujirodev/forgejo-sdk/forgejo/v3"
 import (
 	"bytes"
 	"encoding/json"

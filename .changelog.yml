@@ -1,5 +1,5 @@
 # The full repository name
-repo: MatheusAlves96/forgejo-sdk
+repo: sujirodev/forgejo-sdk
 
 # Service type (forgejo or github)
 service: forgejo

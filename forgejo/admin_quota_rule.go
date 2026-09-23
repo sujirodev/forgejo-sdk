@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/models"
+	"codeberg.org/sujirodev/forgejo-sdk/forgejo/v3/models"
 )
 
 // AdminListQuotaRules lists the available quota rules.

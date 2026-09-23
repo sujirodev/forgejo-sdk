@@ -178,8 +178,8 @@ aggregate_bump() {
 # Renovate, which opens PRs under the owner's own token.
 render_entry() {
   local suffix=""
-  local owner="${GITHUB_REPOSITORY_OWNER:-MatheusAlves96}"
-  local repo="${GITHUB_REPOSITORY:-MatheusAlves96/forgejo-sdk}"
+  local owner="${GITHUB_REPOSITORY_OWNER:-sujirodev}"
+  local repo="${GITHUB_REPOSITORY:-sujirodev/forgejo-sdk}"
   if [ -n "${PR_AUTHOR:-}" ] && [ "${PR_AUTHOR}" != "$owner" ]; then
     suffix=" (thanks [@${PR_AUTHOR}](https://codeberg.org/${PR_AUTHOR}))"
   fi

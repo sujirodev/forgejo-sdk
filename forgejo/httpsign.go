@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/42wim/httpsig"
-	legacyhttpsig "github.com/go-fed/httpsig"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -203,18 +202,12 @@ func (c *Client) SignRequest(r *http.Request) error {
 		headersToSign = append(headersToSign, "Digest")
 	}
 
-	// create a signer for the request and headers, the signature will be valid for 10 seconds
-	var (
-		signer httpsig.SSHSigner
-		err    error
-	)
-
-	// use legacyhttpsig to sign with RSA-SHA1 on older gitea releases
-	if err = c.checkServerVersionGreaterThanOrEqual(version1_23_0); err != nil {
-		signer, _, err = legacyhttpsig.NewSSHSigner(c.httpsigner.Signer, httpsig.DigestSha512, headersToSign, legacyhttpsig.Signature, 10)
-	} else {
-		signer, _, err = httpsig.NewSSHSigner(c.httpsigner.Signer, httpsig.DigestSha512, headersToSign, httpsig.Signature, 10)
-	}
+	// create a signer for the request and headers, the signature will be valid for 10 seconds.
+	// There used to be a second branch here that signed with RSA-SHA1 via github.com/go-fed/httpsig
+	// for servers older than 1.23.0. It was unreachable inside the range this SDK supports --
+	// forgejo >= 11.0.10, which compares greater than 1.23.0 -- so no CI leg ever took it, and it
+	// was the only thing keeping an abandoned dependency (last release 2020) in go.mod. See #14.
+	signer, _, err := httpsig.NewSSHSigner(c.httpsigner.Signer, httpsig.DigestSha512, headersToSign, httpsig.Signature, 10)
 	if err != nil {
 		return fmt.Errorf("httpsig.NewSSHSigner failed: %s", err)
 	}

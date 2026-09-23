@@ -6,6 +6,7 @@ package forgejo
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -59,14 +60,21 @@ type ActionVariable struct {
 
 // ActionRunJob represents a job within a workflow run
 type ActionRunJob struct {
-	ID      int64    `json:"id"`
-	Name    string   `json:"name"`
-	Status  string   `json:"status"`
-	TaskID  int64    `json:"task_id"`
-	OwnerID int64    `json:"owner_id"`
-	RepoID  int64    `json:"repo_id"`
-	RunsOn  []string `json:"runs_on"`
-	Needs   []string `json:"needs"`
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	TaskID int64  `json:"task_id"`
+	// RunID identifies the workflow run this job belongs to.
+	RunID   int64 `json:"run_id"`
+	OwnerID int64 `json:"owner_id"`
+	RepoID  int64 `json:"repo_id"`
+	// Attempt counts how many times the job has been attempted, including
+	// the current one. It is what GetActionJobLogsOption.Attempt selects.
+	Attempt int64 `json:"attempt"`
+	// Handle opaquely identifies a single attempt of a job.
+	Handle string   `json:"handle"`
+	RunsOn []string `json:"runs_on"`
+	Needs  []string `json:"needs"`
 }
 
 // RunnerRegistrationToken represents a runner registration token
@@ -167,6 +175,58 @@ type ListActionTasksOption struct {
 type ListActionTasksResponse struct {
 	TotalCount   int64         `json:"total_count"`
 	WorkflowRuns []*ActionTask `json:"workflow_runs"`
+}
+
+// ActionArtifact represents an artifact produced by a workflow run
+type ActionArtifact struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	// RunID identifies the workflow run that produced this artifact.
+	RunID       int64 `json:"run_id"`
+	SizeInBytes int64 `json:"size_in_bytes"`
+	// ArchiveDownloadURL is the absolute URL of the zip archive. Prefer
+	// DownloadRepoActionArtifact, which goes through the client's
+	// authentication.
+	ArchiveDownloadURL string `json:"archive_download_url"`
+	// Expired reports whether the archive is past its retention and no
+	// longer downloadable, even though the record is still listed.
+	Expired   bool      `json:"expired"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// ListActionArtifactsOption options for listing action artifacts
+type ListActionArtifactsOption struct {
+	ListOptions
+	// Name keeps only the artifacts carrying this exact name. Artifact
+	// names are not unique: one name may cover several runs.
+	Name string
+}
+
+// QueryEncode encodes options to query parameters
+func (opt *ListActionArtifactsOption) QueryEncode() string {
+	query := opt.getURLQuery()
+	if opt.Name != "" {
+		query.Add("name", opt.Name)
+	}
+	return query.Encode()
+}
+
+// GetActionJobLogsOption options for reading an action job's logs
+type GetActionJobLogsOption struct {
+	// Attempt selects one attempt of the job, counting from 1. Zero leaves
+	// the choice to the server, which serves the latest attempt.
+	Attempt int64
+}
+
+// QueryEncode encodes options to query parameters
+func (opt *GetActionJobLogsOption) QueryEncode() string {
+	query := make(url.Values)
+	if opt.Attempt > 0 {
+		query.Add("attempt", fmt.Sprintf("%d", opt.Attempt))
+	}
+	return query.Encode()
 }
 
 // ListActionJobsOption options for listing/searching action jobs

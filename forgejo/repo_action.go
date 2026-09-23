@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -306,4 +307,85 @@ func (c *Client) GetRepoActionRunnerRegistrationToken(owner, repo string) (*Runn
 	token := new(RunnerRegistrationToken)
 	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/actions/runners/registration-token", owner, repo), jsonHeader, nil, token)
 	return token, resp, err
+}
+
+// CancelRepoActionRun cancels a pending or running workflow run. Cancelling
+// is also what moves a run that no runner ever picked up into a completed
+// state, which is the precondition DeleteRepoActionRun enforces.
+func (c *Client) CancelRepoActionRun(owner, repo string, runID int64) (*Response, error) {
+	// The run lifecycle routes (cancel, delete, jobs, logs, artifacts)
+	// arrived in Forgejo 16.0.0; 15.0.9 has no such route.
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, err
+	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
+
+	_, resp, err := c.getResponse("POST", fmt.Sprintf("/repos/%s/%s/actions/runs/%d/cancel", owner, repo, runID), jsonHeader, nil)
+	return resp, err
+}
+
+// DeleteRepoActionRun deletes a completed workflow run. The server refuses to
+// delete a run that has not finished yet; cancel it first.
+func (c *Client) DeleteRepoActionRun(owner, repo string, runID int64) (*Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, err
+	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, err
+	}
+
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/repos/%s/%s/actions/runs/%d", owner, repo, runID), jsonHeader, nil)
+	return resp, err
+}
+
+// ListRepoActionRunJobs lists the jobs of a single workflow run. Unlike
+// ListRepoActionJobs, which searches the repository's jobs by runner label,
+// this one is scoped to one run and needs no filter.
+func (c *Client) ListRepoActionRunJobs(owner, repo string, runID int64) ([]*ActionRunJob, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, nil, err
+	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+
+	jobs := make([]*ActionRunJob, 0)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/repos/%s/%s/actions/runs/%d/jobs", owner, repo, runID), jsonHeader, nil, &jobs)
+	return jobs, resp, err
+}
+
+// GetRepoActionRunLogs downloads a ZIP of the plaintext logs of every job in
+// a workflow run. A job that never executed still gets an entry in the
+// archive, named after the job and suffixed ".MISSING". The archive is
+// returned as a byte stream in a ReadCloser; closing it is the caller's
+// responsibility.
+func (c *Client) GetRepoActionRunLogs(owner, repo string, runID int64) (io.ReadCloser, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, nil, err
+	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+
+	return c.getResponseReader("GET", fmt.Sprintf("/repos/%s/%s/actions/runs/%d/logs", owner, repo, runID), nil, nil)
+}
+
+// GetRepoActionJobLogs downloads the plaintext logs of a single action job.
+// The job must have been executed: the server answers "job has not been
+// executed yet" otherwise. The logs are returned as a byte stream in a
+// ReadCloser; closing it is the caller's responsibility.
+func (c *Client) GetRepoActionJobLogs(owner, repo string, jobID int64, opt GetActionJobLogsOption) (io.ReadCloser, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, nil, err
+	}
+	if err := escapeValidatePathSegments(&owner, &repo); err != nil {
+		return nil, nil, err
+	}
+
+	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/actions/jobs/%d/logs", owner, repo, jobID))
+	link.RawQuery = opt.QueryEncode()
+
+	return c.getResponseReader("GET", link.String(), nil, nil)
 }

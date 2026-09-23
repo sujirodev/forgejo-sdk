@@ -7,14 +7,14 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 30 | 17 | 0 | 506 |
-| V15.x | 485 | 3 | 18 | 0 | 506 |
-| V16.x (latest) | 483 | 0 | 23 | 0 | 506 |
+| V11.x | 459 | 31 | 16 | 0 | 506 |
+| V15.x | 485 | 4 | 17 | 0 | 506 |
+| V16.x (latest) | 489 | 0 | 17 | 0 | 506 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
 | `AcceptRepoTransfer` | ok | ok | ok | accepts a repo transfer. |
-| `ActivityPubFollow` | negative-only | negative-only | negative-only | makes the current user follow a remote ActivityPub |
+| `ActivityPubFollow` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | makes the current user follow a remote ActivityPub |
 | `AddCollaborator` | ok | ok | ok | add some user as a collaborator of a repository |
 | `AddEmail` | ok | ok | ok | add one email to current user with options |
 | `AddIssueLabels` | ok | ok | ok | add one or more labels to one issue |
@@ -313,7 +313,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetSSHSigningKey` | needs-config | needs-config | needs-config | returns the server's default SSH signing key, in OpenSSH |
 | `GetSigningKey` | ok | ok | ok | returns the server's default GPG signing key, armored. |
 | `GetSingleCommit` | ok | ok | ok | returns a single commit |
-| `GetStarredRepos` | ok | ok | known-bug | returns the repos that the given user has starred |
+| `GetStarredRepos` | ok | ok | ok | returns the repos that the given user has starred |
 | `GetSyncForkBranchInfo` | n/a (>= 15.0.0) | ok | ok | gets information about syncing a fork branch with its base branch |
 | `GetSyncForkDefaultInfo` | n/a (>= 15.0.0) | ok | ok | gets information about syncing a fork's default branch with its base branch |
 | `GetTag` | ok | ok | ok | get the tag of a repository |
@@ -335,7 +335,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `IsCollaborator` | ok | ok | ok | check if a user is a collaborator of a repository |
 | `IsFollowing` | ok | ok | ok | if current user followed the target |
 | `IsPullRequestMerged` | ok | ok | ok | test if one PR is merged to one repository |
-| `IsRepoStarring` | ok | ok | known-bug | returns whether the authenticated user has starred the repo or not |
+| `IsRepoStarring` | ok | ok | ok | returns whether the authenticated user has starred the repo or not |
 | `IsUserFollowing` | ok | ok | ok | if the user followed the target |
 | `IssueSubscribe` | ok | ok | ok | subscribe current user to an issue |
 | `IssueUnSubscribe` | ok | ok | ok | unsubscribe current user from an issue |
@@ -422,7 +422,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoMilestones` | ok | ok | ok | list all the milestones of one repository |
 | `ListRepoNotifications` | ok | ok | ok | list users's notification threads on a specific repo |
 | `ListRepoPullRequests` | ok | ok | ok | list PRs of one repository |
-| `ListRepoStargazers` | ok | ok | known-bug | list a repository's stargazers |
+| `ListRepoStargazers` | ok | ok | ok | list a repository's stargazers |
 | `ListRepoSubscribers` | ok | ok | ok | list a repo's subscribers (i.e. watchers) |
 | `ListRepoTags` | ok | ok | ok | list all the branches of one repository |
 | `ListRepoTopics` | ok | ok | ok | list all repository's topics |
@@ -490,7 +490,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `SetSudo` | no-http | no-http | no-http | sets username to impersonate. |
 | `SetUserAgent` | no-http | no-http | no-http | sets the user-agent to send with every request. |
 | `SignRequest` | no-http | no-http | no-http | signs a HTTP request |
-| `StarRepo` | ok | ok | known-bug | star specified repo as the authenticated user |
+| `StarRepo` | ok | ok | ok | star specified repo as the authenticated user |
 | `StartIssueStopWatch` | ok | ok | ok | starts a stopwatch for an existing issue for a given |
 | `StopIssueStopWatch` | ok | ok | ok | stops an existing stopwatch for an issue in a given |
 | `SubmitPullReview` | ok | ok | ok | submit a pending review to an pull request |
@@ -499,7 +499,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `TestRepoHook` | ok | ok | ok | tests a push webhook of a repository. ref is optional and |
 | `TransferRepo` | ok | ok | ok | transfers the ownership of a repository |
 | `UnDismissPullReview` | ok | ok | ok | cancel to dismiss a review for a pull request |
-| `UnStarRepo` | ok | ok | known-bug | remove star to specified repo as the authenticated user |
+| `UnStarRepo` | ok | ok | ok | remove star to specified repo as the authenticated user |
 | `UnWatchRepo` | ok | ok | ok | stop to watch a repository |
 | `UnblockUser` | ok | ok | ok | removes a block placed on the given user by the authenticated user. |
 | `Unfollow` | ok | ok | ok | set current user unfollow the target |

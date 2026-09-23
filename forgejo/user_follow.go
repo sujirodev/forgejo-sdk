@@ -102,14 +102,31 @@ func (c *Client) Unfollow(target string) (*Response, error) {
 
 // APRemoteFollowOption options for following a remote ActivityPub actor
 type APRemoteFollowOption struct {
-	// Target is the remote actor to follow, e.g. "user@remote.example".
+	// Target is the URI of the remote actor to follow, e.g.
+	// "https://remote.example/api/v1/activitypub/user-id/1". The server
+	// parses it as a URL to find the instance to federate with
+	// (modules/forgefed, NewActorID), so a "user@host" handle is not one.
 	Target string `json:"target"`
 }
 
 // ActivityPubFollow makes the current user follow a remote ActivityPub
 // actor. Unlike Follow/Unfollow above, which operate on a user local to
 // this instance, this federates a follow request to a remote instance.
+//
+// Target is the actor's URI. The server resolves it for real before it
+// answers: it reads the remote instance's nodeinfo documents, fetches the
+// actor document, creates a local federated user for it, and only then
+// queues the Follow activity for delivery (services/federation,
+// FollowRemoteActor). An actor it cannot reach is answered with 406, not
+// with a success.
 func (c *Client) ActivityPubFollow(opt APRemoteFollowOption) (*Response, error) {
+	// The route was added in Forgejo 16.0.0: routers/api/v1/api.go registers
+	// POST /user/activitypub/follow there and not in v15.0.9 or earlier,
+	// which answer the plain router 404.
+	if err := c.checkServerVersionGreaterThanOrEqual(version16_0_0); err != nil {
+		return nil, err
+	}
+
 	body, err := json.Marshal(&opt)
 	if err != nil {
 		return nil, err

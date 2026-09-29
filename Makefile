@@ -114,7 +114,8 @@ test-unit: ## Run the client's own unit tests (no Forgejo instance needed).
 
 .PHONY: test
 test: ## Run the integration test suite (requires a running Forgejo instance).
-	@export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
+	@if [ -z "$$FORGEJO_SDK_TEST_RUNNER" ] && [ -n "$$(docker ps -q -f name=^forgejo-test-runner$$ 2> /dev/null)" ]; then export FORGEJO_SDK_TEST_RUNNER=true; fi; \
+	export FORGEJO_SDK_TEST_URL=${FORGEJO_SDK_TEST_URL}; export FORGEJO_SDK_TEST_USERNAME=${FORGEJO_SDK_TEST_USERNAME}; export FORGEJO_SDK_TEST_PASSWORD=${FORGEJO_SDK_TEST_PASSWORD}; \
 	if [ -z "$(shell curl --noproxy "*" "${FORGEJO_SDK_TEST_URL}/api/v1/version" 2> /dev/null)" ]; then \echo "No test-instance detected! See Make targets test-instance*"; exit 1; else \
 	    cd forgejo && $(GO) test -race -timeout 20m -parallel $(TEST_PARALLEL) -cover -coverprofile coverage.out; \
 	fi
@@ -283,12 +284,17 @@ endif
 		--admin=true \
 		--must-change-password=false \
 		--access-token > /dev/null 2>&1 || echo "User might already exist"
+	@echo "Attaching a test runner (host label) for the executed-job tests..."
+	@FORGEJO_EXEC_USER=git RUNNER_CONTAINER=forgejo-test-runner \
+		bash scripts/start-test-runner.sh forgejo-test ${FORGEJO_SDK_TEST_URL} container:forgejo-test \
+		|| echo "No runner attached: the executed-job tests will be skipped"
 	@echo "Test instance is ready at ${FORGEJO_SDK_TEST_URL}"
 
 .PHONY: test-instance-stop
 test-instance-stop: ## Stop the forgejo test instance.
 	@echo "Stopping Forgejo test instance..."
 ifeq ($(DOCKER_AVAILABLE),yes)
+	@docker rm -f forgejo-test-runner > /dev/null 2>&1 || true
 	@docker stop forgejo-test > /dev/null 2>&1 || true
 	@docker rm forgejo-test > /dev/null 2>&1 || true
 	@docker volume rm forgejo-test-data > /dev/null 2>&1 || true

@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 46 | 15 | 0 | 520 |
-| V15.x | 490 | 14 | 16 | 0 | 520 |
-| V16.x (latest) | 500 | 0 | 20 | 0 | 520 |
+| V11.x | 460 | 46 | 14 | 0 | 520 |
+| V15.x | 491 | 14 | 15 | 0 | 520 |
+| V16.x (latest) | 505 | 0 | 15 | 0 | 520 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -172,7 +172,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteReleaseAttachment` | ok | ok | ok | deletes the given attachment including the uploaded file |
 | `DeleteReleaseByTag` | ok | ok | ok | deletes a release frm a repository by tag |
 | `DeleteRepo` | ok | ok | ok | deletes a repository of user or organization. |
-| `DeleteRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | marks an artifact for deletion. The server removes |
+| `DeleteRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | marks an artifact for deletion. The server removes |
 | `DeleteRepoActionRun` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | deletes a completed workflow run. The server refuses to |
 | `DeleteRepoActionSecret` | ok | ok | ok | deletes a secret in a repository |
 | `DeleteRepoActionVariable` | ok | ok | ok | deletes an action variable from a repository |
@@ -196,7 +196,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DiffPatchFile` | ok | ok | ok | apply a diff patch to a file in a repository |
 | `DismissPullReview` | ok | ok | ok | dismiss a review for a pull request |
 | `DispatchRepoWorkflow` | ok | ok | ok | triggers a workflow dispatch event |
-| `DownloadRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | downloads an artifact's zip archive. The archive |
+| `DownloadRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | downloads an artifact's zip archive. The archive |
 | `EditBranchProtection` | ok | ok | ok | edits a branch protection for a repo |
 | `EditIssue` | ok | ok | ok | modify an existing issue for a given repository |
 | `EditIssueAttachment` | ok | ok | ok | updates the given issue attachment with the given options |
@@ -300,8 +300,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetReleaseAttachment` | ok | ok | ok | returns the requested attachment |
 | `GetReleaseByTag` | ok | ok | ok | get a release of a repository by tag |
 | `GetRepo` | ok | ok | ok | returns information of a repository of given owner. |
-| `GetRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | gets one of a repository's artifacts by ID. |
-| `GetRepoActionJobLogs` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | downloads the plaintext logs of a single action job. |
+| `GetRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | gets one of a repository's artifacts by ID. |
+| `GetRepoActionJobLogs` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | downloads the plaintext logs of a single action job. |
 | `GetRepoActionRun` | n/a (>= 12.0.0) | ok | ok | gets a specific action run |
 | `GetRepoActionRunLogs` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | downloads a ZIP of the plaintext logs of every job in |
 | `GetRepoActionRunnerRegistrationToken` | ok | ok | ok | gets a runner registration token for a repository |
@@ -531,7 +531,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UpdateUserAvatar` | ok | ok | ok | updates the avatar of the currently authenticated user. |
 | `UpdateUserSettings` | ok | ok | ok | returns user settings |
 | `ValidateIssueConfig` | ok | ok | ok | returns the validation information for a repository's issue config |
-| `VerifyGPGKey` | negative-only | negative-only | negative-only | verifies and adds a GPG key to the current user's account, |
+| `VerifyGPGKey` | ok | ok | ok | verifies and adds a GPG key to the current user's account, |
 | `WatchRepo` | ok | ok | ok | start to watch a repository |
 
 Cell values: `ok` (the suite called it and the server answered 2xx),

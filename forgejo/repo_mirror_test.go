@@ -84,11 +84,33 @@ func TestConvertToNormalRepo(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestConvertToNormalRepo ==")
 	c := newTestClient()
-	repo, err := createTestRepo(t, "ConvertMirror", c)
-	require.NoError(t, err)
+	source := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
 
-	// the repo isn't a mirror, so converting it must fail
-	_, resp, err := c.ConvertToNormalRepo(repo.Owner.UserName, repo.Name)
+	// The route is absent on 11.0.16 and 12.0.4 and present from 13.0.0;
+	// below that the SDK's guard refuses the call.
+	if !serverAtLeast(t, c, "13.0.0") {
+		_, _, err := c.ConvertToNormalRepo("nobody", "nothing")
+		require.ErrorContains(t, err, "is older than 13.0.0", "the version guard must refuse the call on a server without the route")
+		return
+	}
+
+	// a pull mirror of a repo on the same instance (needs ALLOW_LOCALNETWORKS)
+	mirror, _, err := c.MigrateRepo(MigrateRepoOption{
+		CloneAddr: source.CloneURL,
+		RepoName:  uniqueName(t, "mirror"),
+		RepoOwner: source.Owner.UserName,
+		Mirror:    true,
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() { _, _ = c.DeleteRepo(mirror.Owner.UserName, mirror.Name) })
+	require.True(t, mirror.Mirror)
+
+	converted, _, err := c.ConvertToNormalRepo(mirror.Owner.UserName, mirror.Name)
+	require.NoError(t, err)
+	assert.False(t, converted.Mirror)
+
+	// it is a normal repo now, so converting again must fail
+	_, resp, err := c.ConvertToNormalRepo(mirror.Owner.UserName, mirror.Name)
 	require.Error(t, err)
 	assert.NotNil(t, resp)
 }

@@ -95,8 +95,12 @@ func (c *Client) PushMirrorSync(user, repo string) (*Response, error) {
 	return resp, err
 }
 
-// ConvertToNormalRepo converts a mirror repository to a normal (non-mirror) repository
+// ConvertToNormalRepo converts a mirror repository to a normal (non-mirror) repository.
+// Requires Forgejo 13.0.0 or later (the route is absent on 11.x and 12.x).
 func (c *Client) ConvertToNormalRepo(user, repo string) (*Repository, *Response, error) {
+	if err := c.checkServerVersionGreaterThanOrEqual(version13_0_0); err != nil {
+		return nil, nil, err
+	}
 	if err := escapeValidatePathSegments(&user, &repo); err != nil {
 		return nil, nil, err
 	}

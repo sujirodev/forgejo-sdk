@@ -203,9 +203,56 @@ func TestPullUpdateAndPin(t *testing.T) {
 
 	_, err = c.UpdatePullRequest(user.UserName, repoName, pull.Index, UpdatePullRequestOptions{Style: "merge"})
 	require.NoError(t, err)
+}
 
-	// there is nothing scheduled to auto merge, so cancelling it must fail
-	_, err = c.CancelScheduledAutoMerge(user.UserName, repoName, pull.Index)
+// TestCancelScheduledAutoMerge schedules an auto merge (the head commit has a
+// pending status), cancels it, and asserts the pull request is left open. A second cancel finds nothing scheduled and must fail.
+func TestCancelScheduledAutoMerge(t *testing.T) {
+	t.Parallel()
+	log.Println("== TestCancelScheduledAutoMerge ==")
+	c := newTestClient()
+	repo := newTestRepo(t, c, CreateRepoOption{Name: uniqueName(t, "repo"), AutoInit: true})
+	owner := repo.Owner.UserName
+
+	_, _, err := c.CreateFile(owner, repo.Name, "auto-merge.txt", CreateFileOptions{
+		Content:     "QSBuZXcgRmlsZQo=",
+		FileOptions: FileOptions{Message: "add file", BranchName: repo.DefaultBranch, NewBranchName: "auto_merge"},
+	})
+	require.NoError(t, err)
+	pull, _, err := c.CreatePullRequest(owner, repo.Name, CreatePullRequestOption{
+		Base:  repo.DefaultBranch,
+		Head:  "auto_merge",
+		Title: "auto merge me",
+	})
+	require.NoError(t, err)
+
+	// a check that has not reported success yet is what makes
+	// merge_when_checks_succeed schedule instead of merging right away.
+	// No branch protection: on 11.0.x a required check makes the merge
+	// answer 405 "try again later" instead of scheduling.
+	_, _, err = c.CreateStatus(owner, repo.Name, pull.Head.Sha, CreateStatusOption{
+		State:   StatusPending,
+		Context: "ci/pending",
+	})
+	require.NoError(t, err)
+
+	merged, resp, err := c.MergePullRequest(owner, repo.Name, pull.Index, MergePullRequestOption{
+		Style:                  MergeStyleMerge,
+		MergeWhenChecksSucceed: true,
+	})
+	require.NoError(t, err)
+	assert.False(t, merged)
+	assert.Equal(t, 201, resp.StatusCode)
+
+	_, err = c.CancelScheduledAutoMerge(owner, repo.Name, pull.Index)
+	require.NoError(t, err)
+
+	pr, _, err := c.GetPullRequest(owner, repo.Name, pull.Index)
+	require.NoError(t, err)
+	assert.False(t, pr.HasMerged)
+
+	// nothing is scheduled any more
+	_, err = c.CancelScheduledAutoMerge(owner, repo.Name, pull.Index)
 	require.Error(t, err)
 }
 

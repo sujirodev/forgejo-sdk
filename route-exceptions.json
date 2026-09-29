@@ -121,36 +121,6 @@
       "since": ""
     },
     {
-      "route": "CancelScheduledAutoMerge",
-      "versions": [
-        "*"
-      ],
-      "reason": "negative-only",
-      "detail": "the test never schedules an auto-merge first, so the documented \"nothing scheduled\" failure is the intended, asserted outcome",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/63",
-      "since": ""
-    },
-    {
-      "route": "SyncForkBranch",
-      "versions": [
-        "*"
-      ],
-      "reason": "negative-only",
-      "detail": "called right after SyncForkDefault already synced the same branch, so there's nothing left to sync and an error is the asserted outcome",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/63",
-      "since": ""
-    },
-    {
-      "route": "ConvertToNormalRepo",
-      "versions": [
-        "*"
-      ],
-      "reason": "negative-only",
-      "detail": "the harness has no way to produce an actual mirror repo to convert, so failing is the asserted outcome",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/63",
-      "since": ""
-    },
-    {
       "route": "AdminAdoptRepository",
       "versions": [
         "*"

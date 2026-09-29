@@ -20,6 +20,14 @@ func TestSyncFork(t *testing.T) {
 	origRepo, err := createTestRepo(t, "SyncForkBase", c)
 	require.NoError(t, err)
 
+	// a second branch on the base, created before forking, so it exists on
+	// the fork too and can be synced on its own after the default branch
+	_, _, err = c.CreateBranch(origRepo.Owner.UserName, origRepo.Name, CreateBranchOption{
+		BranchName:    "sync-extra",
+		OldBranchName: origRepo.DefaultBranch,
+	})
+	require.NoError(t, err)
+
 	forkOrg := "SyncForkOrg"
 	_, _ = c.DeleteRepo(forkOrg, origRepo.Name)
 	_, _ = c.DeleteOrg(forkOrg)
@@ -53,18 +61,20 @@ func TestSyncFork(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
 
-	// advance the base repo so that a sync becomes possible
-	license, _, err := c.GetContents(origRepo.Owner.UserName, origRepo.Name, origRepo.DefaultBranch, "LICENSE")
-	require.NoError(t, err)
-	_, _, err = c.UpdateFile(origRepo.Owner.UserName, origRepo.Name, "LICENSE", UpdateFileOptions{
-		FileOptions: FileOptions{
-			Message:    "advance base for sync",
-			BranchName: origRepo.DefaultBranch,
-		},
-		SHA:     license.SHA,
-		Content: "U3luYyBGb3JrIFRlc3QK",
-	})
-	require.NoError(t, err)
+	// advance both branches of the base repo so that a sync becomes possible
+	for _, branch := range []string{origRepo.DefaultBranch, "sync-extra"} {
+		license, _, err := c.GetContents(origRepo.Owner.UserName, origRepo.Name, branch, "LICENSE")
+		require.NoError(t, err)
+		_, _, err = c.UpdateFile(origRepo.Owner.UserName, origRepo.Name, "LICENSE", UpdateFileOptions{
+			FileOptions: FileOptions{
+				Message:    "advance " + branch + " for sync",
+				BranchName: branch,
+			},
+			SHA:     license.SHA,
+			Content: "U3luYyBGb3JrIFRlc3QK",
+		})
+		require.NoError(t, err)
+	}
 
 	info, _, err = c.GetSyncForkDefaultInfo(forkRepo.Owner.UserName, forkRepo.Name)
 	require.NoError(t, err)
@@ -73,6 +83,19 @@ func TestSyncFork(t *testing.T) {
 	_, err = c.SyncForkDefault(forkRepo.Owner.UserName, forkRepo.Name)
 	require.NoError(t, err)
 
+	// the default branch is now in sync, so syncing it again has nothing to do
 	_, err = c.SyncForkBranch(forkRepo.Owner.UserName, forkRepo.Name, forkRepo.DefaultBranch)
 	require.Error(t, err)
+
+	// the other branch is still behind and syncs on its own
+	branchInfo, _, err = c.GetSyncForkBranchInfo(forkRepo.Owner.UserName, forkRepo.Name, "sync-extra")
+	require.NoError(t, err)
+	assert.True(t, branchInfo.Allowed)
+
+	_, err = c.SyncForkBranch(forkRepo.Owner.UserName, forkRepo.Name, "sync-extra")
+	require.NoError(t, err)
+
+	branchInfo, _, err = c.GetSyncForkBranchInfo(forkRepo.Owner.UserName, forkRepo.Name, "sync-extra")
+	require.NoError(t, err)
+	assert.False(t, branchInfo.Allowed)
 }

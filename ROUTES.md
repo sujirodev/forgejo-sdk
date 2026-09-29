@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 45 | 16 | 0 | 520 |
-| V15.x | 489 | 14 | 17 | 0 | 520 |
-| V16.x (latest) | 499 | 0 | 21 | 0 | 520 |
+| V11.x | 460 | 46 | 14 | 0 | 520 |
+| V15.x | 492 | 14 | 14 | 0 | 520 |
+| V16.x (latest) | 502 | 0 | 18 | 0 | 520 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -73,7 +73,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AdminSetUserQuotaGroups` | ok | ok | ok | sets the user's quota groups to the given list, |
 | `BlockUser` | ok | ok | ok | blocks the given user from interacting with the authenticated user. |
 | `CancelRepoActionRun` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | cancels a pending or running workflow run. Cancelling |
-| `CancelScheduledAutoMerge` | negative-only | negative-only | negative-only | cancels the scheduled auto merge for the given pull request |
+| `CancelScheduledAutoMerge` | ok | ok | ok | cancels the scheduled auto merge for the given pull request |
 | `ChangeFiles` | ok | ok | ok | creates, updates or deletes multiple files in a repository in a single commit |
 | `CheckIssueSubscription` | ok | ok | ok | check if current user is subscribed to an issue |
 | `CheckMyQuota` | ok | ok | ok | checks if the authenticated user is over quota. |
@@ -88,7 +88,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ClearIssueLabels` | ok | ok | ok | delete all the labels of one issue. |
 | `CollaboratorPermission` | ok | ok | ok | gets collaborator permission of a repository |
 | `CompareCommits` | ok | ok | ok | compares two commits in a repository. |
-| `ConvertToNormalRepo` | negative-only | negative-only | negative-only | converts a mirror repository to a normal (non-mirror) repository |
+| `ConvertToNormalRepo` | n/a (>= 13.0.0) | ok | ok | converts a mirror repository to a normal (non-mirror) repository. |
 | `CreateAccessToken` | ok | ok | ok | create one access token with options |
 | `CreateBranch` | ok | ok | ok | creates a branch for a user's repository |
 | `CreateBranchProtection` | ok | ok | ok | creates a branch protection for a repo |
@@ -508,7 +508,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `StartIssueStopWatch` | ok | ok | ok | starts a stopwatch for an existing issue for a given |
 | `StopIssueStopWatch` | ok | ok | ok | stops an existing stopwatch for an issue in a given |
 | `SubmitPullReview` | ok | ok | ok | submit a pending review to an pull request |
-| `SyncForkBranch` | n/a (>= 15.0.0) | negative-only | negative-only | syncs a fork branch with its base branch |
+| `SyncForkBranch` | n/a (>= 15.0.0) | ok | ok | syncs a fork branch with its base branch |
 | `SyncForkDefault` | n/a (>= 15.0.0) | ok | ok | syncs a fork's default branch with its base branch |
 | `TestRepoHook` | ok | ok | ok | tests a push webhook of a repository. ref is optional and |
 | `TransferRepo` | ok | ok | ok | transfers the ownership of a repository |

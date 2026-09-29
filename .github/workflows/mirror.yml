@@ -45,6 +45,17 @@ jobs:
             echo "::error::CODEBERG_TOKEN is not set; the Codeberg mirror was not updated"
             exit 1
           fi
+          # Ask the API what the token can do before pushing, so a bad token
+          # is reported as such instead of as a git prompt failure.
+          code=$(curl -sS -o "$RUNNER_TEMP/repo.json" -w '%{http_code}'             -H "Authorization: token ${token}"             https://codeberg.org/api/v1/repos/sujirodev/forgejo-sdk || true)
+          if [ "$code" != "200" ]; then
+            echo "::error::Codeberg answered HTTP ${code} for this token (length ${#token}); it is invalid, expired or lacks the repository scope. Regenerate it and update CODEBERG_TOKEN."
+            exit 1
+          fi
+          if [ "$(jq -r '.permissions.push' "$RUNNER_TEMP/repo.json")" != "true" ]; then
+            echo "::error::the token can read sujirodev/forgejo-sdk but cannot push; it needs the repository scope with write access."
+            exit 1
+          fi
           # Credentials go in a header, not in the URL, so they never show up
           # in git's own messages.
           auth=$(printf 'sujirodev:%s' "$token" | base64 -w0)

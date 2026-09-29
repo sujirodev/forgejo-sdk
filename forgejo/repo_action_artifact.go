@@ -90,5 +90,5 @@ func (c *Client) DownloadRepoActionArtifact(owner, repo string, artifactID int64
 		return nil, nil, err
 	}
 
-	return c.getResponseReader(fmt.Sprintf("/repos/%s/%s/actions/artifacts/%d/zip", owner, repo, artifactID), nil, nil)
+	return c.getResponseReader(fmt.Sprintf("/repos/%s/%s/actions/artifacts/%d/zip", owner, repo, artifactID))
 }

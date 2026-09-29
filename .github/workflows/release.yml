@@ -68,10 +68,15 @@ jobs:
     env:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
     steps:
+      # The checkout authenticates every later git command, so it has to use
+      # RELEASE_TOKEN: with the default GITHUB_TOKEN (read-only here) the push
+      # that fast-forwards develop is answered 403 as github-actions[bot], even
+      # when the push URL carries the right token.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       # Saves the PR as JSON (from the event payload on merge, from the API
       # on a manual dispatch) and hands only its PATH to later steps via
@@ -476,8 +481,7 @@ jobs:
         if: steps.version.outputs.tag && github.event.inputs.dry_run != 'true'
         run: |
           git fetch origin main
-          if git push "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-               "origin/main:refs/heads/develop"; then
+          if git push origin "origin/main:refs/heads/develop"; then
             echo "develop synced with main"
           else
             echo "::error::develop diverged from main; sync it by hand before the next train"

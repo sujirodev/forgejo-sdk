@@ -138,9 +138,14 @@ jobs:
           mkdir -p "$dir"
           numbers=$(bash scripts/compute-release-version.sh range-prs "${base}..${head}")
           test -n "$numbers" || { echo "::error::no PRs in ${base}..${head}"; exit 1; }
+          # PRs merged before the move to GitHub live on Codeberg under their
+          # old numbers; GitHub answers 404 for those, so ask Codeberg
+          # (read-only, public) for any number it does not know. Only the first
+          # train after the move has such PRs.
           for n in $numbers; do
             curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
-              "${api}/repos/${GITHUB_REPOSITORY}/pulls/${n}" > "${dir}/${n}.json"
+              "${api}/repos/${GITHUB_REPOSITORY}/pulls/${n}" > "${dir}/${n}.json" \
+              || curl -sSf "https://codeberg.org/api/v1/repos/${GITHUB_REPOSITORY}/pulls/${n}" > "${dir}/${n}.json"
           done
           echo "train ${base}..${head}: $(echo $numbers | tr '\n' ' ')"
           echo "head=${head}" >> "$GITHUB_OUTPUT"

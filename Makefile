@@ -188,6 +188,7 @@ endif
 	[ -f ${WORK_DIR}/test-cache/forgejo-main ] || { wget ${FORGEJO_DL} -O ${WORK_DIR}/test-cache/forgejo-main; }
 	cp ${WORK_DIR}/test-cache/forgejo-main ${WORK_DIR}/test/forgejo-main; \
 	chmod +x ${WORK_DIR}/test/forgejo-main; \
+	ssh-keygen -q -t ed25519 -N "" -C forgejo-sdk-test -f ${WORK_DIR}/test/conf/signing_key; \
 	secret_key=$$(${WORK_DIR}/test/forgejo-main generate secret SECRET_KEY); \
 	internal_token=$$(${WORK_DIR}/test/forgejo-main generate secret INTERNAL_TOKEN); \
 	echo "[security]" > ${WORK_DIR}/test/conf/app.ini; \
@@ -201,6 +202,13 @@ endif
 	echo "[repository]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ROOT = ${WORK_DIR}/test/data/" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ENABLE_FLAGS = true" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "[repository.signing]" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "FORMAT = ssh" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "SIGNING_KEY = ${WORK_DIR}/test/conf/signing_key.pub" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "INITIAL_COMMIT = never" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "CRUD_ACTIONS = never" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "WIKI = never" >> ${WORK_DIR}/test/conf/app.ini; \
+	echo "MERGES = never" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[server]" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "ROOT_URL = ${FORGEJO_SDK_TEST_URL}" >> ${WORK_DIR}/test/conf/app.ini; \
 	echo "[quota]" >> ${WORK_DIR}/test/conf/app.ini; \
@@ -230,9 +238,11 @@ ifeq ($(DOCKER_AVAILABLE),no)
 endif
 	@echo "Starting Forgejo test instance in Docker..."
 	@docker volume create forgejo-test-data > /dev/null 2>&1 || true
+	@MSYS_NO_PATHCONV=1 docker run --rm -v forgejo-test-data:/data --entrypoint sh codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} \
+		-c '[ -f /data/signing_key ] || ssh-keygen -q -t ed25519 -N "" -C forgejo-sdk-test -f /data/signing_key' > /dev/null
 	@secret_key=$$(docker run --rm codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} forgejo generate secret SECRET_KEY); \
 	internal_token=$$(docker run --rm codeberg.org/forgejo/forgejo:${FORGEJO_VERSION} forgejo generate secret INTERNAL_TOKEN); \
-	docker run -d --name forgejo-test \
+	MSYS_NO_PATHCONV=1 docker run -d --name forgejo-test \
 		-p 3000:3000 \
 		-v forgejo-test-data:/data \
 		-e FORGEJO__security__INSTALL_LOCK=true \
@@ -241,6 +251,12 @@ endif
 		-e FORGEJO__security__PASSWORD_COMPLEXITY=off \
 		-e FORGEJO__security__DISABLE_GIT_HOOKS=false \
 		-e FORGEJO__repository__ENABLE_FLAGS=true \
+		-e FORGEJO__repository_0X2E_signing__FORMAT=ssh \
+		-e FORGEJO__repository_0X2E_signing__SIGNING_KEY=/data/signing_key.pub \
+		-e FORGEJO__repository_0X2E_signing__INITIAL_COMMIT=never \
+		-e FORGEJO__repository_0X2E_signing__CRUD_ACTIONS=never \
+		-e FORGEJO__repository_0X2E_signing__WIKI=never \
+		-e FORGEJO__repository_0X2E_signing__MERGES=never \
 		-e FORGEJO__database__DB_TYPE=sqlite3 \
 		-e FORGEJO__server__ROOT_URL=${FORGEJO_SDK_TEST_URL} \
 		-e FORGEJO__service__DISABLE_REGISTRATION=false \

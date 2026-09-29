@@ -6,9 +6,11 @@ package forgejo
 
 import (
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestGetSigningKey exercises the GPG signing key endpoint. Whether a
@@ -32,19 +34,20 @@ func TestGetSigningKey(t *testing.T) {
 	assert.Contains(t, key, "PGP PUBLIC KEY BLOCK")
 }
 
-// TestGetSSHSigningKey mirrors TestGetSigningKey for the SSH signing key.
+// TestGetSSHSigningKey needs the test instance's [repository.signing]
+// section (FORMAT = ssh, SIGNING_KEY = a public key file); without it
+// /signing-key.ssh answers 404. The route arrived in Forgejo 12.0.0.
 func TestGetSSHSigningKey(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestGetSSHSigningKey ==")
 	c := newTestClient()
 
 	key, resp, err := c.GetSSHSigningKey(t.Context())
-	if err != nil {
-		t.Skipf("no default SSH signing key configured on this server: %v", err)
+	if !serverAtLeast(t, c, "12.0.0") {
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
 	}
-	if key == "" {
-		t.Skip("no default SSH signing key configured on this server: empty response")
-	}
-	assert.NotNil(t, resp)
-	assert.NotEmpty(t, key)
+	require.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.True(t, strings.HasPrefix(key, "ssh-ed25519 "), "want an OpenSSH public key, got %q", key)
 }

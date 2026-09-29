@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 45 | 16 | 0 | 520 |
-| V15.x | 489 | 14 | 17 | 0 | 520 |
-| V16.x (latest) | 499 | 0 | 21 | 0 | 520 |
+| V11.x | 459 | 46 | 15 | 0 | 520 |
+| V15.x | 490 | 14 | 16 | 0 | 520 |
+| V16.x (latest) | 500 | 0 | 20 | 0 | 520 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -319,7 +319,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetRepoSigningKey` | ok | ok | ok | returns the ASCII-armored public part of the key used by |
 | `GetRepoTeams` | ok | ok | ok | return teams from a repository |
 | `GetReviewers` | ok | ok | ok | return all users that can be requested to review in this repo |
-| `GetSSHSigningKey` | needs-config | needs-config | needs-config | returns the server's default SSH signing key, in OpenSSH |
+| `GetSSHSigningKey` | n/a (>= 12.0.0) | ok | ok | returns the server's default SSH signing key, in OpenSSH |
 | `GetSigningKey` | ok | ok | ok | returns the server's default GPG signing key, armored. |
 | `GetSingleCommit` | ok | ok | ok | returns a single commit |
 | `GetStarredRepos` | ok | ok | ok | returns the repos that the given user has starred |

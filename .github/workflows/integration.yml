@@ -157,6 +157,7 @@ jobs:
           cat > "$RUNNER_TEMP/start-forgejo.sh" <<'EOF'
           mkdir -p /tmp/conf/
           mkdir -p /tmp/data/
+          ssh-keygen -q -t ed25519 -N "" -C forgejo-sdk-test -f /tmp/conf/signing_key
           SECRET_KEY="$(forgejo generate secret SECRET_KEY)"
           INTERNAL_TOKEN="$(forgejo generate secret INTERNAL_TOKEN)"
           echo "I_AM_BEING_UNSAFE_RUNNING_AS_ROOT = true" > /tmp/conf/app.ini
@@ -171,6 +172,13 @@ jobs:
           echo "[repository]" >> /tmp/conf/app.ini
           echo "ROOT = /tmp/data/" >> /tmp/conf/app.ini
           echo "ENABLE_FLAGS = true" >> /tmp/conf/app.ini
+          echo "[repository.signing]" >> /tmp/conf/app.ini
+          echo "FORMAT = ssh" >> /tmp/conf/app.ini
+          echo "SIGNING_KEY = /tmp/conf/signing_key.pub" >> /tmp/conf/app.ini
+          echo "INITIAL_COMMIT = never" >> /tmp/conf/app.ini
+          echo "CRUD_ACTIONS = never" >> /tmp/conf/app.ini
+          echo "WIKI = never" >> /tmp/conf/app.ini
+          echo "MERGES = never" >> /tmp/conf/app.ini
           echo "[server]" >> /tmp/conf/app.ini
           echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
           echo "[quota]" >> /tmp/conf/app.ini

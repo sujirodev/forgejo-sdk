@@ -58,6 +58,41 @@ check 'Makefile (docker): INSECURE_ALLOW_INVALID_HOSTS' Makefile 'FORGEJO__feder
 check 'integration.yml: INSECURE_ALLOW_INVALID_HOSTS' .github/workflows/integration.yml 'INSECURE_ALLOW_INVALID_HOSTS = true'
 check 'main_test.go: INSECURE_ALLOW_INVALID_HOSTS' forgejo/main_test.go 'INSECURE_ALLOW_INVALID_HOSTS = true'
 
+# GET /signing-key.ssh answers 404 unless [repository.signing] names an SSH
+# public key (issue #63). Each place generates its own throwaway key.
+check 'Makefile (native): SSH signing FORMAT' Makefile 'FORMAT = ssh'
+check 'Makefile (docker): SSH signing FORMAT' Makefile 'FORGEJO__repository_0X2E_signing__FORMAT=ssh'
+check 'integration.yml: SSH signing FORMAT' .github/workflows/integration.yml 'FORMAT = ssh'
+check 'main_test.go: SSH signing FORMAT' forgejo/main_test.go 'FORMAT = ssh'
+
+check 'Makefile (native): SSH SIGNING_KEY' Makefile 'SIGNING_KEY = .*signing_key\.pub'
+check 'Makefile (docker): SSH SIGNING_KEY' Makefile 'FORGEJO__repository_0X2E_signing__SIGNING_KEY=.*signing_key\.pub'
+check 'integration.yml: SSH SIGNING_KEY' .github/workflows/integration.yml 'SIGNING_KEY = .*signing_key\.pub'
+check 'main_test.go: SSH SIGNING_KEY' forgejo/main_test.go 'SIGNING_KEY = %s'
+
+# With a signing key configured Forgejo signs the commits it makes, which
+# needs the private half; the test keys only have to be served, so signing
+# is switched off for every kind of commit.
+check 'Makefile (native): signing INITIAL_COMMIT never' Makefile 'INITIAL_COMMIT = never'
+check 'Makefile (docker): signing INITIAL_COMMIT never' Makefile 'signing__INITIAL_COMMIT=never'
+check 'integration.yml: signing INITIAL_COMMIT never' .github/workflows/integration.yml 'INITIAL_COMMIT = never'
+check 'main_test.go: signing INITIAL_COMMIT never' forgejo/main_test.go 'INITIAL_COMMIT = never'
+
+check 'Makefile (native): signing CRUD_ACTIONS never' Makefile 'CRUD_ACTIONS = never'
+check 'Makefile (docker): signing CRUD_ACTIONS never' Makefile 'signing__CRUD_ACTIONS=never'
+check 'integration.yml: signing CRUD_ACTIONS never' .github/workflows/integration.yml 'CRUD_ACTIONS = never'
+check 'main_test.go: signing CRUD_ACTIONS never' forgejo/main_test.go 'CRUD_ACTIONS = never'
+
+check 'Makefile (native): signing WIKI never' Makefile '"WIKI = never'
+check 'Makefile (docker): signing WIKI never' Makefile 'signing__WIKI=never'
+check 'integration.yml: signing WIKI never' .github/workflows/integration.yml '"WIKI = never'
+check 'main_test.go: signing WIKI never' forgejo/main_test.go '^WIKI = never'
+
+check 'Makefile (native): signing MERGES never' Makefile 'MERGES = never'
+check 'Makefile (docker): signing MERGES never' Makefile 'signing__MERGES=never'
+check 'integration.yml: signing MERGES never' .github/workflows/integration.yml 'MERGES = never'
+check 'main_test.go: signing MERGES never' forgejo/main_test.go 'MERGES = never'
+
 if [ "$fail" -ne 0 ]; then
   echo "error: test-instance settings drift between files" >&2
   echo "  DISABLE_GIT_HOOKS = false is needed by the git-hook routes' tests," >&2
@@ -66,7 +101,9 @@ if [ "$fail" -ne 0 ]; then
   echo "  [quota]/[federation] ENABLED = true are needed by the quota and" >&2
   echo "  ActivityPub routes' tests, and [federation]" >&2
   echo "  INSECURE_ALLOW_INVALID_HOSTS = true lets Forgejo 16+ fetch the" >&2
-  echo "  suite's signing key from a peer on a private address." >&2
+  echo "  suite's signing key from a peer on a private address, and" >&2
+  echo "  [repository.signing] FORMAT = ssh plus SIGNING_KEY = <public key>" >&2
+  echo "  is needed by the GetSSHSigningKey test." >&2
   exit 1
 fi
 echo "ok: test-instance settings are set consistently across all four places"

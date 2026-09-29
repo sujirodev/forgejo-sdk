@@ -26,6 +26,21 @@ import (
 // suite stayed green (issues #25 and #27).
 func newWorkflowRepo(t *testing.T, c *Client, prefix string) (*Repository, func()) {
 	t.Helper()
+	// runs-on: docker matches no label the harness runner declares, so
+	// this workflow's jobs stay queued even when a runner is attached.
+	return newWorkflowRepoWith(t, c, prefix, "test.yml", `on: workflow_dispatch
+jobs:
+  noop:
+    runs-on: docker
+    steps:
+      - run: echo dispatched
+`)
+}
+
+// newWorkflowRepoWith is newWorkflowRepo for a caller that brings its own
+// workflow file, committed to .forgejo/workflows/<file> on main.
+func newWorkflowRepoWith(t *testing.T, c *Client, prefix, file, workflow string) (*Repository, func()) {
+	t.Helper()
 	user := createTestUser(t, uniqueName(t, prefix+"u"), c)
 	c.SetSudo(user.UserName)
 
@@ -37,14 +52,7 @@ func newWorkflowRepo(t *testing.T, c *Client, prefix string) (*Repository, func(
 	require.NoError(t, err)
 	require.NotNil(t, repo)
 
-	workflow := `on: workflow_dispatch
-jobs:
-  noop:
-    runs-on: docker
-    steps:
-      - run: echo dispatched
-`
-	_, _, err = c.CreateFile(repo.Owner.UserName, repo.Name, ".forgejo/workflows/test.yml", CreateFileOptions{
+	_, _, err = c.CreateFile(repo.Owner.UserName, repo.Name, ".forgejo/workflows/"+file, CreateFileOptions{
 		FileOptions: FileOptions{Message: "add a dispatchable workflow", BranchName: "main"},
 		Content:     base64.StdEncoding.EncodeToString([]byte(workflow)),
 	})
@@ -494,8 +502,8 @@ func TestRepoActionRunLifecycle(t *testing.T) {
 	assert.Equal(t, []string{"docker"}, jobs[0].RunsOn)
 	assert.NotZero(t, jobs[0].Attempt)
 	assert.NotEmpty(t, jobs[0].Handle)
-	// No runner is attached to the test instance, so the job never leaves
-	// the queue.
+	// The workflow asks for a label (docker) no runner declares, so the job
+	// never leaves the queue even when the harness attaches a runner.
 	assert.Equal(t, "waiting", jobs[0].Status)
 
 	// The run's logs are a zip with one entry per job. A job that never
@@ -511,8 +519,8 @@ func TestRepoActionRunLifecycle(t *testing.T) {
 	assert.Contains(t, string(archive), "noop", "the archive holds an entry for the run's only job")
 
 	// A single job's logs, on the other hand, need the job to have run:
-	// asserting the documented refusal is all this harness can do (declared
-	// in route-exceptions.json as negative-only).
+	// this workflow never runs, so the documented refusal is what it can
+	// assert (the positive path is TestRepoActionExecutedRun).
 	_, _, err = c.GetRepoActionJobLogs(repo.Owner.UserName, repo.Name, jobs[0].ID, GetActionJobLogsOption{})
 	require.EqualError(t, err, "job has not been executed yet")
 

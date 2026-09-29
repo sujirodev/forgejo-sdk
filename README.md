@@ -61,7 +61,7 @@ request, so a stale table is a red build instead of a promise nobody checked.
 |---|---|---|---|---|
 | 11.0.16 (LTS) | 460 | 45 | 15 | 520 |
 | 15.0.9 (LTS) | 490 | 14 | 16 | 520 |
-| 16.0.5 (latest stable) | 500 | 0 | 20 | 520 |
+| 16.0.5 (latest stable) | 504 | 0 | 16 | 520 |
 
 Generated from the integration suite on every pull request.
 Per-route detail: [`ROUTES.md`](ROUTES.md).

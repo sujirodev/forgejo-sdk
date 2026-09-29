@@ -9,6 +9,8 @@
 package forgejo
 
 import (
+	"crypto/ed25519"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func getForgejoURL() string {
@@ -157,7 +161,26 @@ func runForgejo() (*os.Process, error) {
 		log.Fatal(err)
 	}
 
-	_, err = cfg.WriteString(`[security]
+	// The instance's SSH signing key: GET /signing-key.ssh only answers when
+	// [repository.signing] names one. Only the public half is read, so only
+	// it is written, freshly generated on every run. The sign-when options
+	// below are "never" because the private half does not exist: with a
+	// key configured Forgejo would otherwise try to sign every commit it
+	// makes (repo init, file edits, merges) and fail.
+	signingPub, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sshPub, err := ssh.NewPublicKey(signingPub)
+	if err != nil {
+		log.Fatal(err)
+	}
+	signingKeyPath := filepath.Join(cfgDir, "signing_key.pub")
+	if err = os.WriteFile(signingKeyPath, ssh.MarshalAuthorizedKey(sshPub), 0o644); err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = fmt.Fprintf(cfg, `[security]
 INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1NTg4MzY4ODB9.LoKQyK5TN_0kMJFVHWUW0uDAyoGjDP6Mkup4ps2VJN4
 INSTALL_LOCK   = true
 SECRET_KEY     = 2crAW4UANgvLipDS6U5obRcFosjSJHQANll6MNfX7P0G3se3fKcCwwK3szPyGcbo
@@ -166,6 +189,13 @@ DISABLE_GIT_HOOKS = false
 ALLOW_LOCALNETWORKS = true
 [repository]
 ENABLE_FLAGS = true
+[repository.signing]
+FORMAT = ssh
+SIGNING_KEY = %s
+INITIAL_COMMIT = never
+CRUD_ACTIONS = never
+WIKI = never
+MERGES = never
 [quota]
 ENABLED = true
 [federation]
@@ -178,7 +208,7 @@ MODE = console
 LEVEL = Trace
 REDIRECT_MACARON_LOG = true
 MACARON = ,
-ROUTER = ,`)
+ROUTER = ,`, filepath.ToSlash(signingKeyPath))
 	cfg.Close()
 	if err != nil {
 		log.Fatal(err)

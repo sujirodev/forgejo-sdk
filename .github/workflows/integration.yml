@@ -206,6 +206,22 @@ jobs:
           docker logs forgejo || true
           exit 1
 
+      # A forgejo-runner (host label, no Docker socket, no docker-in-docker)
+      # so a dispatched workflow really executes: the artifact and job-log
+      # routes only answer 2xx for a job that has run (issue #77). Those
+      # routes exist from Forgejo 16.0.0, so only that leg needs it; the
+      # other two would just carry an idle container. It is reached the same
+      # way the test process reaches the instance: on forgejo-net, as
+      # `forgejo`, which is also the ROOT_URL Forgejo hands to a job for the
+      # artifact service. The script returns once the runner is up; the
+      # tests poll for the job with their own deadline.
+      - name: Start the test runner
+        if: matrix.label == 'latest-stable'
+        run: |
+          RUNNER_CONTAINER=forgejo-runner bash scripts/start-test-runner.sh \
+            forgejo http://forgejo:3000 forgejo-net -c /tmp/conf/app.ini
+          echo "FORGEJO_SDK_TEST_RUNNER=true" >> "$GITHUB_ENV"
+
       # Observed 2026-09-22: all 3 legs timed out here, each stuck 8+
       # minutes on an HTTP round trip to this leg's own Forgejo service
       # container that never returned, past go test's default 10m ceiling

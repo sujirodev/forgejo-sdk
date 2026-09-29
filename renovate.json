@@ -12,7 +12,7 @@
     {
       "description": "Forgejo test-instance version pinned outside the workflow (Makefile, README, main_test.go). The line after the marker comment holds the version.",
       "customType": "regex",
-      "managerFilePatterns": ["/^Makefile$/", "/^README\\.md$/", "/^forgejo/main_test\\.go$/"],
+      "managerFilePatterns": ["/^Makefile$/", "/^README\\.md$/", "/^forgejo/main_test\\.go$/", "/^scripts/start-test-runner\\.sh$/"],
       "matchStrings": [
         "renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)[^\\n]*\\n[^\\n]*?(?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],

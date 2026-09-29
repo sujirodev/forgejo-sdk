@@ -219,46 +219,6 @@
       "detail": "unreached once TestRepoStaring skips on StarRepo's 500 (issue #59)",
       "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
       "since": ""
-    },
-    {
-      "route": "GetRepoActionArtifact",
-      "versions": [
-        "latest-stable"
-      ],
-      "reason": "negative-only",
-      "detail": "needs an artifact to point at; artifacts are uploaded by a runner over the Actions pipeline protocol and the harness attaches no runner, so the test asserts the documented 404 on an id no artifact can have",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/71",
-      "since": ""
-    },
-    {
-      "route": "DeleteRepoActionArtifact",
-      "versions": [
-        "latest-stable"
-      ],
-      "reason": "negative-only",
-      "detail": "same missing artifact as GetRepoActionArtifact -- no REST route creates one, so the 404 is the asserted outcome",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/71",
-      "since": ""
-    },
-    {
-      "route": "DownloadRepoActionArtifact",
-      "versions": [
-        "latest-stable"
-      ],
-      "reason": "negative-only",
-      "detail": "same missing artifact as GetRepoActionArtifact; there is no archive to stream, so the 404 is the asserted outcome",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/71",
-      "since": ""
-    },
-    {
-      "route": "GetRepoActionJobLogs",
-      "versions": [
-        "latest-stable"
-      ],
-      "reason": "negative-only",
-      "detail": "the job never leaves the queue without a runner, so the route answers \"job has not been executed yet\"; the run-level GetRepoActionRunLogs keeps real evidence because it serves a .MISSING entry instead of failing",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/71",
-      "since": ""
     }
   ]
 }

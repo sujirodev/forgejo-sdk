@@ -91,16 +91,6 @@
       "since": ""
     },
     {
-      "route": "VerifyGPGKey",
-      "versions": [
-        "*"
-      ],
-      "reason": "negative-only",
-      "detail": "needs a real private key to sign the verification token; the test only exercises the bogus-signature rejection path",
-      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/57",
-      "since": ""
-    },
-    {
       "route": "GetActionsRun",
       "versions": [
         "*"

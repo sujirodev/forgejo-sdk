@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 45 | 16 | 0 | 520 |
-| V15.x | 489 | 14 | 17 | 0 | 520 |
-| V16.x (latest) | 499 | 0 | 21 | 0 | 520 |
+| V11.x | 460 | 45 | 15 | 0 | 520 |
+| V15.x | 490 | 14 | 16 | 0 | 520 |
+| V16.x (latest) | 500 | 0 | 20 | 0 | 520 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -531,7 +531,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `UpdateUserAvatar` | ok | ok | ok | updates the avatar of the currently authenticated user. |
 | `UpdateUserSettings` | ok | ok | ok | returns user settings |
 | `ValidateIssueConfig` | ok | ok | ok | returns the validation information for a repository's issue config |
-| `VerifyGPGKey` | negative-only | negative-only | negative-only | verifies and adds a GPG key to the current user's account, |
+| `VerifyGPGKey` | ok | ok | ok | verifies and adds a GPG key to the current user's account, |
 | `WatchRepo` | ok | ok | ok | start to watch a repository |
 
 Cell values: `ok` (the suite called it and the server answered 2xx),

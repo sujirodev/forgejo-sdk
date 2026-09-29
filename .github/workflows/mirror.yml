@@ -38,13 +38,20 @@ jobs:
         env:
           CODEBERG_TOKEN: ${{ secrets.CODEBERG_TOKEN }}
         run: |
-          if [ -z "$CODEBERG_TOKEN" ]; then
+          # A token pasted into the secret often carries a trailing newline or
+          # a carriage return; either one breaks the header below.
+          token=$(printf '%s' "$CODEBERG_TOKEN" | tr -d '[:space:]')
+          if [ -z "$token" ]; then
             echo "::error::CODEBERG_TOKEN is not set; the Codeberg mirror was not updated"
             exit 1
           fi
-          remote="https://sujirodev:${CODEBERG_TOKEN}@codeberg.org/sujirodev/forgejo-sdk.git"
+          # Credentials go in a header, not in the URL, so they never show up
+          # in git's own messages.
+          auth=$(printf 'sujirodev:%s' "$token" | base64 -w0)
+          echo "::add-mask::${auth}"
+          remote="https://codeberg.org/sujirodev/forgejo-sdk.git"
           push() {
-            git push "$remote" "$1" 2>&1 | sed "s#${CODEBERG_TOKEN}#***#g"
+            git -c "http.extraHeader=Authorization: Basic ${auth}" push "$remote" "$1" 2>&1               | sed "s#${token}#***#g"
             return "${PIPESTATUS[0]}"
           }
           status=0

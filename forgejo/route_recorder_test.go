@@ -216,7 +216,7 @@ func sdkPackagePath() string {
 }
 
 // clientMethodName extracts "ListRepoTags" from a runtime function name such as
-// "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3.(*Client).ListRepoTags"
+// "github.com/sujirodev/forgejo-sdk/forgejo/v3.(*Client).ListRepoTags"
 // (and from its closures, "...(*Client).ListRepoTags.func1"). Unexported
 // methods are not routes and are skipped, and so is any other package's
 // *Client.

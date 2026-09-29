@@ -1,16 +1,16 @@
 # Forgejo SDK for Go
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-![release-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/release.svg)
-![status-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/workflows/integration.yml/badge.svg)
+![release-badge](https://img.shields.io/github/v/tag/sujirodev/forgejo-sdk?filter=forgejo%2Fv*&label=release)
+![status-badge](https://github.com/sujirodev/forgejo-sdk/actions/workflows/integration.yml/badge.svg)
 
-![stars-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/stars.svg)
-![issues-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/issues/open.svg)
-![prs-badge](https://codeberg.org/MatheusAlves96/forgejo-sdk/badges/pulls/closed.svg)
-[![Go Report Card](https://goreportcard.com/badge/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)](https://goreportcard.com/report/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)
-[![GoDoc](https://godoc.org/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3?status.svg)](https://godoc.org/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3)
+![stars-badge](https://img.shields.io/github/stars/sujirodev/forgejo-sdk)
+![issues-badge](https://img.shields.io/github/issues/sujirodev/forgejo-sdk)
+![prs-badge](https://img.shields.io/github/issues-pr-closed/sujirodev/forgejo-sdk)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sujirodev/forgejo-sdk/forgejo/v3)](https://goreportcard.com/report/github.com/sujirodev/forgejo-sdk/forgejo/v3)
+[![GoDoc](https://godoc.org/github.com/sujirodev/forgejo-sdk/forgejo/v3?status.svg)](https://godoc.org/github.com/sujirodev/forgejo-sdk/forgejo/v3)
 
-This project is a client SDK implementation written in Go to interact with the Forgejo API implementation. For further informations take a look at the current [documentation](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
+This project is a client SDK implementation written in Go to interact with the Forgejo API implementation. For further informations take a look at the current [documentation](https://pkg.go.dev/github.com/sujirodev/forgejo-sdk/forgejo/v3).
 
 Note: function arguments are escaped by the SDK.
 
@@ -18,19 +18,21 @@ Note: function arguments are escaped by the SDK.
 
 This is an independently maintained base derived from [mvdkleijn/forgejo-sdk](https://codeberg.org/mvdkleijn/forgejo-sdk). We started here as a fork to send PRs upstream, and decided to keep developing on our own copy going forward: as of 2026-09-18, upstream's `main` hadn't moved since 2026-08-31, its latest tagged release ([forgejo/v3.0.0](https://codeberg.org/mvdkleijn/forgejo-sdk/releases/tag/forgejo/v3.0.0)) had been out since 2026-03-05 (over 6 months, despite further commits landing on `main` after it), and it had 8 open issues / 9 open PRs, some sitting without a maintainer response for months (e.g. [#159](https://codeberg.org/mvdkleijn/forgejo-sdk/issues/159), open since 2026-05-17). None of that is a knock on the maintainer — it's a one-person project — it's just why we didn't want our own usage blocked on that review queue.
 
+This repository lives on GitHub. [codeberg.org/sujirodev/forgejo-sdk](https://codeberg.org/sujirodev/forgejo-sdk) is a read-only mirror of `main`, `develop` and the release tags; issues and pull requests belong here.
+
 We still track upstream (`git remote add upstream https://codeberg.org/mvdkleijn/forgejo-sdk.git`) and pull in changes when useful, and may still send PRs back when a fix is generally applicable.
 
 ## Use it
 
 ```sh
-go get codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3
+go get github.com/sujirodev/forgejo-sdk/forgejo/v3
 ```
 
 ```go
-import "codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3"
+import "github.com/sujirodev/forgejo-sdk/forgejo/v3"
 ```
 
-Reference docs: [pkg.go.dev](https://pkg.go.dev/codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3).
+Reference docs: [pkg.go.dev](https://pkg.go.dev/github.com/sujirodev/forgejo-sdk/forgejo/v3).
 
 Releases are tagged `forgejo/vX.Y.Z`, because the module lives in the
 `forgejo/` subdirectory; for the Go tooling the version is `vX.Y.Z`, without
@@ -57,9 +59,9 @@ request, so a stale table is a red build instead of a promise nobody checked.
 <!-- route-matrix:start -->
 | Forgejo | Routes ok | n/a (guard) | Declared exception | Total |
 |---|---|---|---|---|
-| 11.0.16 (LTS) | 457 | 25 | 23 | 505 |
-| 15.0.9 (LTS) | 476 | 3 | 26 | 505 |
-| 16.0.5 (latest stable) | 473 | 0 | 32 | 505 |
+| 11.0.16 (LTS) | 459 | 31 | 16 | 506 |
+| 15.0.9 (LTS) | 485 | 4 | 17 | 506 |
+| 16.0.5 (latest stable) | 489 | 0 | 17 | 506 |
 
 Generated from the integration suite on every pull request.
 Per-route detail: [`ROUTES.md`](ROUTES.md).

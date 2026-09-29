@@ -21,7 +21,7 @@
     {
       "description": "Forgejo images inside the testing job's version matrix (integration.yml). Matches all three matrix entries (lts-11, lts-15, latest-stable) as separate dependencies, routed to separate update groups by the packageRules below.",
       "customType": "regex",
-      "managerFilePatterns": ["/^\\.forgejo/workflows/integration\\.yml$/"],
+      "managerFilePatterns": ["/^\\.github/workflows/integration\\.yml$/"],
       "matchStrings": [
         "image: (?<depName>codeberg\\.org/forgejo/forgejo):(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-f0-9]+)"
       ],
@@ -40,13 +40,19 @@
       "automerge": false
     },
     {
+      "description": "github.com/davidmz/go-pageant has had no release since 2021 and `abandonments:recommended` flags it on the dependency dashboard (issue #14). Keeping it is deliberate: it is the Windows half of GetAgent (forgejo/agent_windows.go), the only way this SDK talks to PuTTY's Pageant, and it is feature-complete for a protocol that has not changed. The maintained-looking alternatives are not an improvement -- trzsz/pageant (v0.1.1, 2024-07) and abakum/pageant (v0.0.1, 2024-07) are both past the same abandonment threshold, both pre-1.0, and swapping would trade a stable dependency for a new supply chain for no functional gain. Revisit if Pageant's IPC protocol changes or a v1 successor appears.",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["github.com/davidmz/go-pageant"],
+      "abandonmentThreshold": null
+    },
+    {
       "description": "Require dashboard approval for Go major version updates",
       "matchManagers": ["gomod"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Pin Forgejo Actions workflow digests, auto-update minor/patch",
+      "description": "Pin GitHub Actions workflow digests, auto-update minor/patch",
       "matchManagers": ["github-actions"],
       "pinDigests": true
     },
@@ -68,7 +74,7 @@
     {
       "description": "Keep the testing matrix's lts-11 entry inside the 11.x line: it tracks Forgejo's LTS releases (see docs/PLANO-MATRIZ-VERSOES.md), not the newest stable, so it must never follow the group above past a major bump. Comes after that rule so this groupName overrides it for this one dependency.",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".forgejo/workflows/integration.yml"],
+      "matchFileNames": [".github/workflows/integration.yml"],
       "matchCurrentVersion": "/^11\\./",
       "allowedVersions": "/^11\\./",
       "groupName": "forgejo lts-11 test matrix entry",
@@ -79,7 +85,7 @@
     {
       "description": "Keep the testing matrix's lts-15 entry inside the 15.x line, same reasoning as lts-11 above.",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".forgejo/workflows/integration.yml"],
+      "matchFileNames": [".github/workflows/integration.yml"],
       "matchCurrentVersion": "/^15\\./",
       "allowedVersions": "/^15\\./",
       "groupName": "forgejo lts-15 test matrix entry",

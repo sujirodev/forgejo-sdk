@@ -39,7 +39,7 @@ swagger.v1.json
 # Route coverage evidence, written by TestMain (one per test leg)
 route-report*.json
 
-# Release assets, built by .forgejo/workflows/release.yml on the runner
+# Release assets, built by .github/workflows/release.yml on the runner
 sbom.raw.json
 *.cdx.json
 ROUTES-v*.md

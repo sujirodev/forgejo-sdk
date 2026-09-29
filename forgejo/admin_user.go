@@ -14,7 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/models"
+	"github.com/sujirodev/forgejo-sdk/forgejo/v3/models"
 )
 
 // AdminListUsersOptions options for listing admin users

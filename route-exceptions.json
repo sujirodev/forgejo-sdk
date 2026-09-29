@@ -11,6 +11,16 @@
       "since": ""
     },
     {
+      "route": "SetActivityPubSigner",
+      "versions": [
+        "*"
+      ],
+      "reason": "no-http",
+      "detail": "sets the key the client's ActivityPub requests are signed with",
+      "issue": "",
+      "since": ""
+    },
+    {
       "route": "SetBasicAuth",
       "versions": [
         "*"
@@ -81,23 +91,13 @@
       "since": ""
     },
     {
-      "route": "ActivityPubFollow",
-      "versions": [
-        "*"
-      ],
-      "reason": "negative-only",
-      "detail": "needs a reachable remote ActivityPub actor to succeed; the harness only stands up a single instance, so the test targets an unreachable domain on purpose",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/57",
-      "since": ""
-    },
-    {
       "route": "VerifyGPGKey",
       "versions": [
         "*"
       ],
       "reason": "negative-only",
       "detail": "needs a real private key to sign the verification token; the test only exercises the bogus-signature rejection path",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/57",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/57",
       "since": ""
     },
     {
@@ -107,7 +107,7 @@
       ],
       "reason": "needs-config",
       "detail": "authenticates with the ephemeral per-job ACTIONS_RUNTIME_TOKEN, which only exists inside a running Actions job; the integration suite calls the API externally with a regular admin token and can never legitimately hit this route",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/56",
       "since": ""
     },
     {
@@ -117,7 +117,7 @@
       ],
       "reason": "needs-config",
       "detail": "404s because neither the local Docker instance nor the CI ephemeral instance configures an instance SSH signing key; unlike the GPG counterpart, Forgejo has no lazy default for it",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/56",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/56",
       "since": ""
     },
     {
@@ -127,7 +127,7 @@
       ],
       "reason": "negative-only",
       "detail": "the test never schedules an auto-merge first, so the documented \"nothing scheduled\" failure is the intended, asserted outcome",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/63",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/63",
       "since": ""
     },
     {
@@ -137,7 +137,7 @@
       ],
       "reason": "negative-only",
       "detail": "called right after SyncForkDefault already synced the same branch, so there's nothing left to sync and an error is the asserted outcome",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/63",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/63",
       "since": ""
     },
     {
@@ -147,7 +147,7 @@
       ],
       "reason": "negative-only",
       "detail": "the harness has no way to produce an actual mirror repo to convert, so failing is the asserted outcome",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/63",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/63",
       "since": ""
     },
     {
@@ -157,7 +157,7 @@
       ],
       "reason": "negative-only",
       "detail": "adopts a directory that exists under the server's repository root on disk but isn't tracked in the database; there's no way to create that state through the REST API, so the test can only exercise the request against a path guaranteed not to exist (a 404)",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/60",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/60",
       "since": ""
     },
     {
@@ -167,7 +167,7 @@
       ],
       "reason": "negative-only",
       "detail": "same missing setup as AdminAdoptRepository -- no way to create an unadopted directory through the API",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/60",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/60",
       "since": ""
     },
     {
@@ -177,7 +177,7 @@
       ],
       "reason": "known-bug",
       "detail": "500s on Forgejo 16.0.5 once [federation] is enabled (needed for GetNodeInfo/ActivityPub); 11.0.16 and 15.0.9 are unaffected and still held to real evidence",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/59",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
       "since": ""
     },
     {
@@ -187,7 +187,7 @@
       ],
       "reason": "known-bug",
       "detail": "TestRepoStaring skips on this leg once StarRepo 500s (issue #59), so only the pre-star \"false\" (404) answer is ever recorded here, which looks like a bare failure without the \"true\" (204) evidence the rest of the test would add",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/59",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
       "since": ""
     },
     {
@@ -197,7 +197,7 @@
       ],
       "reason": "known-bug",
       "detail": "unreached once TestRepoStaring skips on StarRepo's 500 (issue #59)",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/59",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
       "since": ""
     },
     {
@@ -207,7 +207,7 @@
       ],
       "reason": "known-bug",
       "detail": "unreached once TestRepoStaring skips on StarRepo's 500 (issue #59)",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/59",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
       "since": ""
     },
     {
@@ -217,108 +217,7 @@
       ],
       "reason": "known-bug",
       "detail": "unreached once TestRepoStaring skips on StarRepo's 500 (issue #59)",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/59",
-      "since": ""
-    },
-    {
-      "route": "SendActivityPubActorInbox",
-      "versions": [
-        "lts-15",
-        "latest-stable"
-      ],
-      "reason": "negative-only",
-      "detail": "delivers an unsigned Follow activity on purpose, to check the route rejects it rather than 404s; Forgejo answers 400 on 15.0.9/16.0.5 (204 on 11.0.16, which stays on real evidence) -- a 2xx was never the expected outcome here",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubRepository",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "the server answers \"request signature verification failed\" to a plain token-authenticated request; this sub-resource actor route needs real ActivityPub HTTP Signature auth, which the SDK does not implement yet",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "SendActivityPubRepositoryInbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubRepositoryOutbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "inconsistent across versions (404 on 11.0.16, ok on 15.0.9, signature-required on 16.0.5); no reliable evidence without HTTP Signature auth",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPerson",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "SendActivityPubPersonInbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPersonOutbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "same missing HTTP Signature auth as GetActivityPubRepository",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPersonActivity",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "blocked by GetActivityPubPerson failing earlier in the same request chain with the same missing HTTP Signature auth",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubPersonActivityNote",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "blocked by GetActivityPubPerson failing earlier in the same request chain with the same missing HTTP Signature auth",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
-      "since": ""
-    },
-    {
-      "route": "GetActivityPubActorOutbox",
-      "versions": [
-        "*"
-      ],
-      "reason": "needs-config",
-      "detail": "inconsistent across versions (404 on 11.0.16, ok on 15.0.9, signature-required on 16.0.5); no reliable evidence without HTTP Signature auth",
-      "issue": "https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/58",
+      "issue": "https://codeberg.org/sujirodev/forgejo-sdk/issues/59",
       "since": ""
     }
   ]

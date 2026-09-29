@@ -1,9 +1,5 @@
-# Requests review from these owners on matching paths. Forgejo does not
-# enforce this as a merge gate (no "require review from code owners" branch
-# protection option, unlike GitHub) -- it only adds a reviewer to the PR.
-# The actual gate against untrusted code is Forgejo's built-in workflow
-# approval requirement for pull requests from forks/non-collaborators:
-# https://forgejo.org/docs/latest/user/actions/security-pull-request/
+# Requests review from these owners on matching paths. Turn on "Require
+# review from Code Owners" in the branch ruleset to make it a merge gate.
 
-/.forgejo/ @MatheusAlves96
-/CODEOWNERS @MatheusAlves96
+/.github/ @sujirodev
+/CODEOWNERS @sujirodev

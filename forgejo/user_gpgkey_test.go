@@ -45,8 +45,17 @@ func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
 // (16 upper-case hex digits), and an armored detached signature of message.
 func newSignedGPGKey(t *testing.T, email, message string) (armoredKey, keyID, signature string) {
 	t.Helper()
-	entity, err := openpgp.NewEntity("forgejo-sdk verify test", "", email, nil)
-	require.NoError(t, err)
+	// Forgejo's verify endpoint trims leading zeros from key_id before looking
+	// the key up, but stores IDs with them, so a key whose ID starts with 0
+	// (1 in 16) is never found and the handler panics with a 500
+	// (routers/api/v1/user/gpg_key.go, index out of range on the empty
+	// result). Skip such keys instead of flaking on them.
+	var entity *openpgp.Entity
+	for entity == nil || entity.PrimaryKey.KeyId>>60 == 0 {
+		var err error
+		entity, err = openpgp.NewEntity("forgejo-sdk verify test", "", email, nil)
+		require.NoError(t, err)
+	}
 
 	var pub bytes.Buffer
 	w, err := armor.Encode(&pub, openpgp.PublicKeyType, nil)

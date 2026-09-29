@@ -511,8 +511,9 @@ func statusCodeToErr(resp *Response) (body []byte, err error) {
 	return data, fmt.Errorf("%s: %s", resp.Status, string(data))
 }
 
-func (c *Client) getResponseReader(method, path string, header http.Header, body io.Reader) (io.ReadCloser, *Response, error) {
-	resp, err := c.doRequest(method, path, header, body)
+// getResponseReader issues a GET and hands back the body unread, for downloads.
+func (c *Client) getResponseReader(path string) (io.ReadCloser, *Response, error) {
+	resp, err := c.doRequest("GET", path, nil, nil)
 	if err != nil {
 		return nil, resp, err
 	}

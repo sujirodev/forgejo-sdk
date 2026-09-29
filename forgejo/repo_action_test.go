@@ -5,7 +5,9 @@
 package forgejo
 
 import (
+	"bytes"
 	"encoding/base64"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -448,4 +450,101 @@ func TestGetRepoActionRunnerRegistrationToken(t *testing.T) {
 		require.NotNil(t, resp)
 		assert.NotEmpty(t, token.Token)
 	}
+}
+
+func TestRepoActionRunLifecycle(t *testing.T) {
+	t.Parallel()
+	log.Println("== TestRepoActionRunLifecycle ==")
+	c := newTestClient()
+
+	repo, cleanup := newWorkflowRepo(t, c, "runlife")
+	defer cleanup()
+
+	_, _, err := c.DispatchRepoWorkflow(repo.Owner.UserName, repo.Name, "test.yml", DispatchWorkflowOption{Ref: "main"})
+	require.NoError(t, err)
+
+	// The jobs, logs, cancel and delete routes of a run arrived in Forgejo
+	// 16.0.0. Below that the SDK's guard refuses the call without
+	// contacting the server.
+	if !serverAtLeast(t, c, "16.0.0") {
+		_, _, err := c.ListRepoActionRunJobs(repo.Owner.UserName, repo.Name, 1)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		_, _, err = c.GetRepoActionRunLogs(repo.Owner.UserName, repo.Name, 1)
+		require.Error(t, err)
+		_, _, err = c.GetRepoActionJobLogs(repo.Owner.UserName, repo.Name, 1, GetActionJobLogsOption{})
+		require.Error(t, err)
+		_, err = c.CancelRepoActionRun(repo.Owner.UserName, repo.Name, 1)
+		require.Error(t, err)
+		_, err = c.DeleteRepoActionRun(repo.Owner.UserName, repo.Name, 1)
+		require.Error(t, err)
+		return
+	}
+
+	runs, _, err := c.ListRepoActionRuns(repo.Owner.UserName, repo.Name, ListActionRunsOption{})
+	require.NoError(t, err)
+	require.NotEmpty(t, runs.WorkflowRuns, "the dispatch above should have created a run")
+	runID := runs.WorkflowRuns[0].ID
+
+	jobs, resp, err := c.ListRepoActionRunJobs(repo.Owner.UserName, repo.Name, runID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Len(t, jobs, 1, "the workflow declares exactly one job")
+	assert.Equal(t, "noop", jobs[0].Name)
+	assert.Equal(t, runID, jobs[0].RunID)
+	assert.Equal(t, []string{"docker"}, jobs[0].RunsOn)
+	assert.NotZero(t, jobs[0].Attempt)
+	assert.NotEmpty(t, jobs[0].Handle)
+	// No runner is attached to the test instance, so the job never leaves
+	// the queue.
+	assert.Equal(t, "waiting", jobs[0].Status)
+
+	// The run's logs are a zip with one entry per job. A job that never
+	// executed still gets an entry, suffixed ".MISSING", so the archive is
+	// well-formed even here.
+	logsBody, resp, err := c.GetRepoActionRunLogs(repo.Owner.UserName, repo.Name, runID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	defer logsBody.Close()
+	archive, err := io.ReadAll(logsBody)
+	require.NoError(t, err)
+	assert.True(t, bytes.HasPrefix(archive, []byte("PK")), "the run logs are served as a zip archive")
+	assert.Contains(t, string(archive), "noop", "the archive holds an entry for the run's only job")
+
+	// A single job's logs, on the other hand, need the job to have run:
+	// asserting the documented refusal is all this harness can do (declared
+	// in route-exceptions.json as negative-only).
+	_, _, err = c.GetRepoActionJobLogs(repo.Owner.UserName, repo.Name, jobs[0].ID, GetActionJobLogsOption{})
+	require.EqualError(t, err, "job has not been executed yet")
+
+	// Attempt goes on the wire as a query parameter and picks one attempt
+	// of the job; no attempt of this one was ever recorded.
+	_, _, err = c.GetRepoActionJobLogs(repo.Owner.UserName, repo.Name, jobs[0].ID, GetActionJobLogsOption{Attempt: 1})
+	require.ErrorContains(t, err, "resource does not exist")
+
+	// Deleting refuses while the run is unfinished, and cancelling is what
+	// finishes a run no runner ever picked up. The refusal arrives as a 500
+	// whose message ("cannot delete run N because it has not completed
+	// yet") Forgejo only discloses to instance admins -- the sudo user this
+	// test runs as gets an empty one -- so the status is what to assert on.
+	resp, err = c.DeleteRepoActionRun(repo.Owner.UserName, repo.Name, runID)
+	require.Error(t, err, "a run that has not completed cannot be deleted")
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	resp, err = c.CancelRepoActionRun(repo.Owner.UserName, repo.Name, runID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+	cancelled, _, err := c.GetRepoActionRun(repo.Owner.UserName, repo.Name, runID)
+	require.NoError(t, err)
+	assert.Equal(t, "cancelled", cancelled.Status)
+
+	resp, err = c.DeleteRepoActionRun(repo.Owner.UserName, repo.Name, runID)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+	_, _, err = c.GetRepoActionRun(repo.Owner.UserName, repo.Name, runID)
+	require.Error(t, err, "the run is gone after DeleteRepoActionRun")
 }

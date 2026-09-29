@@ -164,16 +164,16 @@ func (c *Client) GetFileReader(owner, repo, ref, filepath string, resolveLFS ...
 		if err := c.checkServerVersionGreaterThanOrEqual(version1_17_0); err != nil {
 			return nil, nil, err
 		}
-		return c.getResponseReader("GET", fmt.Sprintf("/repos/%s/%s/media/%s?ref=%s", owner, repo, filepath, url.QueryEscape(ref)), nil, nil)
+		return c.getResponseReader(fmt.Sprintf("/repos/%s/%s/media/%s?ref=%s", owner, repo, filepath, url.QueryEscape(ref)))
 	}
 
 	// normal get
 	filepath = pathEscapeSegments(filepath)
 	if c.checkServerVersionGreaterThanOrEqual(version1_14_0) != nil {
 		ref = pathEscapeSegments(ref)
-		return c.getResponseReader("GET", fmt.Sprintf("/repos/%s/%s/raw/%s/%s", owner, repo, ref, filepath), nil, nil)
+		return c.getResponseReader(fmt.Sprintf("/repos/%s/%s/raw/%s/%s", owner, repo, ref, filepath))
 	}
-	return c.getResponseReader("GET", fmt.Sprintf("/repos/%s/%s/raw/%s?ref=%s", owner, repo, filepath, url.QueryEscape(ref)), nil, nil)
+	return c.getResponseReader(fmt.Sprintf("/repos/%s/%s/raw/%s?ref=%s", owner, repo, filepath, url.QueryEscape(ref)))
 }
 
 // GetContents get the metadata and contents of a file in a repository

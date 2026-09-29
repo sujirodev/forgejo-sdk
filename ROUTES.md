@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 31 | 16 | 0 | 506 |
-| V15.x | 485 | 4 | 17 | 0 | 506 |
-| V16.x (latest) | 489 | 0 | 17 | 0 | 506 |
+| V11.x | 459 | 45 | 16 | 0 | 520 |
+| V15.x | 489 | 14 | 17 | 0 | 520 |
+| V16.x (latest) | 499 | 0 | 21 | 0 | 520 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -72,6 +72,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `AdminSearchEmails` | ok | ok | ok | searches users' email addresses. |
 | `AdminSetUserQuotaGroups` | ok | ok | ok | sets the user's quota groups to the given list, |
 | `BlockUser` | ok | ok | ok | blocks the given user from interacting with the authenticated user. |
+| `CancelRepoActionRun` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | cancels a pending or running workflow run. Cancelling |
 | `CancelScheduledAutoMerge` | negative-only | negative-only | negative-only | cancels the scheduled auto merge for the given pull request |
 | `ChangeFiles` | ok | ok | ok | creates, updates or deletes multiple files in a repository in a single commit |
 | `CheckIssueSubscription` | ok | ok | ok | check if current user is subscribed to an issue |
@@ -171,6 +172,8 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteReleaseAttachment` | ok | ok | ok | deletes the given attachment including the uploaded file |
 | `DeleteReleaseByTag` | ok | ok | ok | deletes a release frm a repository by tag |
 | `DeleteRepo` | ok | ok | ok | deletes a repository of user or organization. |
+| `DeleteRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | marks an artifact for deletion. The server removes |
+| `DeleteRepoActionRun` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | deletes a completed workflow run. The server refuses to |
 | `DeleteRepoActionSecret` | ok | ok | ok | deletes a secret in a repository |
 | `DeleteRepoActionVariable` | ok | ok | ok | deletes an action variable from a repository |
 | `DeleteRepoAvatar` | ok | ok | ok | deletes a repository's avatar |
@@ -178,6 +181,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DeleteRepoFlag` | ok | ok | ok | removes a flag from a repository |
 | `DeleteRepoGitHook` | ok | ok | ok | delete one Git hook from a repository |
 | `DeleteRepoHook` | ok | ok | ok | delete one hook from a repository, with hook id |
+| `DeleteRepoRunner` | n/a (>= 15.0.0) | ok | ok | deletes a particular runner that belongs to the repository. |
 | `DeleteRepoTopic` | ok | ok | ok | deletes a topic from repo's topics list |
 | `DeleteReviewRequests` | ok | ok | ok | delete review requests to an pull request |
 | `DeleteTag` | ok | ok | ok | deletes a tag from a repository, if no release refers to it |
@@ -192,6 +196,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `DiffPatchFile` | ok | ok | ok | apply a diff patch to a file in a repository |
 | `DismissPullReview` | ok | ok | ok | dismiss a review for a pull request |
 | `DispatchRepoWorkflow` | ok | ok | ok | triggers a workflow dispatch event |
+| `DownloadRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | downloads an artifact's zip archive. The archive |
 | `EditBranchProtection` | ok | ok | ok | edits a branch protection for a repo |
 | `EditIssue` | ok | ok | ok | modify an existing issue for a given repository |
 | `EditIssueAttachment` | ok | ok | ok | updates the given issue attachment with the given options |
@@ -295,7 +300,10 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetReleaseAttachment` | ok | ok | ok | returns the requested attachment |
 | `GetReleaseByTag` | ok | ok | ok | get a release of a repository by tag |
 | `GetRepo` | ok | ok | ok | returns information of a repository of given owner. |
+| `GetRepoActionArtifact` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | gets one of a repository's artifacts by ID. |
+| `GetRepoActionJobLogs` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | negative-only | downloads the plaintext logs of a single action job. |
 | `GetRepoActionRun` | n/a (>= 12.0.0) | ok | ok | gets a specific action run |
+| `GetRepoActionRunLogs` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | downloads a ZIP of the plaintext logs of every job in |
 | `GetRepoActionRunnerRegistrationToken` | ok | ok | ok | gets a runner registration token for a repository |
 | `GetRepoActionVariable` | ok | ok | ok | gets a specific action variable |
 | `GetRepoAllGitRefs` | ok | ok | ok | get list of all of a repository's refs |
@@ -307,6 +315,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `GetRepoLanguages` | ok | ok | ok | return language stats of a repo |
 | `GetRepoRef` | ok | ok | ok | get one ref's information of one repository |
 | `GetRepoRefs` | ok | ok | ok | get list of ref's information of one repository |
+| `GetRepoRunner` | n/a (>= 15.0.0) | ok | ok | gets a particular runner that belongs to the repository. |
 | `GetRepoSigningKey` | ok | ok | ok | returns the ASCII-armored public part of the key used by |
 | `GetRepoTeams` | ok | ok | ok | return teams from a repository |
 | `GetReviewers` | ok | ok | ok | return all users that can be requested to review in this repo |
@@ -405,7 +414,10 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListPushMirrors` | ok | ok | ok | gets all push mirrors of a repository |
 | `ListReleaseAttachments` | ok | ok | ok | list release's attachments |
 | `ListReleases` | ok | ok | ok | list releases of a repository |
+| `ListRepoActionArtifacts` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | lists a repository's artifacts, across every |
 | `ListRepoActionJobs` | ok | ok | ok | searches for repository action jobs |
+| `ListRepoActionRunArtifacts` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | lists the artifacts a single workflow run |
+| `ListRepoActionRunJobs` | n/a (>= 16.0.0) | n/a (>= 16.0.0) | ok | lists the jobs of a single workflow run. Unlike |
 | `ListRepoActionRuns` | n/a (>= 12.0.0) | ok | ok | lists a repository's action runs |
 | `ListRepoActionSecret` | ok | ok | ok | list a repository's secrets |
 | `ListRepoActionTasks` | ok | ok | ok | lists a repository's action tasks |
@@ -422,6 +434,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoMilestones` | ok | ok | ok | list all the milestones of one repository |
 | `ListRepoNotifications` | ok | ok | ok | list users's notification threads on a specific repo |
 | `ListRepoPullRequests` | ok | ok | ok | list PRs of one repository |
+| `ListRepoRunners` | n/a (>= 15.0.0) | ok | ok | gets the runners that belong to the repository. |
 | `ListRepoStargazers` | ok | ok | ok | list a repository's stargazers |
 | `ListRepoSubscribers` | ok | ok | ok | list a repo's subscribers (i.e. watchers) |
 | `ListRepoTags` | ok | ok | ok | list all the branches of one repository |
@@ -455,6 +468,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ReadNotifications` | ok | ok | ok | mark notification threads as read |
 | `ReadRepoNotifications` | ok | ok | ok | mark notification threads as read on a specific repo |
 | `RegisterOrgRunner` | n/a (>= 15.0.0) | ok | ok | registers a new organization-level runner and returns its registration token |
+| `RegisterRepoRunner` | n/a (>= 15.0.0) | ok | ok | registers a new repository-level runner and returns the |
 | `RegisterUserRunner` | n/a (>= 12.0.0) | ok | ok | registers a new user-level Actions runner and returns |
 | `RejectRepoTransfer` | ok | ok | ok | rejects a repo transfer. |
 | `RemoveIssueBlocking` | ok | ok | ok | unblocks the issue given in meta from the issue given in index |

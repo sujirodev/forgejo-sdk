@@ -5,11 +5,16 @@
 package forgejo
 
 import (
+	"bytes"
+	"fmt"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/openpgp"       //nolint:staticcheck // frozen but enough for a throwaway test key; avoids a new dependency
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck // see above
 )
 
 func TestGetGPGKeyVerificationToken(t *testing.T) {
@@ -23,10 +28,6 @@ func TestGetGPGKeyVerificationToken(t *testing.T) {
 	assert.NotEmpty(t, token)
 }
 
-// TestVerifyGPGKeyRejectsBogusSignature only exercises the failure path.
-// A full round trip would need a real GPG keypair to sign the verification
-// token from GetGPGKeyVerificationToken, which this environment does not
-// have available, so it is not live-verified here.
 func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestVerifyGPGKeyRejectsBogusSignature ==")
@@ -37,6 +38,68 @@ func TestVerifyGPGKeyRejectsBogusSignature(t *testing.T) {
 		Signature: "not a real signature",
 	})
 	require.Error(t, err)
+}
+
+// newSignedGPGKey generates a throwaway RSA OpenPGP key whose UID email is
+// email, and returns its armored public key, its key ID as Forgejo reports it
+// (16 upper-case hex digits), and an armored detached signature of message.
+func newSignedGPGKey(t *testing.T, email, message string) (armoredKey, keyID, signature string) {
+	t.Helper()
+	// Forgejo's verify endpoint trims leading zeros from key_id before looking
+	// the key up, but stores IDs with them, so a key whose ID starts with 0
+	// (1 in 16) is never found and the handler panics with a 500
+	// (routers/api/v1/user/gpg_key.go, index out of range on the empty
+	// result). Skip such keys instead of flaking on them.
+	var entity *openpgp.Entity
+	for entity == nil || entity.PrimaryKey.KeyId>>60 == 0 {
+		var err error
+		entity, err = openpgp.NewEntity("forgejo-sdk verify test", "", email, nil)
+		require.NoError(t, err)
+	}
+
+	var pub bytes.Buffer
+	w, err := armor.Encode(&pub, openpgp.PublicKeyType, nil)
+	require.NoError(t, err)
+	require.NoError(t, entity.Serialize(w))
+	require.NoError(t, w.Close())
+
+	var sig bytes.Buffer
+	require.NoError(t, openpgp.ArmoredDetachSign(&sig, entity, strings.NewReader(message), nil))
+
+	return pub.String(), fmt.Sprintf("%016X", entity.PrimaryKey.KeyId), sig.String()
+}
+
+// TestVerifyGPGKey runs the real verification flow: it generates a keypair,
+// takes the token from GetGPGKeyVerificationToken, signs it with the private
+// key and submits the armored detached signature. It runs as a dedicated
+// user, not the shared admin, so the key it adds does not disturb
+// TestUserGPGKeys' exact key counts on that account.
+func TestVerifyGPGKey(t *testing.T) {
+	t.Parallel()
+	log.Println("== TestVerifyGPGKey ==")
+	c := newTestClient()
+	user := createTestUser(t, uniqueName(t, "gpgverify"), c)
+
+	asUser(t, c, user.UserName, func() {
+		token, _, err := c.GetGPGKeyVerificationToken()
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+
+		armoredKey, keyID, signature := newSignedGPGKey(t, user.Email, token)
+
+		added, _, err := c.CreateGPGKey(CreateGPGKeyOption{ArmoredKey: armoredKey})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			asUser(t, c, user.UserName, func() { _, _ = c.DeleteGPGKey(added.ID) })
+		})
+		require.Equal(t, keyID, strings.ToUpper(added.KeyID))
+
+		verified, resp, err := c.VerifyGPGKey(VerifyGPGKeyOption{KeyID: keyID, Signature: signature})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, keyID, strings.ToUpper(verified.KeyID))
+		assert.NotZero(t, verified.ID)
+	})
 }
 
 // TestUserGPGKeys uses the fixture in testdata/gpg_test01.asc, whose UID

@@ -43,6 +43,15 @@ func enableRunForgejo() bool {
 	return r
 }
 
+// runnerAttached reports whether the harness started a forgejo-runner with
+// the "host" label next to the instance (scripts/start-test-runner.sh, run by
+// `make test-instance-docker` and by CI). Tests that need a job to execute
+// run only then; without a runner they would wait for a job that never starts.
+func runnerAttached() bool {
+	r, _ := strconv.ParseBool(os.Getenv("FORGEJO_SDK_TEST_RUNNER"))
+	return r
+}
+
 func newTestClient() *Client {
 	c, _ := newTestClientOpts()
 	return c

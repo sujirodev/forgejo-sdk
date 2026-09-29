@@ -1,5 +1,19 @@
 # Changelog
 
+## [v3.2.6](https://github.com/sujirodev/forgejo-sdk/releases/tag/forgejo/v3.2.6) - 2026-09-29
+
+* GENERAL
+  * SDK: exercitar ActivityPubFollow de verdade contra o par federado (#57) ([#78](https://codeberg.org/sujirodev/forgejo-sdk/pulls/78))
+  * ci(release): English release notes in upstream's format ([#77](https://codeberg.org/sujirodev/forgejo-sdk/pulls/77))
+  * chore(deps): corrigir os lookups do Renovate e resolver as duas deps abandonadas (#14) ([#72](https://codeberg.org/sujirodev/forgejo-sdk/pulls/72))
+  * ci: check the Codeberg token before pushing ([#3](https://github.com/sujirodev/forgejo-sdk/pull/3))
+  * ci: migrate the repository and its pipeline to GitHub ([#1](https://github.com/sujirodev/forgejo-sdk/pull/1))
+* FIXES
+  * fix: never return an empty error from statusCodeToErr ([#75](https://codeberg.org/sujirodev/forgejo-sdk/pulls/75))
+  * fix: make the release train work across the move to GitHub ([#4](https://github.com/sujirodev/forgejo-sdk/pull/4))
+  * fix: strip whitespace from the Codeberg token in mirror.yml ([#2](https://github.com/sujirodev/forgejo-sdk/pull/2))
+
+
 ## [v3.2.5](https://codeberg.org/MatheusAlves96/forgejo-sdk/releases/tag/forgejo/v3.2.5) - 2026-09-22
 
 * MISC

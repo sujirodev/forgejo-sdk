@@ -258,12 +258,16 @@ func TestUnit_SignRequest_PubkeyMode(t *testing.T) {
 	t.Parallel()
 	path, _ := writeEd25519Key(t, t.TempDir(), "")
 
+	// SignRequest used to branch on the server version, signing with RSA-SHA1
+	// via github.com/go-fed/httpsig below 1.23.0. That branch is gone (#14):
+	// it was unreachable inside the supported range, forgejo >= 11.0.10. Both
+	// rows must now produce the same modern signature.
 	for _, tc := range []struct {
 		name    string
 		version string
 	}{
-		{"legacy (< 1.23.0)", "1.17.0"},
-		{"current (>= 1.23.0)", "16.0.5"},
+		{"gitea-era version", "1.17.0"},
+		{"current forgejo", "16.0.5"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, err := NewClient("http://example.invalid", SetForgejoVersion(tc.version), UseSSHPubkey("", path, ""))

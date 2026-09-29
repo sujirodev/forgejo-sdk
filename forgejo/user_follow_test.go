@@ -7,23 +7,30 @@ package forgejo
 import (
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-// TestActivityPubFollow only verifies the request round-trips to the
-// server. The test instance has no reachable remote ActivityPub actor (and
-// federation may not even be enabled on it), so a full follow against a
-// live remote instance is not exercised here.
+// TestActivityPubFollow follows the throwaway federated peer the suite
+// stands up (see activitypub_federation_test.go). That peer is a real
+// remote actor as far as the instance under test is concerned: the server
+// reads its nodeinfo, fetches its actor document and creates a local
+// federated user for it before answering, so a 204 here is evidence the
+// whole resolution path ran -- an actor it cannot reach gets a 406.
 func TestActivityPubFollow(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubFollow ==")
-	c := newTestClient()
+	c, peer := signingTestClient(t)
 
-	resp, err := c.ActivityPubFollow(APRemoteFollowOption{Target: "https://example.com/api/v1/activitypub/user-id/1"})
-	if err != nil {
-		t.Logf("ActivityPubFollow returned an error (expected if federation is disabled or the target is unreachable): %v", err)
+	// POST /user/activitypub/follow arrived in Forgejo 16.0.0; below that
+	// the SDK's guard refuses the call, which is the documented behavior.
+	if !serverAtLeast(t, c, "16.0.0") {
+		_, err := c.ActivityPubFollow(APRemoteFollowOption{Target: peer.personURI()})
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
 		return
 	}
-	if resp == nil {
-		t.Fatal("expected a non-nil response when ActivityPubFollow returns no error")
-	}
+
+	resp, err := c.ActivityPubFollow(APRemoteFollowOption{Target: peer.personURI()})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
 }

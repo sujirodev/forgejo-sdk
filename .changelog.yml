@@ -1,12 +1,8 @@
 # The full repository name
-repo: MatheusAlves96/forgejo-sdk
+repo: sujirodev/forgejo-sdk
 
 # Service type (forgejo or github)
-service: forgejo
-
-# Base URL for Forgejo instance if using forgejo service type (optional)
-# Default: https://forgejo.org
-base-url: https://codeberg.org
+service: github
 
 # Changelog groups and which labeled PRs to add to each group
 groups:
@@ -15,43 +11,20 @@ groups:
     labels:
       - kind/breaking
   -
-    name: FEATURES
-    labels:
-      - kind/feature
-  -
-    name: BUGFIXES
-    labels:
-      - kind/bug
-  -
-    name: ENHANCEMENTS
-    labels:
-      - kind/enhancement
-      - kind/refactor
-      - kind/ui
-  -
     name: SECURITY
     labels:
       - kind/security
   -
-    name: TESTING
-    labels:
-      - kind/testing
-  -
-    name: TRANSLATION
-    labels:
-      - kind/translation
-  -
-    name: BUILD
-    labels:
-      - kind/build
-      - kind/lint
-  -
-    name: DOCS
-    labels:
-    - kind/docs
-  -
-    name: MISC
+    name: GENERAL
     default: true
+  -
+    name: FEATURES
+    labels:
+      - kind/feature
+  -
+    name: FIXES
+    labels:
+      - kind/bug
 
 # regex indicating which labels to skip for the changelog
 skip-labels: skip-changelog|backport\/.+|has/backport

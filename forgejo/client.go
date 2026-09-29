@@ -43,6 +43,7 @@ type Client struct {
 	userAgent      string
 	debug          bool
 	httpsigner     *HTTPSign
+	apSigner       *ActivityPubSigner
 	client         *http.Client
 	ctx            context.Context
 	mutex          sync.RWMutex
@@ -369,6 +370,7 @@ func (c *Client) doRequest(method, path string, header http.Header, body io.Read
 	}
 
 	client := c.client // client ref can change from this point on so safe it
+	apSigner := c.apSigner
 	c.mutex.RUnlock()
 
 	for k, v := range header {
@@ -378,6 +380,12 @@ func (c *Client) doRequest(method, path string, header http.Header, body io.Read
 	if c.httpsigner != nil {
 		err = c.SignRequest(req)
 		if err != nil {
+			return nil, err
+		}
+	}
+
+	if apSigner != nil && isActivityPubPath(path) {
+		if err := c.signActivityPubRequest(apSigner, req); err != nil {
 			return nil, err
 		}
 	}
@@ -428,6 +436,7 @@ func (c *Client) doRequestWithContext(ctx context.Context, method, path string, 
 	}
 
 	client := c.client
+	apSigner := c.apSigner
 	c.mutex.RUnlock()
 
 	for k, v := range header {
@@ -437,6 +446,12 @@ func (c *Client) doRequestWithContext(ctx context.Context, method, path string, 
 	if c.httpsigner != nil {
 		err = c.SignRequest(req)
 		if err != nil {
+			return Response{}, err
+		}
+	}
+
+	if apSigner != nil && isActivityPubPath(path) {
+		if err := c.signActivityPubRequest(apSigner, req); err != nil {
 			return Response{}, err
 		}
 	}
@@ -481,8 +496,15 @@ func statusCodeToErr(resp *Response) (body []byte, err error) {
 		return data, fmt.Errorf("unknown API Error: %d\nRequest: '%s' with '%s' method and '%s' body", resp.StatusCode, path, method, string(data))
 	}
 
+	// A 5XX answered to a caller who is not an instance admin has its
+	// internal detail stripped, so "message" comes back present but empty.
+	// Returning that as-is yields a non-nil error whose Error() is the empty
+	// string, which tells the caller nothing -- not even the status code. Let
+	// an empty message fall through to the status fallback below.
 	if msg, ok := errMap["message"]; ok {
-		return data, fmt.Errorf("%v", msg)
+		if text := fmt.Sprintf("%v", msg); text != "" {
+			return data, errors.New(text)
+		}
 	}
 
 	// If no error message, at least give status and data

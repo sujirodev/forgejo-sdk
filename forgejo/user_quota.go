@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"codeberg.org/MatheusAlves96/forgejo-sdk/forgejo/v3/models"
+	"github.com/sujirodev/forgejo-sdk/forgejo/v3/models"
 )
 
 // QuotaSubject represents a quota limit subject for use with CheckMyQuota.

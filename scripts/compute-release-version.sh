@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Helper for .forgejo/workflows/release.yml: decides the semver bump for a
+# Helper for .github/workflows/release.yml: decides the semver bump for a
 # release train and computes/renders the resulting release metadata. Kept
 # as a standalone script (rather than inline YAML) so it can be run and
 # tested locally without pushing a workflow change.
@@ -37,7 +37,8 @@ load_pr() {
   PR_BODY=$(jq -r '.body // ""' "$f")
   PR_LABELS_JSON=$(jq -c '.labels // []' "$f")
   PR_AUTHOR=$(jq -r '.user.login // ""' "$f")
-  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON PR_AUTHOR
+  PR_URL=$(jq -r '.html_url // ""' "$f")
+  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON PR_AUTHOR PR_URL
 }
 [ -n "${PR_JSON_FILE:-}" ] && load_pr "$PR_JSON_FILE"
 
@@ -48,18 +49,20 @@ pr_label_names() {
   jq -r '.[].name' <<<"${PR_LABELS_JSON:-[]}"
 }
 
-# kind/* label -> CHANGELOG.md group, mirrors .changelog.yml.
+# kind/* label -> CHANGELOG.md group, mirrors .changelog.yml. The groups are
+# upstream's (GENERAL/FEATURES/FIXES). Without a kind/* label the PR title's
+# Conventional Commits type decides (feat -> FEATURES, fix -> FIXES), so an
+# unlabeled "feat: ..." PR doesn't land in GENERAL. Reads PR_TITLE.
 changelog_group_for_labels() {
   local labels="$1"
+  if grep -qx 'kind/breaking' <<<"$labels"; then echo "BREAKING"; return; fi
   if grep -qx 'kind/feature' <<<"$labels"; then echo "FEATURES"; return; fi
-  if grep -qx 'kind/bug' <<<"$labels"; then echo "BUGFIXES"; return; fi
-  if grep -qxE 'kind/(enhancement|refactor|ui)' <<<"$labels"; then echo "ENHANCEMENTS"; return; fi
+  if grep -qx 'kind/bug' <<<"$labels"; then echo "FIXES"; return; fi
   if grep -qx 'kind/security' <<<"$labels"; then echo "SECURITY"; return; fi
-  if grep -qx 'kind/testing' <<<"$labels"; then echo "TESTING"; return; fi
-  if grep -qx 'kind/translation' <<<"$labels"; then echo "TRANSLATION"; return; fi
-  if grep -qxE 'kind/(build|lint)' <<<"$labels"; then echo "BUILD"; return; fi
-  if grep -qx 'kind/docs' <<<"$labels"; then echo "DOCS"; return; fi
-  echo "MISC"
+  if grep -q '^kind/' <<<"$labels"; then echo "GENERAL"; return; fi
+  if grep -qE '^feat(\([^)]*\))?!?:' <<<"${PR_TITLE:-}"; then echo "FEATURES"; return; fi
+  if grep -qE '^fix(\([^)]*\))?!?:' <<<"${PR_TITLE:-}"; then echo "FIXES"; return; fi
+  echo "GENERAL"
 }
 
 # Prints major/minor/patch. Reads PR_LABELS_JSON (Forgejo Label[] JSON),
@@ -145,8 +148,12 @@ train_head() {
 # leaves no "(#N)" behind, so a rebased PR would silently not appear here.
 range_prs() {
   local range="$1"
+  # Two merge-subject shapes: Forgejo's "Merge pull request 'title' (#N) from
+  # ..." (the history before the move to GitHub) and GitHub's "Merge pull
+  # request #N from owner/branch".
   git log --first-parent --reverse --format=%s "$range" \
-    | sed -n 's/.*(#\([0-9]\{1,\}\)).*/\1/p' \
+    | sed -n -e 's/^Merge pull request #\([0-9]\{1,\}\) from .*/\1/p' \
+             -e 's/.*(#\([0-9]\{1,\}\)).*/\1/p' \
     | awk 'NF && !seen[$0]++'
 }
 
@@ -169,18 +176,25 @@ aggregate_bump() {
   echo "$level"
 }
 
-# Renders "* PR_TITLE (#PR_NUMBER)", with a "(thanks @author)" suffix when
-# the PR wasn't opened by the repo owner, for reuse in both the release
-# body and the CHANGELOG.md entry. GITHUB_REPOSITORY_OWNER is set by the
-# runner; it also covers Renovate, which opens PRs under the owner's own
-# token.
+# Renders "* PR_TITLE ([#N](.../issues/N))", with a "(thanks [@author](...))"
+# suffix when the PR wasn't opened by the repo owner, for reuse in both the
+# release body and the CHANGELOG.md entry. GITHUB_REPOSITORY and
+# GITHUB_REPOSITORY_OWNER are set by the runner; the owner check also covers
+# Renovate, which opens PRs under the owner's own token.
 render_entry() {
   local suffix=""
-  local owner="${GITHUB_REPOSITORY_OWNER:-MatheusAlves96}"
+  local owner="${GITHUB_REPOSITORY_OWNER:-sujirodev}"
+  local repo="${GITHUB_REPOSITORY:-sujirodev/forgejo-sdk}"
+  # The PR's own URL, so PRs merged on Codeberg before the move keep linking
+  # to Codeberg instead of to a GitHub PR with the same number that does not
+  # exist. The author's profile lives on the same host.
+  local url="${PR_URL:-https://github.com/${repo}/pull/${PR_NUMBER:-}}"
+  local origin
+  origin=$(sed -E 's#^(https?://[^/]+)/.*#\1#' <<<"$url")
   if [ -n "${PR_AUTHOR:-}" ] && [ "${PR_AUTHOR}" != "$owner" ]; then
-    suffix=" (thanks @${PR_AUTHOR})"
+    suffix=" (thanks [@${PR_AUTHOR}](${origin}/${PR_AUTHOR}))"
   fi
-  echo "  * ${PR_TITLE:-} (#${PR_NUMBER:-})${suffix}"
+  echo "  * ${PR_TITLE:-} ([#${PR_NUMBER:-}](${url}))${suffix}"
 }
 
 # Changelog body for every PR in dir: groups in .changelog.yml order, each
@@ -189,29 +203,28 @@ render_entry() {
 # is left out of the text, but its bump level was already counted by
 # aggregate_bump: the label speaks to the changelog, not to semver.
 #
-# Multi-group sections are blank-line-separated between groups (as in the
-# upstream v2.2.0 section); within a group, entries are newline-separated
-# with no blank line (as in the current v3.x sections).
+# Groups and entries follow upstream's release notes: "* GROUP" lines with
+# their entries nested under them, no blank lines in between.
 #
 # Empty output (every PR in the train skipped, or dir has no files) is a
 # caller error: release.yml's "Update CHANGELOG.md" step must treat it as
 # a hard failure rather than publish a release with no notes.
 render_body() {
-  local dir="$1" f group labels first=1
+  local dir="$1" f group labels
   declare -A entries
   shopt -s nullglob
-  for f in "$dir"/*.json; do
+  local files=("$dir"/*.json)
+  [ "${#files[@]}" -gt 0 ] || return 0
+  # Newest PR first within each group, as upstream lists them.
+  for f in $(printf '%s\n' "${files[@]}" | sort -V -r); do
     load_pr "$f"
     labels=$(pr_label_names)
     grep -qE '^(skip-changelog|backport/.+|has/backport)$' <<<"$labels" && continue
     group=$(changelog_group_for_labels "$labels")
     entries[$group]+="$(render_entry)"$'\n'
   done
-  for group in BREAKING FEATURES BUGFIXES ENHANCEMENTS SECURITY TESTING \
-               TRANSLATION BUILD DOCS MISC; do
+  for group in BREAKING SECURITY GENERAL FEATURES FIXES; do
     [ -n "${entries[$group]:-}" ] || continue
-    [ "$first" = 1 ] || echo
-    first=0
     echo "* ${group}"
     printf '%s' "${entries[$group]}"
   done
@@ -232,7 +245,7 @@ changelog_insert() {
     return
   fi
   date=$(date -u +%Y-%m-%d)
-  url="https://codeberg.org/${repo}/releases/tag/${tag}"
+  url="https://github.com/${repo}/releases/tag/${tag}"
   tmp=$(mktemp)
   {
     head -n 1 "$file"

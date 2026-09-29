@@ -5,6 +5,7 @@
 package forgejo
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"testing"
@@ -23,165 +24,180 @@ func skipIfFederationDisabled(t *testing.T, resp *Response, err error) {
 	}
 }
 
-// skipIfActivityPubSubResourceUnavailable skips the calling test on any
-// error from a repository/person/outbox ActivityPub sub-resource. Evidence
-// gathered against real Forgejo 11.0.16/15.0.9/16.0.5 instances shows these
-// routes are unreachable with plain token auth -- 404 on some versions,
-// "request signature verification failed" on others, since (per the
-// server's behavior) they expect the request to come from a remote actor
-// authenticated with an ActivityPub HTTP Signature, which the SDK does not
-// implement yet (see issue #58). Unlike skipIfFederationDisabled, this does
-// not try to distinguish the failure reason: every reason observed so far
-// means "cannot succeed with this SDK/harness", not "federation is off".
-func skipIfActivityPubSubResourceUnavailable(t *testing.T, err error) {
+// requireActor asserts that an ActivityPub GET succeeded and decoded into an
+// ActivityStreams document.
+func requireActor(t *testing.T, obj *ActivityPubObject, resp *Response, err error) {
 	t.Helper()
-	if err != nil {
-		t.Skipf("ActivityPub sub-resource unavailable with token auth (see issue #58): %v", err)
-	}
+	skipIfFederationDisabled(t, resp, err)
+	require.NoError(t, err)
+	require.NotNil(t, obj)
+	assert.Contains(t, *obj, "@context")
 }
 
-// remoteFollowActivity is a well-formed, but unsigned, ActivityStreams
-// Follow activity. It is enough to exercise inbox routing and request
-// encoding; it is not expected to be *accepted*, because Forgejo verifies
-// the HTTP signature of an inbox delivery against the sending actor's
-// published key, and this test has no such remote actor/key to sign with.
-func remoteFollowActivity(target string) ActivityPubObject {
-	return ActivityPubObject{
-		"@context": "https://www.w3.org/ns/activitystreams",
-		"type":     "Follow",
-		"actor":    "https://example.invalid/actor",
-		"object":   target,
-	}
+// requireDelivered asserts that an inbox accepted a signed delivery. The SDK
+// turns any non-2xx into an error, so a nil error here already means the
+// activity was taken.
+func requireDelivered(t *testing.T, resp *Response, err error) {
+	t.Helper()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
 }
 
 func TestActivityPubInstanceActor(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubInstanceActor ==")
-	c := newTestClient()
+	c, _ := signingTestClient(t)
 
 	actor, resp, err := c.GetActivityPubActor()
-	skipIfFederationDisabled(t, resp, err)
-	require.NoError(t, err)
-	require.NotNil(t, actor)
-	assert.Contains(t, *actor, "@context")
+	requireActor(t, actor, resp, err)
 
-	outbox, resp, err := c.GetActivityPubActorOutbox()
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
-	require.NotNil(t, outbox)
+	// /activitypub/actor/outbox arrived in Forgejo 14.0.0; below that the
+	// SDK's guard refuses the call, which is the documented behavior.
+	if serverAtLeast(t, c, "14.0.0") {
+		outbox, resp, err := c.GetActivityPubActorOutbox()
+		requireActor(t, outbox, resp, err)
+	} else {
+		_, _, err := c.GetActivityPubActorOutbox()
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+	}
 }
 
 func TestActivityPubInstanceActorInbox(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubInstanceActorInbox ==")
-	c := newTestClient()
+	c, peer := signingTestClient(t)
 
-	_, resp, err := c.GetActivityPubActor()
-	skipIfFederationDisabled(t, resp, err)
-	require.NoError(t, err)
+	actor, resp, err := c.GetActivityPubActor()
+	requireActor(t, actor, resp, err)
 
-	resp, err = c.SendActivityPubActorInbox(remoteFollowActivity(c.url + "/activitypub/actor"))
-	require.NotNil(t, resp)
-	// Not asserting success: an unsigned delivery is expected to be
-	// rejected. What matters here is that the route exists and the SDK's
-	// request reaches it.
-	assert.NotEqual(t, http.StatusNotFound, resp.StatusCode)
-	_ = err
+	resp, err = c.SendActivityPubActorInbox(peer.followActivity(c.url + "/api/v1/activitypub/actor"))
+	requireDelivered(t, resp, err)
 }
 
 func TestActivityPubRepository(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubRepository ==")
-	c := newTestClient()
+	c, _ := signingTestClient(t)
 	repo, err := createTestRepo(t, "activitypub-repo", c)
 	require.NoError(t, err)
 
 	actor, resp, err := c.GetActivityPubRepository(repo.ID)
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
-	require.NotNil(t, actor)
-	assert.Contains(t, *actor, "@context")
+	requireActor(t, actor, resp, err)
 
-	outbox, resp, err := c.GetActivityPubRepositoryOutbox(repo.ID)
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
-	require.NotNil(t, outbox)
+	// /activitypub/repository-id/{id}/outbox arrived in Forgejo 14.0.0.
+	if serverAtLeast(t, c, "14.0.0") {
+		outbox, resp, err := c.GetActivityPubRepositoryOutbox(repo.ID)
+		requireActor(t, outbox, resp, err)
+	} else {
+		_, _, err := c.GetActivityPubRepositoryOutbox(repo.ID)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+	}
 }
 
 func TestActivityPubRepositoryInbox(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubRepositoryInbox ==")
-	c := newTestClient()
+	c, peer := signingTestClient(t)
 	repo, err := createTestRepo(t, "activitypub-repo-inbox", c)
 	require.NoError(t, err)
 
-	_, resp, err := c.GetActivityPubRepository(repo.ID)
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
+	actor, resp, err := c.GetActivityPubRepository(repo.ID)
+	requireActor(t, actor, resp, err)
 
-	resp, err = c.SendActivityPubRepositoryInbox(repo.ID, remoteFollowActivity(c.url+"/activitypub/repository-id/"))
-	require.NotNil(t, resp)
-	assert.NotEqual(t, http.StatusNotFound, resp.StatusCode)
-	_ = err
+	// A repository inbox only accepts Like (forgefed.ForgeLike); a Follow
+	// there is refused as a validation error, not as a routing failure.
+	resp, err = c.SendActivityPubRepositoryInbox(repo.ID, peer.likeActivity(
+		fmt.Sprintf("%s/api/v1/activitypub/repository-id/%d", c.url, repo.ID)))
+	requireDelivered(t, resp, err)
 }
 
 func TestActivityPubPerson(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubPerson ==")
-	c := newTestClient()
+	c, _ := signingTestClient(t)
 	me, _, err := c.GetMyUserInfo()
 	require.NoError(t, err)
 
 	actor, resp, err := c.GetActivityPubPerson(me.ID)
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
-	require.NotNil(t, actor)
-	assert.Contains(t, *actor, "@context")
+	requireActor(t, actor, resp, err)
 
-	outbox, resp, err := c.GetActivityPubPersonOutbox(me.ID)
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
-	require.NotNil(t, outbox)
+	// /activitypub/user-id/{id}/outbox arrived in Forgejo 13.0.0.
+	if serverAtLeast(t, c, "13.0.0") {
+		outbox, resp, err := c.GetActivityPubPersonOutbox(me.ID)
+		requireActor(t, outbox, resp, err)
+	} else {
+		_, _, err := c.GetActivityPubPersonOutbox(me.ID)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+	}
 }
 
 func TestActivityPubPersonInbox(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubPersonInbox ==")
-	c := newTestClient()
+	c, peer := signingTestClient(t)
 	me, _, err := c.GetMyUserInfo()
 	require.NoError(t, err)
 
-	_, resp, err := c.GetActivityPubPerson(me.ID)
-	skipIfFederationDisabled(t, resp, err)
-	skipIfActivityPubSubResourceUnavailable(t, err)
+	actor, resp, err := c.GetActivityPubPerson(me.ID)
+	requireActor(t, actor, resp, err)
 
-	resp, err = c.SendActivityPubPersonInbox(me.ID, remoteFollowActivity(c.url+"/activitypub/user-id/"))
-	require.NotNil(t, resp)
-	assert.NotEqual(t, http.StatusNotFound, resp.StatusCode)
-	_ = err
+	resp, err = c.SendActivityPubPersonInbox(me.ID, peer.followActivity(
+		fmt.Sprintf("%s/api/v1/activitypub/user-id/%d", c.url, me.ID)))
+	requireDelivered(t, resp, err)
 }
 
 func TestActivityPubPersonActivity(t *testing.T) {
 	t.Parallel()
 	log.Println("== TestActivityPubPersonActivity ==")
-	c := newTestClient()
+	c, _ := signingTestClient(t)
 	me, _, err := c.GetMyUserInfo()
 	require.NoError(t, err)
 
-	if _, resp, err := c.GetActivityPubPerson(me.ID); err != nil {
-		skipIfFederationDisabled(t, resp, err)
-		skipIfActivityPubSubResourceUnavailable(t, err)
+	// The activity routes arrived in Forgejo 13.0.0.
+	if !serverAtLeast(t, c, "13.0.0") {
+		_, _, err := c.GetActivityPubPersonActivityNote(me.ID, 1)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		_, _, err = c.GetActivityPubPersonActivity(me.ID, 1)
+		require.Error(t, err, "the version guard must refuse the call on a server without the route")
+		return
 	}
 
-	// There is no way to seed a specific federation activity ID through the
-	// REST API, so activity-id 1 is very likely absent. This still verifies
-	// the SDK reaches the route (not a 404 caused by a wrong path on the
-	// SDK side) and decodes whatever comes back.
-	_, resp, err := c.GetActivityPubPersonActivityNote(me.ID, 1)
-	require.NotNil(t, resp)
-	_ = err
+	// These routes read an ordinary activity feed entry, not a federation
+	// specific one (routers/api/v1/activitypub/person.go, getActivity), and
+	// only one the user performed on themselves in a public repository. So
+	// seed one by creating a public repo, then ask the feed for its ID:
+	// there is no fixed activity ID to hard-code, and a missing one is a
+	// 404 rather than an empty document.
+	activityID := seedPersonActivity(t, c, me.UserName)
 
-	_, resp, err = c.GetActivityPubPersonActivity(me.ID, 1)
-	require.NotNil(t, resp)
-	_ = err
+	note, resp, err := c.GetActivityPubPersonActivityNote(me.ID, activityID)
+	requireActor(t, note, resp, err)
+
+	activity, resp, err := c.GetActivityPubPersonActivity(me.ID, activityID)
+	requireActor(t, activity, resp, err)
+}
+
+// seedPersonActivity creates a public repository and returns the ID of the
+// resulting feed entry, which is what the ActivityPub activity routes serve.
+func seedPersonActivity(t *testing.T, c *Client, username string) int64 {
+	t.Helper()
+
+	_, err := createTestRepo(t, "activitypub-activity", c)
+	require.NoError(t, err)
+
+	feeds, _, err := c.ListUserActivityFeeds(username, ListActivityFeedsOptions{
+		OnlyPerformedBy: true,
+		ListOptions:     ListOptions{PageSize: 20},
+	})
+	require.NoError(t, err)
+
+	for _, f := range feeds {
+		// getActivity serves only an action the user performed on their own
+		// feed, and only a public one.
+		if !f.IsPrivate && f.UserID == f.ActUserID {
+			return f.ID
+		}
+	}
+	t.Skip("no public self-performed activity in the user's feed to read back")
+	return 0
 }

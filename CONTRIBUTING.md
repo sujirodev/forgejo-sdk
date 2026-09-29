@@ -4,7 +4,7 @@
 
 Please search the issues on the issue tracker with a variety of keywords to ensure your bug is not already reported.
 
-If unique, [open an issue](https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/new) and answer the questions so we can understand and reproduce the problematic behavior.
+If unique, [open an issue](https://github.com/sujirodev/forgejo-sdk/issues/new) and answer the questions so we can understand and reproduce the problematic behavior.
 
 To show us that the issue you are having is in Forgejo SDK itself, please write clear, concise instructions so we can reproduce the behavior (even if it seems obvious). The more detailed and specific you are, the faster we can fix the issue.
 
@@ -14,7 +14,7 @@ Please be kind, remember that Forgejo SDK comes at no cost to you, and you're ge
 
 The project welcomes submissions but please let everyone know what you're working on if you want to change or add something to the Forgejo SDK repository.
 
-Before starting to write something new for the Forgejo SDK project, please [file an issue](https://codeberg.org/MatheusAlves96/forgejo-sdk/issues/new).
+Before starting to write something new for the Forgejo SDK project, please [file an issue](https://github.com/sujirodev/forgejo-sdk/issues/new).
 
 ## Branching
 

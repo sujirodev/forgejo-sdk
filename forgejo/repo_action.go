@@ -369,7 +369,7 @@ func (c *Client) GetRepoActionRunLogs(owner, repo string, runID int64) (io.ReadC
 		return nil, nil, err
 	}
 
-	return c.getResponseReader("GET", fmt.Sprintf("/repos/%s/%s/actions/runs/%d/logs", owner, repo, runID), nil, nil)
+	return c.getResponseReader(fmt.Sprintf("/repos/%s/%s/actions/runs/%d/logs", owner, repo, runID), nil, nil)
 }
 
 // GetRepoActionJobLogs downloads the plaintext logs of a single action job.
@@ -387,5 +387,5 @@ func (c *Client) GetRepoActionJobLogs(owner, repo string, jobID int64, opt GetAc
 	link, _ := url.Parse(fmt.Sprintf("/repos/%s/%s/actions/jobs/%d/logs", owner, repo, jobID))
 	link.RawQuery = opt.QueryEncode()
 
-	return c.getResponseReader("GET", link.String(), nil, nil)
+	return c.getResponseReader(link.String(), nil, nil)
 }

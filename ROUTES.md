@@ -7,9 +7,9 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 
 | Version | ok | n/a (guard) | declared exception | no test | Total |
 |---|---|---|---|---|---|
-| V11.x | 459 | 31 | 16 | 0 | 506 |
-| V15.x | 485 | 4 | 17 | 0 | 506 |
-| V16.x (latest) | 489 | 0 | 17 | 0 | 506 |
+| V11.x | 459 | 45 | 16 | 0 | 520 |
+| V15.x | 489 | 14 | 17 | 0 | 520 |
+| V16.x (latest) | 499 | 0 | 21 | 0 | 520 |
 
 | Route | V11.x | V15.x | V16.x (latest) | Description |
 |---|---|---|---|---|
@@ -434,6 +434,7 @@ Run against Forgejo 11.0.16 (V11.x), 15.0.9 (V15.x) and 16.0.5 (V16.x (latest)).
 | `ListRepoMilestones` | ok | ok | ok | list all the milestones of one repository |
 | `ListRepoNotifications` | ok | ok | ok | list users's notification threads on a specific repo |
 | `ListRepoPullRequests` | ok | ok | ok | list PRs of one repository |
+| `ListRepoRunners` | n/a (>= 15.0.0) | ok | ok | gets the runners that belong to the repository. |
 | `ListRepoStargazers` | ok | ok | ok | list a repository's stargazers |
 | `ListRepoSubscribers` | ok | ok | ok | list a repo's subscribers (i.e. watchers) |
 | `ListRepoTags` | ok | ok | ok | list all the branches of one repository |

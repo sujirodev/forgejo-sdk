@@ -2,11 +2,7 @@
 repo: sujirodev/forgejo-sdk
 
 # Service type (forgejo or github)
-service: forgejo
-
-# Base URL for Forgejo instance if using forgejo service type (optional)
-# Default: https://forgejo.org
-base-url: https://codeberg.org
+service: github
 
 # Changelog groups and which labeled PRs to add to each group
 groups:

@@ -23,27 +23,27 @@ fail=0
 
 check 'Makefile (native): DISABLE_GIT_HOOKS' Makefile 'DISABLE_GIT_HOOKS = false'
 check 'Makefile (docker): DISABLE_GIT_HOOKS' Makefile 'FORGEJO__security__DISABLE_GIT_HOOKS=false'
-check 'integration.yml: DISABLE_GIT_HOOKS' .forgejo/workflows/integration.yml 'DISABLE_GIT_HOOKS = false'
+check 'integration.yml: DISABLE_GIT_HOOKS' .github/workflows/integration.yml 'DISABLE_GIT_HOOKS = false'
 check 'main_test.go: DISABLE_GIT_HOOKS' forgejo/main_test.go 'DISABLE_GIT_HOOKS = false'
 
 check 'Makefile (native): ALLOW_LOCALNETWORKS' Makefile 'ALLOW_LOCALNETWORKS = true'
 check 'Makefile (docker): ALLOW_LOCALNETWORKS' Makefile 'FORGEJO__migrations__ALLOW_LOCALNETWORKS=true'
-check 'integration.yml: ALLOW_LOCALNETWORKS' .forgejo/workflows/integration.yml 'ALLOW_LOCALNETWORKS = true'
+check 'integration.yml: ALLOW_LOCALNETWORKS' .github/workflows/integration.yml 'ALLOW_LOCALNETWORKS = true'
 check 'main_test.go: ALLOW_LOCALNETWORKS' forgejo/main_test.go 'ALLOW_LOCALNETWORKS = true'
 
 check 'Makefile (native): ENABLE_FLAGS' Makefile 'ENABLE_FLAGS = true'
 check 'Makefile (docker): ENABLE_FLAGS' Makefile 'FORGEJO__repository__ENABLE_FLAGS=true'
-check 'integration.yml: ENABLE_FLAGS' .forgejo/workflows/integration.yml 'ENABLE_FLAGS = true'
+check 'integration.yml: ENABLE_FLAGS' .github/workflows/integration.yml 'ENABLE_FLAGS = true'
 check 'main_test.go: ENABLE_FLAGS' forgejo/main_test.go 'ENABLE_FLAGS = true'
 
 check 'Makefile (native): quota ENABLED' Makefile '\[quota\]'
 check 'Makefile (docker): quota ENABLED' Makefile 'FORGEJO__quota__ENABLED=true'
-check 'integration.yml: quota ENABLED' .forgejo/workflows/integration.yml '\[quota\]'
+check 'integration.yml: quota ENABLED' .github/workflows/integration.yml '\[quota\]'
 check 'main_test.go: quota ENABLED' forgejo/main_test.go '\[quota\]'
 
 check 'Makefile (native): federation ENABLED' Makefile '\[federation\]'
 check 'Makefile (docker): federation ENABLED' Makefile 'FORGEJO__federation__ENABLED=true'
-check 'integration.yml: federation ENABLED' .forgejo/workflows/integration.yml '\[federation\]'
+check 'integration.yml: federation ENABLED' .github/workflows/integration.yml '\[federation\]'
 check 'main_test.go: federation ENABLED' forgejo/main_test.go '\[federation\]'
 
 # The ActivityPub actor sub-routes authenticate their caller with an HTTP
@@ -55,7 +55,7 @@ check 'main_test.go: federation ENABLED' forgejo/main_test.go '\[federation\]'
 # it disables an SSRF guard.
 check 'Makefile (native): INSECURE_ALLOW_INVALID_HOSTS' Makefile 'INSECURE_ALLOW_INVALID_HOSTS = true'
 check 'Makefile (docker): INSECURE_ALLOW_INVALID_HOSTS' Makefile 'FORGEJO__federation__INSECURE_ALLOW_INVALID_HOSTS=true'
-check 'integration.yml: INSECURE_ALLOW_INVALID_HOSTS' .forgejo/workflows/integration.yml 'INSECURE_ALLOW_INVALID_HOSTS = true'
+check 'integration.yml: INSECURE_ALLOW_INVALID_HOSTS' .github/workflows/integration.yml 'INSECURE_ALLOW_INVALID_HOSTS = true'
 check 'main_test.go: INSECURE_ALLOW_INVALID_HOSTS' forgejo/main_test.go 'INSECURE_ALLOW_INVALID_HOSTS = true'
 
 if [ "$fail" -ne 0 ]; then

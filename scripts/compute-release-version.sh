@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Helper for .forgejo/workflows/release.yml: decides the semver bump for a
+# Helper for .github/workflows/release.yml: decides the semver bump for a
 # release train and computes/renders the resulting release metadata. Kept
 # as a standalone script (rather than inline YAML) so it can be run and
 # tested locally without pushing a workflow change.
@@ -181,9 +181,9 @@ render_entry() {
   local owner="${GITHUB_REPOSITORY_OWNER:-sujirodev}"
   local repo="${GITHUB_REPOSITORY:-sujirodev/forgejo-sdk}"
   if [ -n "${PR_AUTHOR:-}" ] && [ "${PR_AUTHOR}" != "$owner" ]; then
-    suffix=" (thanks [@${PR_AUTHOR}](https://codeberg.org/${PR_AUTHOR}))"
+    suffix=" (thanks [@${PR_AUTHOR}](https://github.com/${PR_AUTHOR}))"
   fi
-  echo "  * ${PR_TITLE:-} ([#${PR_NUMBER:-}](https://codeberg.org/${repo}/issues/${PR_NUMBER:-}))${suffix}"
+  echo "  * ${PR_TITLE:-} ([#${PR_NUMBER:-}](https://github.com/${repo}/pull/${PR_NUMBER:-}))${suffix}"
 }
 
 # Changelog body for every PR in dir: groups in .changelog.yml order, each
@@ -234,7 +234,7 @@ changelog_insert() {
     return
   fi
   date=$(date -u +%Y-%m-%d)
-  url="https://codeberg.org/${repo}/releases/tag/${tag}"
+  url="https://github.com/${repo}/releases/tag/${tag}"
   tmp=$(mktemp)
   {
     head -n 1 "$file"

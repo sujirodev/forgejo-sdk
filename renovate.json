@@ -21,7 +21,7 @@
     {
       "description": "Forgejo images inside the testing job's version matrix (integration.yml). Matches all three matrix entries (lts-11, lts-15, latest-stable) as separate dependencies, routed to separate update groups by the packageRules below.",
       "customType": "regex",
-      "managerFilePatterns": ["/^\\.forgejo/workflows/integration\\.yml$/"],
+      "managerFilePatterns": ["/^\\.github/workflows/integration\\.yml$/"],
       "matchStrings": [
         "image: (?<depName>codeberg\\.org/forgejo/forgejo):(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-f0-9]+)"
       ],
@@ -52,7 +52,7 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Pin Forgejo Actions workflow digests, auto-update minor/patch",
+      "description": "Pin GitHub Actions workflow digests, auto-update minor/patch",
       "matchManagers": ["github-actions"],
       "pinDigests": true
     },
@@ -61,13 +61,6 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
-    },
-    {
-      "description": "forgejo/upload-artifact and forgejo/download-artifact are Forgejo Actions hosted on code.forgejo.org -- the same host the Forgejo runner resolves them from -- and have no github.com counterpart. The github-actions manager routes every `uses:` to the github-tags datasource, which is why the dependency dashboard (issue #14) reported `Failed to look up github-tags package forgejo/upload-artifact: no-result`. Point just these two at forgejo-tags on that host; digests keep working, because the github-actions manager resolves them from the datasource's sourceUrl. The rules above still apply: major bumps wait for dashboard approval. Must stay after the two github-actions rules above so neither resets the datasource.",
-      "matchManagers": ["github-actions"],
-      "matchDepNames": ["forgejo/upload-artifact", "forgejo/download-artifact"],
-      "overrideDatasource": "forgejo-tags",
-      "registryUrls": ["https://code.forgejo.org"]
     },
     {
       "description": "Forgejo test instance: always track the newest release tag (https://codeberg.org/forgejo/forgejo/tags; the docker datasource exposes the same tags plus the image digest). One PR touching every reference (workflow service image, Makefile, README, main_test.go), majors included, no separate minor/patch PR, no dashboard approval; CI on the PR decides. Must stay after the github-actions major rule above, and before the two lts-* matrix rules below (their narrower groupName has to win for those two dependencies; this rule's groupName still applies to the matrix's latest-stable entry, which neither of them matches).",
@@ -81,7 +74,7 @@
     {
       "description": "Keep the testing matrix's lts-11 entry inside the 11.x line: it tracks Forgejo's LTS releases (see docs/PLANO-MATRIZ-VERSOES.md), not the newest stable, so it must never follow the group above past a major bump. Comes after that rule so this groupName overrides it for this one dependency.",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".forgejo/workflows/integration.yml"],
+      "matchFileNames": [".github/workflows/integration.yml"],
       "matchCurrentVersion": "/^11\\./",
       "allowedVersions": "/^11\\./",
       "groupName": "forgejo lts-11 test matrix entry",
@@ -92,7 +85,7 @@
     {
       "description": "Keep the testing matrix's lts-15 entry inside the 15.x line, same reasoning as lts-11 above.",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".forgejo/workflows/integration.yml"],
+      "matchFileNames": [".github/workflows/integration.yml"],
       "matchCurrentVersion": "/^15\\./",
       "allowedVersions": "/^15\\./",
       "groupName": "forgejo lts-15 test matrix entry",

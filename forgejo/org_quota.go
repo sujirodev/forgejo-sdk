@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"codeberg.org/sujirodev/forgejo-sdk/forgejo/v3/models"
+	"github.com/sujirodev/forgejo-sdk/forgejo/v3/models"
 )
 
 // GetOrgQuota returns quota information for an organization

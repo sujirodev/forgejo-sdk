@@ -53,6 +53,9 @@ concurrency:
   group: release-main
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   release:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
@@ -63,7 +66,7 @@ jobs:
     # minutes that were enough for the tag-and-notes job alone.
     timeout-minutes: 20
     env:
-      RELEASE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -92,7 +95,7 @@ jobs:
           INPUT_DRY_RUN: ${{ github.event.inputs.dry_run }}
           EVENT_PR_JSON: ${{ toJSON(github.event.pull_request) }}
         run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          api="${GITHUB_API_URL:-https://api.github.com}"
           pr_file="${RUNNER_TEMP:-/tmp}/release-pr.json"
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             curl -sSf -H "Authorization: token ${RELEASE_TOKEN}" \
@@ -122,7 +125,7 @@ jobs:
       - name: Collect the PRs in this train
         id: train
         run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          api="${GITHUB_API_URL:-https://api.github.com}"
           base=$(bash scripts/compute-release-version.sh latest-tag)
           if [ "$DRY_RUN" = "true" ]; then
             head=$(jq -r '.head.sha' "$PR_JSON_FILE")
@@ -143,8 +146,8 @@ jobs:
           echo "head=${head}" >> "$GITHUB_OUTPUT"
           echo "dir=${dir}" >> "$GITHUB_OUTPUT"
 
-      # pull_request `paths` filtering isn't documented/supported by Forgejo
-      # Actions (only `push` is), so the check happens here instead of in
+      # pull_request `paths` filtering is not applied to `closed` events the
+      # way it is to `push`, so the check happens here instead of in
       # `on:`. A tree diff (not a commit walk) between the last tag and the
       # train's end, so it doesn't care how many commits or PRs are in
       # between, or what merge style produced them.
@@ -212,23 +215,24 @@ jobs:
           echo "sha=${changelog_sha}" >> "$GITHUB_OUTPUT"
           echo "body_file=${body_file}" >> "$GITHUB_OUTPUT"
 
-      # Direct commit to main through the Contents API. The branch protection
-      # on main must allow the token's user to push (push whitelist), or this
-      # step fails with 403 and no release is created. Skipped in a dry run.
+      # Direct commit to main through the Contents API. RELEASE_TOKEN is a
+      # personal access token of a repository admin, and main's ruleset must
+      # let that admin bypass the pull-request requirement, or this step
+      # fails with 403 and no release is created. Skipped in a dry run.
       - name: Commit CHANGELOG.md
         if: steps.changelog.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
         env:
           TAG: ${{ steps.version.outputs.tag }}
           CHANGELOG_SHA: ${{ steps.changelog.outputs.sha }}
         run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          api="${GITHUB_API_URL:-https://api.github.com}"
           content_b64=$(base64 -w0 CHANGELOG.md)
           body=$(jq -n \
             --arg content "$content_b64" \
             --arg sha "$CHANGELOG_SHA" \
             --arg message "docs: update changelog for ${TAG}" \
             --arg branch "main" \
-            '{content:$content, sha:$sha, message:$message, branch:$branch, signoff:true}')
+            '{content:$content, sha:$sha, message:$message, branch:$branch}')
           curl -sSf -X PUT \
             -H "Authorization: token ${RELEASE_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -246,7 +250,7 @@ jobs:
         env:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          api="${GITHUB_API_URL:-https://api.github.com}"
           note=$(cat "${{ steps.changelog.outputs.body_file }}")
           body=$(jq -n \
             --arg tag "$TAG" \
@@ -266,7 +270,7 @@ jobs:
       # ---------------------------------------------------------------------
       # Release assets.
       #
-      # The .zip/.tar.gz on a release page are NOT assets: Codeberg generates
+      # The .zip/.tar.gz on a release page are NOT assets: GitHub generates
       # a source archive for every tag and there is nothing to configure about
       # them. Until this block existed, every release had `assets: []`.
       #
@@ -352,9 +356,7 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           version="${TAG##*/}"
-          # The copy must not survive the step even if the generator fails:
-          # the runner's workspace is shared between jobs, so a leftover file
-          # is somebody else's confusing untracked file later on.
+          # The copy must not survive the step even if the generator fails.
           trap 'rm -f forgejo/LICENSE' EXIT
           cp LICENSE forgejo/LICENSE
           go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.9.0 \
@@ -391,14 +393,15 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
           RELEASE_ID: ${{ steps.release.outputs.id }}
         run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          api="${GITHUB_API_URL:-https://api.github.com}"
           version="${TAG##*/}"
           cp ROUTES.md "ROUTES-${version}.md"
           for asset in "forgejo-sdk-${version}.cdx.json" "ROUTES-${version}.md"; do
             curl -sSf -X POST \
               -H "Authorization: token ${RELEASE_TOKEN}" \
-              -F "attachment=@${asset}" \
-              "${api}/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?name=${asset}" >/dev/null
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@${asset}" \
+              "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?name=${asset}" >/dev/null
             echo "attached ${asset}"
           done
 
@@ -417,7 +420,7 @@ jobs:
           GOSUM: ${{ steps.proxy.outputs.gosum }}
           RELEASE_ID: ${{ steps.release.outputs.id }}
         run: |
-          api="${GITHUB_API_URL:-https://codeberg.org/api/v1}"
+          api="${GITHUB_API_URL:-https://api.github.com}"
           # The changelog is read from the file the "Update CHANGELOG.md" step
           # wrote (not from a step output: it has none holding the text), or
           # this PATCH replaces the list of changes with the install section.
@@ -468,7 +471,7 @@ jobs:
         if: steps.version.outputs.tag && github.event.inputs.dry_run != 'true'
         run: |
           git fetch origin main
-          if git push "https://${RELEASE_TOKEN}@codeberg.org/${GITHUB_REPOSITORY}.git" \
+          if git push "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
                "origin/main:refs/heads/develop"; then
             echo "develop synced with main"
           else

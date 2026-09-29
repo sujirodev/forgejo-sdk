@@ -8,14 +8,14 @@ cd "$(dirname "$0")/.."
 # latest-stable); only latest-stable is meant to match Makefile/README/
 # main_test.go, so pull the line right after its "label: latest-stable"
 # marker instead of just the first "forgejo/forgejo:" match in the file.
-wf=$(awk '/label: latest-stable/{found=1; next} found && /forgejo\/forgejo:/{print; exit}' .forgejo/workflows/integration.yml \
+wf=$(awk '/label: latest-stable/{found=1; next} found && /forgejo\/forgejo:/{print; exit}' .github/workflows/integration.yml \
   | grep -oE 'forgejo/forgejo:[0-9]+\.[0-9]+\.[0-9]+' | cut -d: -f2)
 mk=$(grep -oE '^FORGEJO_VERSION := [0-9]+\.[0-9]+\.[0-9]+' Makefile | awk '{print $3}')
 rd=$(grep -A1 'renovate: datasource=docker depName=codeberg.org/forgejo/forgejo' README.md | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 gt=$(grep -oE 'testForgejoVersion = "[0-9]+\.[0-9]+\.[0-9]+"' forgejo/main_test.go | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 
 printf '%-38s %s\n' \
-  '.forgejo/workflows/integration.yml' "${wf:-<missing>}" \
+  '.github/workflows/integration.yml' "${wf:-<missing>}" \
   'Makefile' "${mk:-<missing>}" \
   'README.md' "${rd:-<missing>}" \
   'forgejo/main_test.go' "${gt:-<missing>}"

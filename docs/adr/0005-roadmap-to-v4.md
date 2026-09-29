@@ -40,7 +40,7 @@ Track candidate v4 breaking changes here. As of this writing:
   server can be older than. Candidate for removal at that point:
   `version1_11_0` through `version1_17_0` and any guard that only exists
   for a server version below the new floor.
-- **Module path**: `codeberg.org/sujirodev/forgejo-sdk/forgejo/v4`,
+- **Module path**: `github.com/sujirodev/forgejo-sdk/forgejo/v4`,
   per Go's own major-version-in-import-path convention — not a new
   decision, just what "v4" means mechanically for a Go module.
 

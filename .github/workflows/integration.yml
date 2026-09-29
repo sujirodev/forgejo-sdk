@@ -5,6 +5,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 # A newer push to the same branch/PR cancels the run still in progress.
 concurrency:
   group: integration-${{ github.ref }}
@@ -14,8 +17,7 @@ jobs:
   # main only accepts a PR whose head is develop, in this same repository
   # (release train plan, decision 2). Runs first, before lint/testing:
   # it costs nothing (no checkout, pure payload inspection) and there is
-  # no reason to spend the runner's 2 job slots on a full lint + 3-leg
-  # test matrix for a PR that this check is about to reject anyway.
+  # no reason to spend runner minutes on a full lint + 3-leg test matrix for a PR that this check is about to reject anyway.
   # Always runs and always reports a context on pull_request, so it can
   # be required on any branch without the risk of a required check that
   # never fires because its own `if:` never matched.
@@ -39,13 +41,7 @@ jobs:
             exit 1
           fi
 
-  # Static checks need no Forgejo instance; they run alongside `testing`
-  # (the self-hosted runner has capacity 2). golangci-lint's binary and
-  # Go's own build/module caches are bind-mounted from the runner host
-  # (see .forgejo/runner/entrypoint.sh's container.options) instead of
-  # going through actions/cache/setup-go's own cache: the runner's cache
-  # proxy is unreachable from job containers on this host, so those paths
-  # are disabled below rather than left silently failing every run.
+  # Static checks need no Forgejo instance; they run alongside `testing`.
   lint:
     needs: [train-guard]
     # train-guard only actually runs on pull_request; on push (develop) it
@@ -60,17 +56,6 @@ jobs:
       GOPROXY: "https://proxy.golang.org,direct"
       GO111MODULE: "on"
     steps:
-      # The self-hosted runner reuses /workspace/<owner>/<repo> between jobs.
-      # When a job starts and that directory has no .git (it happens),
-      # actions/checkout init's a fresh repository on top of whatever is
-      # already there and checks out the ref -- which restores tracked files
-      # but leaves the *previous* job's files behind as untracked leftovers.
-      # A job then lints and tests files from another pull request: observed
-      # on PR #31, whose lint failed on a forgejo/repo_refs_test.go that does
-      # not exist on its branch at all. Wipe the workspace first.
-      - name: Clean the shared workspace
-        run: find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
@@ -95,7 +80,7 @@ jobs:
   # newest stable, so "supports 11.0.10+" is something CI actually checks
   # instead of an unverified claim about the versions in between.
   #
-  # With the matrix, the job name Forgejo Actions reports for each leg is
+  # With the matrix, the job name GitHub Actions reports for each leg is
   # "testing (lts-11)", "testing (lts-15)", "testing (latest-stable)" — the
   # single "testing" name that used to be the required status check on
   # `main` no longer exists on its own. Branch protection needs updating to
@@ -103,13 +88,13 @@ jobs:
   # something this workflow file can do by itself).
   #
   # The explicit `name:` below is what makes those names stable: without it
-  # the runner names each leg after every matrix field, image digest
+  # GitHub names each leg after every matrix field, image digest
   # included ("testing (codeberg.org/forgejo/forgejo:11.0.16@sha256:...,
   # lts-11)"), so the status-check context would change on every Renovate
   # bump and the required check on `main` would never match again.
   #
   # fail-fast: true trades "know immediately which legs would have failed"
-  # for "stop burning runner capacity the moment any leg is red": the first
+  # for "stop burning runner minutes the moment any leg is red": the first
   # failing leg cancels the other two still in flight.
   testing:
     needs: [train-guard]
@@ -142,23 +127,70 @@ jobs:
       # gives ROUTES.md one column per Forgejo version.
       FORGEJO_SDK_TEST_LABEL: ${{ matrix.label }}
     steps:
-      # The self-hosted runner reuses /workspace/<owner>/<repo> between jobs.
-      # When a job starts and that directory has no .git (it happens),
-      # actions/checkout init's a fresh repository on top of whatever is
-      # already there and checks out the ref -- which restores tracked files
-      # but leaves the *previous* job's files behind as untracked leftovers.
-      # A job then lints and tests files from another pull request: observed
-      # on PR #31, whose lint failed on a forgejo/repo_refs_test.go that does
-      # not exist on its branch at all. Wipe the workspace first.
-      - name: Clean the shared workspace
-        run: find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: forgejo/go.mod
           check-latest: true
           cache: false
+
+      # GitHub's `services:` block cannot override the container command, and
+      # this instance is configured entirely through a generated app.ini, so it
+      # is started by hand. Disposable: it serves only this job and dies with
+      # the runner VM. SECRET_KEY/INTERNAL_TOKEN are generated fresh below
+      # instead of being fixed values committed to the repo.
+      #
+      # Runs as root (I_AM_BEING_UNSAFE_RUNNING_AS_ROOT): the upstream image's
+      # default user can't write to /tmp/conf or /tmp/data unless a volume/user
+      # is customized. Fine for a throwaway CI instance; would not be fine for
+      # anything long-lived.
+      #
+      # The instance is published on the runner's port 3000 and reached as
+      # `forgejo` (an /etc/hosts entry on the runner, a network alias inside
+      # Docker), so FORGEJO_SDK_TEST_URL and ROOT_URL are the same string on
+      # both sides. The federation tests start a peer inside the test process;
+      # the instance reaches it through the Docker network's gateway address.
+      - name: Start Forgejo
+        env:
+          FORGEJO_IMAGE: ${{ matrix.image }}
+        run: |
+          cat > "$RUNNER_TEMP/start-forgejo.sh" <<'EOF'
+          mkdir -p /tmp/conf/
+          mkdir -p /tmp/data/
+          SECRET_KEY="$(forgejo generate secret SECRET_KEY)"
+          INTERNAL_TOKEN="$(forgejo generate secret INTERNAL_TOKEN)"
+          echo "I_AM_BEING_UNSAFE_RUNNING_AS_ROOT = true" > /tmp/conf/app.ini
+          echo "[security]" >> /tmp/conf/app.ini
+          echo "INTERNAL_TOKEN = ${INTERNAL_TOKEN}" >> /tmp/conf/app.ini
+          echo "INSTALL_LOCK = true" >> /tmp/conf/app.ini
+          echo "SECRET_KEY = ${SECRET_KEY}" >> /tmp/conf/app.ini
+          echo "PASSWORD_COMPLEXITY = off" >> /tmp/conf/app.ini
+          echo "DISABLE_GIT_HOOKS = false" >> /tmp/conf/app.ini
+          echo "[database]" >> /tmp/conf/app.ini
+          echo "DB_TYPE = sqlite3" >> /tmp/conf/app.ini
+          echo "[repository]" >> /tmp/conf/app.ini
+          echo "ROOT = /tmp/data/" >> /tmp/conf/app.ini
+          echo "ENABLE_FLAGS = true" >> /tmp/conf/app.ini
+          echo "[server]" >> /tmp/conf/app.ini
+          echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
+          echo "[quota]" >> /tmp/conf/app.ini
+          echo "ENABLED = true" >> /tmp/conf/app.ini
+          echo "[migrations]" >> /tmp/conf/app.ini
+          echo "ALLOW_LOCALNETWORKS = true" >> /tmp/conf/app.ini
+          echo "[federation]" >> /tmp/conf/app.ini
+          echo "ENABLED = true" >> /tmp/conf/app.ini
+          echo "INSECURE_ALLOW_INVALID_HOSTS = true" >> /tmp/conf/app.ini
+          forgejo migrate -c /tmp/conf/app.ini
+          forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
+          exec forgejo web -c /tmp/conf/app.ini
+          EOF
+          docker network create forgejo-net
+          docker run -d --name forgejo --network forgejo-net --network-alias forgejo \
+            -p 3000:3000 -v "$RUNNER_TEMP/start-forgejo.sh:/start-forgejo.sh:ro" \
+            --entrypoint bash "$FORGEJO_IMAGE" /start-forgejo.sh
+          echo "127.0.0.1 forgejo" | sudo tee -a /etc/hosts
+          gateway=$(docker network inspect forgejo-net -f '{{ (index .IPAM.Config 0).Gateway }}')
+          echo "FORGEJO_SDK_TEST_CALLBACK_HOST=${gateway}" >> "$GITHUB_ENV"
 
       # Wait for Forgejo to be healthy before running tests; fail if it never is.
       - name: Wait for Forgejo
@@ -171,6 +203,7 @@ jobs:
             sleep 2
           done
           echo "Forgejo did not become healthy in time"
+          docker logs forgejo || true
           exit 1
 
       # Observed 2026-09-22: all 3 legs timed out here, each stuck 8+
@@ -202,66 +235,19 @@ jobs:
       # and with what result. The route-matrix job below turns the three
       # legs' reports into ROUTES.md.
       - name: Upload the route report
-        uses: forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: route-report-${{ matrix.label }}
           path: forgejo/route-report.json
           if-no-files-found: error
 
-    services:
-      # Disposable, single-run instance: it only ever serves this one job,
-      # gets torn down with the container afterwards, and nothing in it is
-      # reused across runs. SECRET_KEY/INTERNAL_TOKEN are generated fresh
-      # below instead of being fixed values committed to the repo.
-      #
-      # Runs as root (I_AM_BEING_UNSAFE_RUNNING_AS_ROOT): the upstream
-      # codeberg.org/forgejo/forgejo image's default user can't write to
-      # /tmp/conf or /tmp/data unless the volume/user is customized, and
-      # Forgejo Actions' `services:` block has no equivalent of Docker
-      # Compose's `user:` to run the container as non-root instead. Fine
-      # for a throwaway CI instance; would not be fine for anything
-      # long-lived.
-      forgejo:
-        image: ${{ matrix.image }}
-        cmd:
-          - bash
-          - -c
-          - >-
-            mkdir -p /tmp/conf/
-            && mkdir -p /tmp/data/
-            && SECRET_KEY="$(forgejo generate secret SECRET_KEY)"
-            && INTERNAL_TOKEN="$(forgejo generate secret INTERNAL_TOKEN)"
-            && echo "I_AM_BEING_UNSAFE_RUNNING_AS_ROOT = true" > /tmp/conf/app.ini
-            && echo "[security]" >> /tmp/conf/app.ini
-            && echo "INTERNAL_TOKEN = ${INTERNAL_TOKEN}" >> /tmp/conf/app.ini
-            && echo "INSTALL_LOCK = true" >> /tmp/conf/app.ini
-            && echo "SECRET_KEY = ${SECRET_KEY}" >> /tmp/conf/app.ini
-            && echo "PASSWORD_COMPLEXITY = off" >> /tmp/conf/app.ini
-            && echo "DISABLE_GIT_HOOKS = false" >> /tmp/conf/app.ini
-            && echo "[database]" >> /tmp/conf/app.ini
-            && echo "DB_TYPE = sqlite3" >> /tmp/conf/app.ini
-            && echo "[repository]" >> /tmp/conf/app.ini
-            && echo "ROOT = /tmp/data/" >> /tmp/conf/app.ini
-            && echo "ENABLE_FLAGS = true" >> /tmp/conf/app.ini
-            && echo "[server]" >> /tmp/conf/app.ini
-            && echo "ROOT_URL = http://forgejo:3000" >> /tmp/conf/app.ini
-            && echo "[quota]" >> /tmp/conf/app.ini
-            && echo "ENABLED = true" >> /tmp/conf/app.ini
-            && echo "[migrations]" >> /tmp/conf/app.ini
-            && echo "ALLOW_LOCALNETWORKS = true" >> /tmp/conf/app.ini
-            && echo "[federation]" >> /tmp/conf/app.ini
-            && echo "ENABLED = true" >> /tmp/conf/app.ini
-            && echo "INSECURE_ALLOW_INVALID_HOSTS = true" >> /tmp/conf/app.ini
-            && forgejo migrate -c /tmp/conf/app.ini
-            && forgejo admin user create --username=test01 --password=test01 --email=test01@forgejo.org --admin=true --must-change-password=false --access-token -c /tmp/conf/app.ini
-            && forgejo web -c /tmp/conf/app.ini
 
   # Checks the route contract against what the legs actually did: ROUTES.md
   # (one line per route, one column per version) and the counters in
   # README.md have to match what the generator produces from the three
   # reports. Cheap job -- it only downloads three small JSON files and runs a
   # generator -- and with `needs:` it does not compete with the legs for
-  # runner capacity.
+  # runner minutes.
   #
   # This job fails the build when:
   #   - a route has no evidence on some version and no declared reason in
@@ -288,11 +274,6 @@ jobs:
       GOPROXY: "https://proxy.golang.org,direct"
       GO111MODULE: "on"
     steps:
-      # Same reason as the other jobs: the runner's workspace is shared and
-      # keeps the previous job's files unless it is emptied first.
-      - name: Clean the shared workspace
-        run: find "$GITHUB_WORKSPACE" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
@@ -300,7 +281,7 @@ jobs:
           check-latest: true
           cache: false
 
-      - uses: forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: route-report-*
           path: route-reports
@@ -320,7 +301,7 @@ jobs:
           reports=$(find route-reports -name route-report.json -printf '%p ')
           make route-matrix ROUTE_REPORTS="$reports" || true
 
-      - uses: forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: route-contract

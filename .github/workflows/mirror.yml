@@ -1,0 +1,55 @@
+name: mirror
+
+# GitHub is the source of truth; https://codeberg.org/sujirodev/forgejo-sdk is
+# a read-only mirror kept in sync from here. Only the long-lived refs are
+# pushed: main, develop and the release tags. Feature branches stay on GitHub.
+#
+# Needs a CODEBERG_TOKEN secret: a Codeberg access token with write:repository
+# for sujirodev/forgejo-sdk, belonging to a user who may push to the protected
+# main and develop branches there (or with those protections switched off).
+on:
+  push:
+    branches: [main, develop]
+    tags: ["forgejo/v*"]
+  workflow_dispatch:
+
+# Pushes are ordered: a newer run must not be overtaken by an older one.
+concurrency:
+  group: mirror
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  codeberg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      # No --force: if the mirror ever diverges (someone pushed to Codeberg
+      # directly) the job fails loudly instead of overwriting their commits.
+      # Refs are pushed one at a time so a rejected develop does not hide
+      # that main went through.
+      - name: Push to Codeberg
+        env:
+          CODEBERG_TOKEN: ${{ secrets.CODEBERG_TOKEN }}
+        run: |
+          if [ -z "$CODEBERG_TOKEN" ]; then
+            echo "::error::CODEBERG_TOKEN is not set; the Codeberg mirror was not updated"
+            exit 1
+          fi
+          remote="https://sujirodev:${CODEBERG_TOKEN}@codeberg.org/sujirodev/forgejo-sdk.git"
+          push() {
+            git push "$remote" "$1" 2>&1 | sed "s#${CODEBERG_TOKEN}#***#g"
+            return "${PIPESTATUS[0]}"
+          }
+          status=0
+          for ref in main develop; do
+            push "refs/remotes/origin/${ref}:refs/heads/${ref}" || status=1
+          done
+          push "refs/tags/forgejo/*:refs/tags/forgejo/*" || status=1
+          exit "$status"

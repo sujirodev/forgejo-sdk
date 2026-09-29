@@ -37,7 +37,8 @@ load_pr() {
   PR_BODY=$(jq -r '.body // ""' "$f")
   PR_LABELS_JSON=$(jq -c '.labels // []' "$f")
   PR_AUTHOR=$(jq -r '.user.login // ""' "$f")
-  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON PR_AUTHOR
+  PR_URL=$(jq -r '.html_url // ""' "$f")
+  export PR_NUMBER PR_TITLE PR_BODY PR_LABELS_JSON PR_AUTHOR PR_URL
 }
 [ -n "${PR_JSON_FILE:-}" ] && load_pr "$PR_JSON_FILE"
 
@@ -147,8 +148,12 @@ train_head() {
 # leaves no "(#N)" behind, so a rebased PR would silently not appear here.
 range_prs() {
   local range="$1"
+  # Two merge-subject shapes: Forgejo's "Merge pull request 'title' (#N) from
+  # ..." (the history before the move to GitHub) and GitHub's "Merge pull
+  # request #N from owner/branch".
   git log --first-parent --reverse --format=%s "$range" \
-    | sed -n 's/.*(#\([0-9]\{1,\}\)).*/\1/p' \
+    | sed -n -e 's/^Merge pull request #\([0-9]\{1,\}\) from .*/\1/p' \
+             -e 's/.*(#\([0-9]\{1,\}\)).*/\1/p' \
     | awk 'NF && !seen[$0]++'
 }
 
@@ -180,10 +185,16 @@ render_entry() {
   local suffix=""
   local owner="${GITHUB_REPOSITORY_OWNER:-sujirodev}"
   local repo="${GITHUB_REPOSITORY:-sujirodev/forgejo-sdk}"
+  # The PR's own URL, so PRs merged on Codeberg before the move keep linking
+  # to Codeberg instead of to a GitHub PR with the same number that does not
+  # exist. The author's profile lives on the same host.
+  local url="${PR_URL:-https://github.com/${repo}/pull/${PR_NUMBER:-}}"
+  local origin
+  origin=$(sed -E 's#^(https?://[^/]+)/.*#\1#' <<<"$url")
   if [ -n "${PR_AUTHOR:-}" ] && [ "${PR_AUTHOR}" != "$owner" ]; then
-    suffix=" (thanks [@${PR_AUTHOR}](https://github.com/${PR_AUTHOR}))"
+    suffix=" (thanks [@${PR_AUTHOR}](${origin}/${PR_AUTHOR}))"
   fi
-  echo "  * ${PR_TITLE:-} ([#${PR_NUMBER:-}](https://github.com/${repo}/pull/${PR_NUMBER:-}))${suffix}"
+  echo "  * ${PR_TITLE:-} ([#${PR_NUMBER:-}](${url}))${suffix}"
 }
 
 # Changelog body for every PR in dir: groups in .changelog.yml order, each

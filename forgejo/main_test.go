@@ -87,7 +87,7 @@ func serverAtLeast(t *testing.T, c *Client, minVersion string) bool {
 }
 
 // renovate: datasource=docker depName=codeberg.org/forgejo/forgejo
-const testForgejoVersion = "16.0.5"
+const testForgejoVersion = "16.0.6"
 
 // TODO: replace with proper forgejo path
 func forgejoMasterPath() string {

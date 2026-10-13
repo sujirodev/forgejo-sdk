@@ -109,7 +109,7 @@ jobs:
             image: codeberg.org/forgejo/forgejo:11.0.16@sha256:946243edbab116d5bb78b73ea68af6f3d69229ba1b1ed958dd82c3481167f3e0
           # renovate: versioning=regex:^(?<major>15)\.(?<minor>\d+)\.(?<patch>\d+)$
           - label: lts-15
-            image: codeberg.org/forgejo/forgejo:15.0.9@sha256:91a5310c86934339e16bd06b6078aada836e3d8935b2d70f6598108cbfaed5d1
+            image: codeberg.org/forgejo/forgejo:15.0.10@sha256:7b2f61163ff1d19f2aaf62d37ae4e805e822c2f86d6628b2bd468470929beacb
           # No version-lock marker: this entry tracks the same release as
           # Makefile/README.md/forgejo/main_test.go and is bumped by the
           # same Renovate group ("forgejo test instance") as those three.
